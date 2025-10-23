@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import AssetPreview from "./AssetPreview";
 import { brandingKits } from "../data/brandingKits";
 import RapidWorksHeader from "./new_landing_page_header";
-import { Link, useSearchParams } from "react-router-dom";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import LoginModal from "./LoginModal";
 
 const PublicBrandingKits = () => {

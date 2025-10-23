@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { getBlogPostBySlug, getRelatedPosts } from '../utils/blogService';
 import RapidWorksHeader from "./new_landing_page_header";
 import ReactMarkdown from 'react-markdown';
@@ -64,7 +66,7 @@ const BlogPostPage = () => {
   }
 
   if (error || !post) {
-    return <Navigate to="/blogs" replace />;
+    redirect('/blogs');
   }
 
   const handleShare = () => {

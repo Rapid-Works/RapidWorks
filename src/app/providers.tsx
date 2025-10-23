@@ -27,7 +27,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <ScrollToTop />
           {children}
           {!isDashboardPage && <AIAssistantChatbot />}
-          {!isDashboardPage && <Footer />}
+          {!isDashboardPage && <Footer onFAQClick={() => {}} />}
           <CookieConsent />
         </LanguageProvider>
       </NotificationProvider>

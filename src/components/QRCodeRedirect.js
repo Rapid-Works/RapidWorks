@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { track } from '@vercel/analytics';
 
 const QRCodeRedirect = () => {
@@ -10,7 +10,7 @@ const QRCodeRedirect = () => {
 
   useEffect(() => {
     // Get the target path from the current URL
-    const currentPath = location.pathname;
+    const currentPath = pathname;
     
     // Map of QR code paths to their target destinations
     const redirectMap = {
@@ -37,12 +37,12 @@ const QRCodeRedirect = () => {
       });
 
       // Redirect to the target path
-      router.push(targetPath, { replace: true });
+      router.push(targetPath);
     } else {
       // If no mapping found, redirect to home
-      router.push('/', { replace: true });
+      router.push('/');
     }
-  }, [navigate, location]);
+  }, [router, pathname]);
 
   return null; // This component doesn't render anything
 };
