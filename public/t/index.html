@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+    <link rel="dns-prefetch" href="//us-central1-landingpage-606e9.cloudfunctions.net">
+    <link rel="preconnect" href="https://us-central1-landingpage-606e9.cloudfunctions.net">
+    <style>
+        body{margin:0;background:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+        .s{width:10px;height:10px;border:2px solid #7C3BEC;border-top:2px solid transparent;border-radius:50%;animation:spin 0.6s linear infinite}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+    <div class="s"></div>
+    <script>
+        (function(){
+            const p=location.pathname;
+            const t=p.split('/t/')[1];
+            if(t){
+                const u='https://us-central1-landingpage-606e9.cloudfunctions.net/trackingRedirect/'+t;
+                location.replace(u);
+            }else{
+                location.replace('/');
+            }
+        })();
+    </script>
+</body>
+</html>

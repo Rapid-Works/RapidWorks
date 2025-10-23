@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/opengraphimage.png" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/opengraphimage.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="RapidWorks - Ideas into Action"
+    />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>RapidWorks</title>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="RapidWorks - IDEAS INTO ACTION" />
+    <meta property="og:description" content="Transform your ideas into action with RapidWorks." />
+    <meta property="og:image" content="%PUBLIC_URL%/opengraphimage.png" />
+    <meta property="og:image:alt" content="RapidWorks Brand Visual" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="RapidWorks - IDEAS INTO ACTION" />
+    <meta name="twitter:description" content="Transform your ideas into action with RapidWorks." />
+    <meta name="twitter:image" content="%PUBLIC_URL%/opengraphimage.png" />
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root">
+      <!-- Fallback content for mobile debugging -->
+      <div id="loading-fallback" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        z-index: 9999;
+      ">
+                  <div style="text-align: center;">
+            <div style="
+              width: 48px;
+              height: 48px;
+              border: 2px solid transparent;
+              border-bottom: 2px solid #7C3BEC;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+              margin: 0 auto;
+            "></div>
+          </div>
+      </div>
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
+    
+      <script>
+        // Simple loading screen removal
+        function removeLoadingScreen() {
+          const fallback = document.getElementById('loading-fallback');
+          if (fallback) {
+            console.log('🚀 Removing loading screen');
+            fallback.style.opacity = '0';
+            setTimeout(() => {
+              if (fallback.parentNode) {
+                fallback.remove();
+              }
+            }, 200);
+          }
+        }
+        
+        // Watch for React app mount
+        const observer = new MutationObserver(() => {
+          const root = document.getElementById('root');
+          // Check if React has mounted (more than just loading screen)
+          if (root && root.children.length > 1) {
+            console.log('✅ React app mounted - removing loading screen');
+            removeLoadingScreen();
+            observer.disconnect();
+          }
+        });
+        
+        // Start watching
+        const rootElement = document.getElementById('root');
+        if (rootElement) {
+          observer.observe(rootElement, { childList: true });
+        }
+        
+        // Fallback timeout (3 seconds max)
+        setTimeout(() => {
+          console.log('⏰ Timeout - removing loading screen');
+          removeLoadingScreen();
+          if (observer) observer.disconnect();
+        }, 3000);
+      </script>
+  </body>
+</html>

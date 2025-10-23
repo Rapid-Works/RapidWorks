@@ -1,0 +1,1005 @@
+import { 
+  collection, 
+  doc as firestoreDoc, 
+  addDoc, 
+  updateDoc, 
+  getDoc, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy,
+  serverTimestamp,
+  writeBatch,
+  setDoc,
+  limit as firestoreLimit,
+  startAfter
+} from 'firebase/firestore';
+import { db } from '../firebase/config';
+
+/**
+ * Update organization information (for MID/Company Info form)
+ * @param {string} organizationId - The organization ID to update
+ * @param {Object} infoData - The information data to update
+ * @returns {Promise<void>}
+ */
+export const updateOrganizationInfo = async (organizationId, infoData) => {
+  try {
+    console.log('💾 Updating organization information:', organizationId);
+    
+    const orgRef = firestoreDoc(db, 'organizations', organizationId);
+    
+    // Prepare update object with company/MID information
+    const updateData = {
+      ...infoData,
+      updatedAt: serverTimestamp()
+    };
+    
+    await updateDoc(orgRef, updateData);
+    
+    console.log('✅ Organization information updated successfully');
+  } catch (error) {
+    console.error('❌ Error updating organization information:', error);
+    throw new Error(`Failed to update organization information: ${error.message}`);
+  }
+};
+
+/**
+ * Get organization information by ID
+ * @param {string} organizationId - The organization ID
+ * @returns {Promise<Object|null>} - The organization data or null
+ */
+export const getOrganizationInfo = async (organizationId) => {
+  try {
+    console.log('📖 Getting organization information:', organizationId);
+    
+    const orgRef = firestoreDoc(db, 'organizations', organizationId);
+    const orgSnap = await getDoc(orgRef);
+    
+    if (orgSnap.exists()) {
+      console.log('✅ Organization information retrieved');
+      return { id: orgSnap.id, ...orgSnap.data() };
+    } else {
+      console.log('❌ Organization not found');
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Error getting organization information:', error);
+    throw new Error(`Failed to get organization information: ${error.message}`);
+  }
+};
+
+// Check if user has already created an organization and is still a member
+export const hasUserCreatedOrganization = async (userId) => {
+  try {
+    // First, get organizations created by this user
+    const organizationsQuery = query(
+      collection(db, 'organizations'),
+      where('createdBy', '==', userId)
+    );
+    
+    const organizationsSnapshot = await getDocs(organizationsQuery);
+    
+    if (organizationsSnapshot.empty) {
+      return false; // User hasn't created any organizations
+    }
+    
+    // Check if user is still an active member of any organization they created
+    for (const orgDoc of organizationsSnapshot.docs) {
+      const organizationId = orgDoc.id;
+      
+      // Check if user is still an active member of this organization
+      const membershipQuery = query(
+        collection(db, 'organizationMembers'),
+        where('organizationId', '==', organizationId),
+        where('userId', '==', userId),
+        where('status', '==', 'active')
+      );
+      
+      const membershipSnapshot = await getDocs(membershipQuery);
+      
+      if (!membershipSnapshot.empty) {
+        return true; // User is still an active member of an organization they created
+      }
+    }
+    
+    return false; // User created organizations but is not an active member of any
+  } catch (error) {
+    console.error('Error checking if user has created organization:', error);
+    throw new Error('Failed to check organization creation status');
+  }
+};
+
+// Check if user has any organization membership (created or invited)
+export const hasUserOrganizationMembership = async (userId) => {
+  try {
+    const membersQuery = query(
+      collection(db, 'organizationMembers'),
+      where('userId', '==', userId),
+      where('status', '==', 'active')
+    );
+    
+    const querySnapshot = await getDocs(membersQuery);
+    return !querySnapshot.empty; // Returns true if user is a member of any organization
+  } catch (error) {
+    console.error('Error checking if user has organization membership:', error);
+    throw new Error('Failed to check organization membership status');
+  }
+};
+
+// Organization CRUD operations
+export const createOrganization = async (userId, orgData) => {
+  try {
+    const batch = writeBatch(db);
+    
+    // Create organization document
+    const orgRef = firestoreDoc(collection(db, 'organizations'));
+    const organizationData = {
+      ...orgData,
+      createdBy: userId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    batch.set(orgRef, organizationData);
+    
+    // Create organization member (creator as admin)
+    const memberRef = firestoreDoc(collection(db, 'organizationMembers'));
+    const memberData = {
+      organizationId: orgRef.id,
+      userId: userId,
+      role: 'admin',
+      permissions: {
+        canRequestExperts: true,
+        canSeeAllRequests: true,
+        canManageMembers: true
+      },
+      joinedAt: serverTimestamp(),
+      invitedBy: userId,
+      status: 'active'
+    };
+    batch.set(memberRef, memberData);
+    
+    // Update user's currentOrganizationId (create document if it doesn't exist)
+    const userRef = firestoreDoc(db, 'users', userId);
+    batch.set(userRef, {
+      currentOrganizationId: orgRef.id,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    
+    await batch.commit();
+    
+    return { id: orgRef.id, ...organizationData };
+  } catch (error) {
+    console.error('Error creating organization:', error);
+    throw new Error('Failed to create organization');
+  }
+};
+
+export const getOrganization = async (organizationId) => {
+  try {
+    const orgDoc = await getDoc(firestoreDoc(db, 'organizations', organizationId));
+    if (orgDoc.exists()) {
+      return { id: orgDoc.id, ...orgDoc.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting organization:', error);
+    throw new Error('Failed to get organization');
+  }
+};
+
+export const getUserOrganizations = async (userId) => {
+  try {
+    const membersQuery = query(
+      collection(db, 'organizationMembers'),
+      where('userId', '==', userId),
+      where('status', '==', 'active')
+    );
+    
+    const memberDocs = await getDocs(membersQuery);
+    const organizations = [];
+    
+    for (const memberDoc of memberDocs.docs) {
+      const memberData = memberDoc.data();
+      const org = await getOrganization(memberData.organizationId);
+      if (org) {
+        organizations.push({
+          ...org,
+          membershipId: memberDoc.id,
+          role: memberData.role,
+          permissions: memberData.permissions,
+          joinedAt: memberData.joinedAt
+        });
+      }
+    }
+    
+    return organizations;
+  } catch (error) {
+    console.error('Error getting user organizations:', error);
+    throw new Error('Failed to get user organizations');
+  }
+};
+
+export const switchToOrganization = async (userId, organizationId) => {
+  try {
+    const userRef = firestoreDoc(db, 'users', userId);
+    await setDoc(userRef, {
+      currentOrganizationId: organizationId,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    
+    // Notify other components that organization context changed
+    window.dispatchEvent(new CustomEvent('organizationContextChanged'));
+  } catch (error) {
+    console.error('Error switching to organization:', error);
+    throw new Error('Failed to switch to organization');
+  }
+};
+
+export const switchToPersonal = async (userId) => {
+  try {
+    const userRef = firestoreDoc(db, 'users', userId);
+    await setDoc(userRef, {
+      currentOrganizationId: null,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    
+    // Notify other components that organization context changed
+    window.dispatchEvent(new CustomEvent('organizationContextChanged'));
+  } catch (error) {
+    console.error('Error switching to personal:', error);
+    throw new Error('Failed to switch to personal account');
+  }
+};
+
+// Organization member management
+export const getOrganizationInvites = async (organizationId) => {
+  try {
+    const invitationsQuery = query(
+      collection(db, 'organizationInvitations'),
+      where('organizationId', '==', organizationId),
+      where('status', '==', 'pending')
+    );
+    
+    const invitationDocs = await getDocs(invitationsQuery);
+    const invites = [];
+    
+    for (const invitationDoc of invitationDocs.docs) {
+      const invitationData = invitationDoc.data();
+      
+      // Check if invitation hasn't expired
+      const isExpired = invitationData.expiresAt.toDate() < new Date();
+      
+      if (!isExpired) {
+        invites.push({
+          id: invitationDoc.id,
+          ...invitationData
+        });
+      }
+    }
+    
+    return invites;
+  } catch (error) {
+    console.error('Error getting organization invites:', error);
+    throw new Error('Failed to get organization invites');
+  }
+};
+
+export const getOrganizationMembers = async (organizationId) => {
+  try {
+    // Get active members
+    const membersQuery = query(
+      collection(db, 'organizationMembers'),
+      where('organizationId', '==', organizationId),
+      where('status', '==', 'active'),
+      orderBy('joinedAt', 'desc')
+    );
+    
+    const memberDocs = await getDocs(membersQuery);
+    const members = [];
+    
+    for (const memberDoc of memberDocs.docs) {
+      const memberData = memberDoc.data();
+      
+      // Get user details
+      const userDoc = await getDoc(firestoreDoc(db, 'users', memberData.userId));
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      
+      // Better fallback for missing user data
+      let userEmail = 'Unknown';
+      let userName = 'Unknown';
+      
+      if (userData.email) {
+        userEmail = userData.email;
+        userName = userData.displayName || userData.email.split('@')[0];
+      } else if (memberData.userId) {
+        // If no user document exists, show the user ID as a fallback
+        userName = `User ${memberData.userId.substring(0, 8)}...`;
+        userEmail = `Missing user data (${memberData.userId.substring(0, 8)}...)`;
+      }
+      
+      members.push({
+        id: memberDoc.id,
+        type: 'member',
+        ...memberData,
+        userEmail,
+        userName
+      });
+    }
+    
+    // Get pending invitations
+    const invitationsQuery = query(
+      collection(db, 'organizationInvitations'),
+      where('organizationId', '==', organizationId),
+      where('status', '==', 'pending')
+    );
+    
+    const invitationDocs = await getDocs(invitationsQuery);
+    
+    for (const invitationDoc of invitationDocs.docs) {
+      const invitationData = invitationDoc.data();
+      
+      // Check if invitation hasn't expired
+      const isExpired = invitationData.expiresAt.toDate() < new Date();
+      
+      if (!isExpired) {
+        members.push({
+          id: invitationDoc.id,
+          type: 'invitation',
+          userEmail: invitationData.inviteeEmail,
+          userName: invitationData.inviteeEmail.split('@')[0],
+          role: 'member',
+          permissions: invitationData.permissions,
+          joinedAt: invitationData.createdAt,
+          status: 'pending',
+          inviterName: invitationData.inviterName || 'Unknown'
+        });
+      }
+    }
+    
+    // Sort by joinedAt/createdAt desc
+    members.sort((a, b) => {
+      const aDate = a.joinedAt?.toDate?.() || new Date(a.joinedAt);
+      const bDate = b.joinedAt?.toDate?.() || new Date(b.joinedAt);
+      return bDate - aDate;
+    });
+    
+    return members;
+  } catch (error) {
+    console.error('Error getting organization members:', error);
+    throw new Error('Failed to get organization members');
+  }
+};
+
+export const generateInvitationToken = () => {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+};
+
+export const createInvitation = async (organizationId, inviterUserId, inviteeEmail, permissions = {}, inviterInfo = {}, role = 'member') => {
+  try {
+    const isAdmin = role === 'admin';
+    
+    const invitationData = {
+      organizationId,
+      inviterUserId,
+      inviterName: inviterInfo.name || 'Unknown',
+      inviterEmail: inviterInfo.email || '',
+      inviteeEmail: inviteeEmail.toLowerCase(),
+      role: role,
+      permissions: {
+        canRequestExperts: isAdmin || permissions.canRequestExperts || false,
+        canSeeAllRequests: isAdmin || permissions.canSeeAllRequests || false,
+        canManageMembers: isAdmin // Admins can manage members
+      },
+      token: generateInvitationToken(),
+      status: 'pending',
+      createdAt: serverTimestamp(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+    };
+    
+    const invitationRef = await addDoc(collection(db, 'organizationInvitations'), invitationData);
+    
+    return {
+      id: invitationRef.id,
+      ...invitationData,
+      invitationLink: `${window.location.origin}/organization/invite/${invitationData.token}`
+    };
+  } catch (error) {
+    console.error('Error creating invitation:', error);
+    throw new Error('Failed to create invitation');
+  }
+};
+
+export const getInvitationByToken = async (token) => {
+  try {
+    const invitationsQuery = query(
+      collection(db, 'organizationInvitations'),
+      where('token', '==', token),
+      where('status', '==', 'pending')
+    );
+    
+    const invitationDocs = await getDocs(invitationsQuery);
+    
+    if (invitationDocs.empty) {
+      return null;
+    }
+    
+    const invitationData = invitationDocs.docs[0].data();
+    const invitationId = invitationDocs.docs[0].id;
+    
+    // Check if invitation has expired
+    if (invitationData.expiresAt.toDate() < new Date()) {
+      return null;
+    }
+    
+    // Get organization details
+    const org = await getOrganization(invitationData.organizationId);
+    
+    return {
+      id: invitationId,
+      ...invitationData,
+      organization: org,
+      inviterName: invitationData.inviterName || 'Unknown'
+    };
+  } catch (error) {
+    console.error('Error getting invitation:', error);
+    throw new Error('Failed to get invitation');
+  }
+};
+
+export const acceptInvitation = async (token, userId, userEmail) => {
+  try {
+    const invitation = await getInvitationByToken(token);
+    
+    if (!invitation) {
+      throw new Error('Invalid or expired invitation');
+    }
+    
+    if (invitation.inviteeEmail !== userEmail.toLowerCase()) {
+      throw new Error('This invitation was sent to a different email address');
+    }
+    
+    // Check if user is already a member of this specific organization
+    const existingMemberQuery = query(
+      collection(db, 'organizationMembers'),
+      where('organizationId', '==', invitation.organizationId),
+      where('userId', '==', userId),
+      where('status', '==', 'active')
+    );
+    
+    const existingMembers = await getDocs(existingMemberQuery);
+    if (!existingMembers.empty) {
+      throw new Error('You are already a member of this organization');
+    }
+    
+    const batch = writeBatch(db);
+    
+    // Remove user from all existing organization memberships (since users can only be in one org)
+    const allUserMembershipsQuery = query(
+      collection(db, 'organizationMembers'),
+      where('userId', '==', userId),
+      where('status', '==', 'active')
+    );
+    
+    const allUserMemberships = await getDocs(allUserMembershipsQuery);
+    console.log(`🔄 Removing user from ${allUserMemberships.size} existing organization memberships`);
+    
+    allUserMemberships.forEach((membershipDoc) => {
+      batch.update(membershipDoc.ref, {
+        status: 'inactive',
+        leftAt: serverTimestamp(),
+        leftReason: 'joined_new_organization'
+      });
+    });
+    
+    // Create organization member
+    const memberRef = firestoreDoc(collection(db, 'organizationMembers'));
+    const memberData = {
+      organizationId: invitation.organizationId,
+      userId: userId,
+      role: invitation.role || 'member', // Use role from invitation
+      permissions: invitation.permissions,
+      joinedAt: serverTimestamp(),
+      invitedBy: invitation.inviterUserId,
+      status: 'active'
+    };
+    batch.set(memberRef, memberData);
+    
+    // Update invitation status
+    const invitationRef = firestoreDoc(db, 'organizationInvitations', invitation.id);
+    batch.update(invitationRef, {
+      status: 'accepted',
+      acceptedBy: userId,
+      acceptedAt: serverTimestamp()
+    });
+    
+    // Switch user to the organization
+    const userRef = firestoreDoc(db, 'users', userId);
+    batch.set(userRef, {
+      currentOrganizationId: invitation.organizationId,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    
+    // Note: With simplified branding kit logic, organization members automatically see
+    // organization kits based on organizationName match, no need to add emails individually
+    
+    await batch.commit();
+    
+    return invitation.organization;
+  } catch (error) {
+    console.error('Error accepting invitation:', error);
+    throw error;
+  }
+};
+
+export const updateMemberPermissions = async (membershipId, permissions) => {
+  try {
+    const memberRef = firestoreDoc(db, 'organizationMembers', membershipId);
+    await updateDoc(memberRef, {
+      permissions,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error updating member permissions:', error);
+    throw new Error('Failed to update member permissions');
+  }
+};
+
+export const removeMember = async (membershipId) => {
+  try {
+    // Get member reference and verify it exists
+    const memberRef = firestoreDoc(db, 'organizationMembers', membershipId);
+    const memberDoc = await getDoc(memberRef);
+    
+    if (!memberDoc.exists()) {
+      throw new Error('Member not found');
+    }
+    
+    // Note: With simplified branding kit logic, no need to update kit emails individually
+    
+    const batch = writeBatch(db);
+    
+    // Remove member
+    batch.update(memberRef, {
+      status: 'removed',
+      removedAt: serverTimestamp()
+    });
+    
+    // Note: With simplified branding kit logic, organization members automatically see
+    // organization kits based on organizationName match, no need to remove emails individually
+    
+    await batch.commit();
+  } catch (error) {
+    console.error('Error removing member:', error);
+    throw new Error('Failed to remove member');
+  }
+};
+
+export const leaveOrganization = async (userId, organizationId) => {
+  try {
+    // Find the user's membership in this organization
+    const membersQuery = query(
+      collection(db, 'organizationMembers'),
+      where('userId', '==', userId),
+      where('organizationId', '==', organizationId),
+      where('status', '==', 'active')
+    );
+    
+    const memberDocs = await getDocs(membersQuery);
+    
+    if (memberDocs.empty) {
+      throw new Error('You are not a member of this organization');
+    }
+    
+    const memberDoc = memberDocs.docs[0];
+    const memberData = memberDoc.data();
+    
+    // Check if user is the last admin
+    if (memberData.role === 'admin') {
+      const adminQuery = query(
+        collection(db, 'organizationMembers'),
+        where('organizationId', '==', organizationId),
+        where('role', '==', 'admin'),
+        where('status', '==', 'active')
+      );
+      
+      const adminDocs = await getDocs(adminQuery);
+      
+      if (adminDocs.size === 1) {
+        throw new Error('Cannot leave organization: You are the last administrator. Please transfer admin rights to another member or delete the organization.');
+      }
+    }
+    
+    const batch = writeBatch(db);
+    
+    // Mark membership as inactive
+    batch.update(memberDoc.ref, {
+      status: 'inactive',
+      leftAt: serverTimestamp(),
+      leftReason: 'user_left'
+    });
+    
+    // Switch user to personal account if they're currently in this organization
+    const userRef = firestoreDoc(db, 'users', userId);
+    batch.update(userRef, {
+      currentOrganizationId: null,
+      updatedAt: serverTimestamp()
+    });
+    
+    await batch.commit();
+    
+    // Notify other components that organization context changed
+    window.dispatchEvent(new CustomEvent('organizationContextChanged'));
+    
+    return true;
+  } catch (error) {
+    console.error('Error leaving organization:', error);
+    // Re-throw the original error to preserve the specific error message
+    throw error;
+  }
+};
+
+// Check user permissions in organization
+export const getUserOrgPermissions = async (userId, organizationId) => {
+  try {
+    const memberQuery = query(
+      collection(db, 'organizationMembers'),
+      where('userId', '==', userId),
+      where('organizationId', '==', organizationId),
+      where('status', '==', 'active')
+    );
+    
+    const memberDocs = await getDocs(memberQuery);
+    
+    if (memberDocs.empty) {
+      return null;
+    }
+    
+    const memberData = memberDocs.docs[0].data();
+    return {
+      role: memberData.role,
+      permissions: memberData.permissions
+    };
+  } catch (error) {
+    console.error('Error getting user org permissions:', error);
+    return null;
+  }
+};
+
+// Get current user context (personal vs organization)
+export const getCurrentUserContext = async (userId) => {
+  try {
+    const userDoc = await getDoc(firestoreDoc(db, 'users', userId));
+    
+    if (!userDoc.exists()) {
+      return { type: 'personal', organization: null, permissions: null };
+    }
+    
+    const userData = userDoc.data();
+    const currentOrgId = userData.currentOrganizationId;
+    
+    if (!currentOrgId) {
+      return { type: 'personal', organization: null, permissions: null };
+    }
+    
+    const organization = await getOrganization(currentOrgId);
+    const permissions = await getUserOrgPermissions(userId, currentOrgId);
+    
+    // If organization doesn't exist, fall back to personal context
+    if (!organization) {
+      console.warn(`Organization ${currentOrgId} not found, falling back to personal context`);
+      return { type: 'personal', organization: null, permissions: null };
+    }
+    
+    return {
+      type: 'organization',
+      organization,
+      permissions
+    };
+  } catch (error) {
+    console.error('Error getting current user context:', error);
+    return { type: 'personal', organization: null, permissions: null };
+  }
+};
+
+const organizationService = {
+  createOrganization,
+  getOrganization,
+  getUserOrganizations,
+  switchToOrganization,
+  switchToPersonal,
+  getOrganizationMembers,
+  createInvitation,
+  getInvitationByToken,
+  acceptInvitation,
+  updateMemberPermissions,
+  removeMember,
+  leaveOrganization,
+  getUserOrgPermissions,
+  getCurrentUserContext
+};
+
+// Utility functions for debugging and fixing data issues
+export const debugOrganizationMembers = async (organizationId) => {
+  try {
+    console.log('🔍 Debugging organization members for:', organizationId);
+    
+    // Get all members
+    const membersQuery = query(
+      collection(db, 'organizationMembers'),
+      where('organizationId', '==', organizationId)
+    );
+    const memberDocs = await getDocs(membersQuery);
+    
+    console.log(`Found ${memberDocs.size} organization members:`);
+    
+    for (const memberDoc of memberDocs.docs) {
+      const memberData = memberDoc.data();
+      console.log('Member:', {
+        id: memberDoc.id,
+        userId: memberData.userId,
+        role: memberData.role,
+        status: memberData.status,
+        joinedAt: memberData.joinedAt?.toDate?.()
+      });
+      
+      // Check if user document exists
+      if (memberData.userId) {
+        const userDoc = await getDoc(firestoreDoc(db, 'users', memberData.userId));
+        console.log(`User ${memberData.userId} exists:`, userDoc.exists());
+        if (userDoc.exists()) {
+          console.log('User data:', userDoc.data());
+        }
+      }
+    }
+    
+    // Get all invitations
+    const invitationsQuery = query(
+      collection(db, 'organizationInvitations'),
+      where('organizationId', '==', organizationId)
+    );
+    const invitationDocs = await getDocs(invitationsQuery);
+    
+    console.log(`Found ${invitationDocs.size} invitations:`);
+    invitationDocs.forEach(invitationDoc => {
+      console.log('Invitation:', { id: invitationDoc.id, ...invitationDoc.data() });
+    });
+    
+  } catch (error) {
+    console.error('Error debugging organization members:', error);
+  }
+};
+
+export const cleanupDuplicateInvitations = async (organizationId) => {
+  try {
+    console.log('🧹 Cleaning up duplicate invitations for:', organizationId);
+    
+    const invitationsQuery = query(
+      collection(db, 'organizationInvitations'),
+      where('organizationId', '==', organizationId),
+      where('status', '==', 'pending')
+    );
+    
+    const invitationDocs = await getDocs(invitationsQuery);
+    const invitationsByEmail = new Map();
+    const duplicatesToDelete = [];
+    
+    // Group invitations by email
+    invitationDocs.forEach(doc => {
+      const data = doc.data();
+      const email = data.inviteeEmail;
+      
+      if (invitationsByEmail.has(email)) {
+        // This is a duplicate - mark for deletion (keep the first one)
+        duplicatesToDelete.push(doc.id);
+      } else {
+        invitationsByEmail.set(email, doc.id);
+      }
+    });
+    
+    // Delete duplicates
+    const batch = writeBatch(db);
+    duplicatesToDelete.forEach(invitationId => {
+      const invitationRef = firestoreDoc(db, 'organizationInvitations', invitationId);
+      batch.delete(invitationRef);
+    });
+    
+    if (duplicatesToDelete.length > 0) {
+      await batch.commit();
+      console.log(`Deleted ${duplicatesToDelete.length} duplicate invitations`);
+    }
+    
+    return duplicatesToDelete.length;
+  } catch (error) {
+    console.error('Error cleaning up duplicate invitations:', error);
+    throw error;
+  }
+};
+
+export const fixMissingUserData = async (organizationId, currentUserId, currentUserData) => {
+  try {
+    console.log('🔧 Fixing missing user data for organization:', organizationId);
+    
+    const membersQuery = query(
+      collection(db, 'organizationMembers'),
+      where('organizationId', '==', organizationId),
+      where('status', '==', 'active')
+    );
+    
+    const memberDocs = await getDocs(membersQuery);
+    let fixedCount = 0;
+    
+    const batch = writeBatch(db);
+    
+    for (const memberDoc of memberDocs.docs) {
+      const memberData = memberDoc.data();
+      
+      if (memberData.userId) {
+        const userRef = firestoreDoc(db, 'users', memberData.userId);
+        const userDoc = await getDoc(userRef);
+        
+        if (!userDoc.exists()) {
+          console.log(`Creating missing user document for: ${memberData.userId}`);
+          
+          // If this is the current user, use their data
+          if (memberData.userId === currentUserId) {
+            batch.set(userRef, {
+              email: currentUserData.email,
+              displayName: currentUserData.displayName,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+            fixedCount++;
+          } else {
+            // For other users, create a placeholder document
+            // This will be updated when they log in next time
+            batch.set(userRef, {
+              email: `user-${memberData.userId.substring(0, 8)}@placeholder.com`,
+              displayName: `User ${memberData.userId.substring(0, 8)}`,
+              isPlaceholder: true,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+            fixedCount++;
+            console.log(`Created placeholder user data for ${memberData.userId}`);
+          }
+        }
+      }
+    }
+    
+    if (fixedCount > 0) {
+      await batch.commit();
+      console.log(`Fixed ${fixedCount} user records`);
+    }
+    
+    return fixedCount;
+  } catch (error) {
+    console.error('Error fixing missing user data:', error);
+    throw error;
+  }
+};
+
+// Admin function to get all organizations (optimized with pagination and caching)
+export const getAllOrganizations = async (options = {}) => {
+  const { 
+    limit = 50, 
+    startAfter = null, 
+    useCache = true 
+  } = options;
+
+  try {
+    // Build paginated query
+    const organizationsRef = collection(db, 'organizations');
+    let q = query(organizationsRef, orderBy('createdAt', 'desc'));
+    
+    if (limit) {
+      q = query(q, firestoreLimit(limit));
+    }
+    
+    if (startAfter) {
+      q = query(q, startAfter(startAfter));
+    }
+    
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      return { organizations: [], hasMore: false, lastDoc: null };
+    }
+
+    // Get organization IDs for this page
+    const orgIds = snapshot.docs.map(doc => doc.id);
+    
+    // Optimized member fetching with parallel batches
+    const membersRef = collection(db, 'organizationMembers');
+    const memberPromises = [];
+    
+    // Process in parallel batches of 10 (Firestore 'in' query limitation)
+    for (let i = 0; i < orgIds.length; i += 10) {
+      const batch = orgIds.slice(i, i + 10);
+      const batchPromise = getDocs(query(
+        membersRef,
+        where('organizationId', 'in', batch),
+        where('status', '==', 'active')
+      ));
+      memberPromises.push(batchPromise);
+    }
+    
+    // Execute all member queries in parallel
+    const memberSnapshots = await Promise.all(memberPromises);
+    const allMembers = memberSnapshots.flatMap(snapshot => 
+      snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    );
+
+    // Group members by organization and collect admin user IDs
+    const membersByOrg = {};
+    const adminUserIds = new Set();
+    
+    allMembers.forEach(member => {
+      const orgId = member.organizationId;
+      if (!membersByOrg[orgId]) {
+        membersByOrg[orgId] = [];
+      }
+      membersByOrg[orgId].push(member);
+      
+      if (member.role === 'admin') {
+        adminUserIds.add(member.userId);
+      }
+    });
+
+    // Batch fetch admin user data with error handling
+    const adminUsers = {};
+    if (adminUserIds.size > 0) {
+      const userPromises = Array.from(adminUserIds).slice(0, 50).map(async (userId) => {
+        try {
+          const userDoc = await getDoc(firestoreDoc(db, 'users', userId));
+          return userDoc.exists() ? { id: userId, ...userDoc.data() } : null;
+        } catch (error) {
+          console.warn(`Failed to fetch user ${userId}:`, error);
+          return null;
+        }
+      });
+      
+      const userResults = await Promise.all(userPromises);
+      userResults.forEach(user => {
+        if (user) {
+          adminUsers[user.id] = user;
+        }
+      });
+    }
+
+    // Build final organization list
+    const organizations = snapshot.docs.map(doc => {
+      const orgData = { id: doc.id, ...doc.data() };
+      const members = membersByOrg[doc.id] || [];
+      
+      orgData.memberCount = members.length;
+      
+      const admin = members.find(member => member.role === 'admin');
+      if (admin && adminUsers[admin.userId]) {
+        const adminUser = adminUsers[admin.userId];
+        orgData.adminName = adminUser.displayName || adminUser.email?.split('@')[0] || 'Unknown';
+        orgData.adminEmail = adminUser.email || 'Unknown';
+      } else {
+        orgData.adminName = 'Unknown';
+        orgData.adminEmail = 'Unknown';
+      }
+      
+      return orgData;
+    });
+    
+    // Determine if there are more results
+    const hasMore = snapshot.docs.length === limit;
+    const lastDoc = hasMore ? snapshot.docs[snapshot.docs.length - 1] : null;
+    
+    return {
+      organizations,
+      hasMore,
+      lastDoc,
+      total: organizations.length
+    };
+  } catch (error) {
+    console.error('Error fetching all organizations:', error);
+    throw new Error('Failed to fetch organizations');
+  }
+};
+
+export default organizationService;
