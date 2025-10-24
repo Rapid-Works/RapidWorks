@@ -233,7 +233,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
               }}
               className="text-sm text-gray-500 hover:text-gray-700 underline transition-colors"
             >
-              Already part of an organization, reach out to admin to add you.
+              Already part of an organization? Reach out to your admin to add you.
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
-export const midTranslations = {
+
+export const midTranslations = { 
   de: {
     // Header
     title: 'BENUTZER',
@@ -121,6 +122,8 @@ export const midTranslations = {
       professional: 'Erbringung von freiberuflichen wissenschaftlichen technischen Dienstleistungen (z.B. Rechts-und Steuerberatung, Unternehmensberatung, Architekturbüros, Fotografie etc.)',
       other: 'Sonstiges'
     },
+    employeesTitle: 'Mitarbeiter',
+    employeesHelp: "Einigen Förderprogramme verwenden die Gesamtzahl der Beschäftigten, andere die Vollzeitäquivalente. Falls du die exakten Zahlen nicht auswendig kennst, reichen grobe Werte. Allerdings liegen die Schwellenwerte für Förderungen bei 10, 50 und 250 Mitarbeitern. Es ist also nur wichtig, dass deine Zahl im richtigen Bereich (0-9, 10-49, 50-249, 250+) liegt. Innerhalb dieses Bereiches darf sie ruhig ungenau sein (bspw. 25 statt 29 ist ok, aber 10 statt 9 ist ein relevanter Unterschied).",
     employees: 'Mitarbeiteranzahl einschließlich Partner- und verbundener Unternehmen (Entsprechend Vollzeit-äquivalente)',
     
     // MID Funding History
@@ -199,7 +202,7 @@ export const midTranslations = {
     homepage: 'Homepage',
     legalName: 'Legal name of the organization',
     legalNameHelp: '(You can find the legal name of your company in the commercial register extract)',
-    organizationInfoDescription: 'This data represents your company. All fields are optional, but those marked with MID are required to participate in the MID lottery.',
+    organizationInfoDescription: `This data represents your company. All fields are optional, but those marked with MID are required to participate in the MID lottery.`,
     quickSetupTitle: 'Quick Setup',
     quickSetupDescription: 'You can optionally enter your organization\'s Impressum URL here and click the button so our form tries to fill some fields automatically based on the public information in your Impressum. It only takes 1 second. You can of course edit any field afterwards.',
     impressumUrlPlaceholder: 'https://yourwebsite.com/imprint',
@@ -294,6 +297,9 @@ export const midTranslations = {
       professional: 'Provision of Professional Scientific Technical Services (e.g. Legal and Tax Consulting, Business Consulting, Architecture Offices, Photography etc.)',
       other: 'Other'
     },
+
+    employeesTitle: 'Employees',
+    employeesHelp: "Some subsidy programs use the total number of employees, others use full-time equivalents. If you don't know the exact figures off the top of your head, rough estimates will suffice. However, the thresholds for subsidies are 10, 50, and 250 employees. So it is only important that your number is in the correct range (0-9, 10-49, 50-249, 250+). Within this range, it can be inaccurate (e.g., 25 instead of 29 is okay, but 10 instead of 9 is a relevant difference).",
     employees: 'Number of employees including partner and affiliated companies (Full-time equivalents)',
     
     // MID Funding History

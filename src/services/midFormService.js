@@ -345,8 +345,8 @@ export const validatePostalCode = (postalCode) => {
 // Tax ID validation (XXX/XXXX/XXX format)
 export const validateTaxId = (taxId) => {
   if (!taxId || taxId.trim() === '') return null;
-  const taxIdRegex = /^\d{3}\/\d{4}\/\d{3}$/;
-  return taxIdRegex.test(taxId) ? null : 'Tax ID must be in format XXX/XXXX/XXX (11 digits)';
+  const taxIdRegex = /^\d{3}\/\d{4}\/\d{4}$/;
+  return taxIdRegex.test(taxId) ? null : 'Tax ID must be in format XXX/XXXX/XXXX (11 digits)';
 };
 
 // IBAN validation (2 letters + 20 digits for German IBANs)
@@ -467,20 +467,20 @@ export const validateMIDFormData = (formData, isUpdate = false) => {
     }
   }
   
-  // Tax ID validation (11 digits format: XXX/XXXX/XXX)
+  // Tax ID validation (11 digits format: XXX/XXXX/XXXX)
   if (formData.taxId && formData.taxId.trim() !== '') {
-    const taxIdRegex = /^\d{3}\/\d{4}\/\d{3}$/;
+    const taxIdRegex = /^\d{3}\/\d{4}\/\d{4}$/;
     if (!taxIdRegex.test(formData.taxId)) {
-      errors.push('Tax ID must be in format XXX/XXXX/XXX (11 digits)');
+      errors.push('Tax ID must be in format XXX/XXXX/XXXX (11 digits)');
     }
   }
   
-  // IBAN validation (2 letters + 16 digits)
+  // IBAN validation (2 letters + 20 digits for German IBANs)
   if (formData.iban && formData.iban.trim() !== '') {
-    const ibanRegex = /^[A-Z]{2}\d{16}$/;
+    const ibanRegex = /^[A-Z]{2}\d{20}$/;
     const cleanIban = formData.iban.replace(/\s/g, '');
     if (!ibanRegex.test(cleanIban)) {
-      errors.push('IBAN must be 2 letters followed by 16 digits (e.g., DE11 2222 3333 4444 55)');
+      errors.push('IBAN must be 2 letters followed by 20 digits (e.g., DE11 2222 3333 4444 5555 55)');
     }
   }
   

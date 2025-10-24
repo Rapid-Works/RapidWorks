@@ -332,7 +332,7 @@ const PartnersPage = () => {
             <p className="text-gray-600 text-lg mb-8">
               {content.partners.subtitle}
             </p>
-            <h3 className="text-xl font-semibold mb-6">{content.partners.selectionTitle}</h3>
+            <h3 className="text-xl font-semibold mb-6 text-black">{content.partners.selectionTitle}</h3>
           </div>
 
           <div className="bg-white rounded-3xl shadow-lg overflow-hidden w-full">
@@ -360,7 +360,7 @@ const PartnersPage = () => {
                             <select
                               value={partnerNeeds[partner.id] || "0"}
                               onChange={(e) => handleNeedChange(partner.id, e.target.value)}
-                              className="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#073E47] focus:border-[#073E47]"
+                              className="block w-full px-2 py-1 border border-gray-300 rounded-md text-sm text-black focus:outline-none focus:ring-1 focus:ring-[#073E47] focus:border-[#073E47]"
                             >
                               {monthOptions.map(opt => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -408,7 +408,7 @@ const PartnersPage = () => {
                   )}
 
                  <div className="p-8">
-                    <h2 className="text-2xl font-bold mb-6">{content.form.title}</h2>
+                    <h2 className="text-2xl font-bold mb-6 text-black">{content.form.title}</h2>
 
                     {!submitted ? (
                       <form onSubmit={handleSubmit} className="space-y-6">

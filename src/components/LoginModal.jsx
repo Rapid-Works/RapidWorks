@@ -3,10 +3,11 @@
 import React, { useState, useContext } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, X } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, X, CheckCircle } from 'lucide-react';
 
 const LoginModal = ({ 
   isOpen, 
@@ -22,6 +23,7 @@ const LoginModal = ({
   const [loading, setLoading] = useState(false);
   const [isSignup, setIsSignup] = useState(modalContext === 'task' || modalContext === 'branding');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showEmailVerificationAlert, setShowEmailVerificationAlert] = useState(false);
   const { login, signup, loginWithGoogle } = useAuth();
   const router = useRouter();
   const context = useLanguage();
@@ -146,16 +148,10 @@ const LoginModal = ({
       if (isSignup) {
         result = await signup(email, password);
         
-        // For signup, call success callback or redirect to dashboard (temporarily)
-        if (EMAIL_VERIFICATION_DISABLED) {
-          if (onLoginSuccess) {
-            onLoginSuccess(result);
-          } else {
-            router.push('/dashboard');
-          }
-        } else {
-          router.push('/verify-email');
-        }
+        // For signup, show email verification alert instead of redirecting
+        setShowEmailVerificationAlert(true);
+        setLoading(false);
+        return;
       } else {
         result = await login(email, password);
         
@@ -279,6 +275,7 @@ const LoginModal = ({
     setConfirmPassword('');
     setError('');
     setShowPassword(false);
+    setShowEmailVerificationAlert(false);
     // Reset to appropriate mode based on context
     setIsSignup(modalContext === 'task' || modalContext === 'branding');
   };
@@ -294,9 +291,64 @@ const LoginModal = ({
     setConfirmPassword('');
   };
 
+  // Email verification alert component
+  const EmailVerificationAlert = () => {
+    if (!showEmailVerificationAlert) return null;
+
+    const alertContent = (
+      <div className="fixed inset-0 z-[99999] overflow-y-auto">
+        <div 
+          className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+          style={{ backdropFilter: 'blur(8px)' }}
+        >
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowEmailVerificationAlert(false)}></div>
+
+          <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+          <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full sm:p-6">
+            <div className="sm:flex sm:items-start">
+              <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  {language === 'de' ? 'Konto erstellt!' : 'Account Created!'}
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">
+                    {language === 'de' 
+                      ? 'Bitte überprüfen Sie Ihre E-Mail und klicken Sie auf den Bestätigungslink, um Ihr Konto zu aktivieren.'
+                      : 'Please check your email and click the verification link to activate your account.'
+                    }
+                  </p>
+                </div>
+                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                  <button
+                    type="button"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#7C3BEC] text-base font-medium text-white hover:bg-[#6B32D6] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#7C3BEC] sm:ml-3 sm:w-auto sm:text-sm"
+                    onClick={() => {
+                      setShowEmailVerificationAlert(false);
+                      onClose();
+                    }}
+                  >
+                    {language === 'de' ? 'Verstanden' : 'Got it'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    return createPortal(alertContent, document.body);
+  };
+
   if (!isOpen) return null;
 
   return (
+    <>
+      <EmailVerificationAlert />
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{backgroundColor: 'rgba(0, 0, 0, 0.6)'}}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -496,6 +548,7 @@ const LoginModal = ({
         </p>
       </motion.div>
     </div>
+    </>
   );
 };
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Building, User, FileText, Briefcase, Check, AlertTriangle, Globe, Loader2 } from 'lucide-react';
+import { Building, User, FileText, Briefcase, Check, AlertTriangle, Globe, Loader2, PersonStanding, Users, Wand, Wand2Icon, LucideWand2, WandSparklesIcon, WandSparkles } from 'lucide-react';
 import { useMIDTranslation } from '../hooks/useMIDTranslation';
 import { 
   validateMIDFormData, 
@@ -28,6 +28,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
   const { t } = useMIDTranslation();
   const { currentUser: user } = useAuth();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   
   // Check if we're in creation mode - automatically detect based on user's organization
   // Creation mode is triggered when user has no organization (for non-admin users)
@@ -152,14 +153,14 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
     const hasError = fieldErrors[fieldName];
     
     if (hasError) {
-      return 'border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-red-400';
+      return 'border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-red-400 text-black placeholder-gray-200';
     }
     
     if (isHighlighted) {
-      return 'border-amber-300 bg-amber-50/30 focus:border-amber-400 focus:ring-amber-400';
+      return 'border-amber-300 bg-amber-50/30 focus:border-amber-400 focus:ring-amber-400 text-black placeholder-gray-200';
     }
     
-    return 'border border-gray-200 focus:ring-purple-500 focus:border-transparent';
+    return 'border border-gray-200 focus:ring-purple-500 focus:border-transparent text-black placeholder-gray-200';
   };
 
   // Helper function to render validation error message
@@ -178,8 +179,10 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
   // Format Tax ID with slashes
   const formatTaxId = (value) => {
     const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length <= 3) return cleaned;
-    if (cleaned.length <= 7) return `${cleaned.slice(0, 3)}/${cleaned.slice(3)}`;
+    if (cleaned.length < 3) return cleaned;
+    if (cleaned.length === 3) return `${cleaned}/`;
+    if (cleaned.length < 7) return `${cleaned.slice(0, 3)}/${cleaned.slice(3)}`;
+    if (cleaned.length === 7) return `${cleaned.slice(0, 3)}/${cleaned.slice(3, 7)}/`;
     return `${cleaned.slice(0, 3)}/${cleaned.slice(3, 7)}/${cleaned.slice(7, 11)}`;
   };
 
@@ -662,7 +665,6 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         }
         
         // Navigate back to home tab after organization creation
-        const searchParams = new URLSearchParams(location.search);
         const returnTo = searchParams.get('returnTo');
         
         if (returnTo === 'home' && onNavigateToTab) {
@@ -703,7 +705,6 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
       }
       
       // Check if we need to navigate back to a specific tab
-      const searchParams = new URLSearchParams(location.search);
       const returnTo = searchParams.get('returnTo');
       
       if (returnTo === 'home' && onNavigateToTab) {
@@ -744,6 +745,12 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
 
   return (
     <div className="max-w-5xl mx-auto">
+      <style jsx>{`
+        input::placeholder,
+        textarea::placeholder {
+          color: #e5e7eb !important;
+        }
+      `}</style>
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         {/* Header */}
         <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
@@ -814,7 +821,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                     value={impressumUrl}
                     onChange={(e) => setImpressumUrl(e.target.value)}
                     placeholder={t('impressumUrlPlaceholder')}
-                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white"
+                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white placeholder-gray-200"
                     disabled={isExtracting}
                   />
                   <button
@@ -830,7 +837,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                       </>
                     ) : (
                       <>
-                        <Globe className="h-4 w-4" />
+                        <WandSparkles className="h-4 w-4" />
                         {t('collectDataButton')}
                       </>
                     )}
@@ -889,9 +896,9 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               <select
                 value={formData.companyType}
                 onChange={(e) => handleInputChange('companyType', e.target.value)}
-                className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white text-black ${getInputStyling('companyType')}`}
+                className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white text-black ${getInputStyling('companyType')} ${formData.companyType === 'pleaseSelect' ? 'text-gray-100' : ''}`}
               >
-                <option value="pleaseSelect">{t('companyTypeOptions.pleaseSelect')}</option>
+                <option  value="pleaseSelect">{t('companyTypeOptions.pleaseSelect')}</option>
                 <option value="company">{t('companyTypeOptions.company')}</option>
                 <option value="freelancer">{t('companyTypeOptions.freelancer')}</option>
                 <option value="association">{t('companyTypeOptions.association')}</option>
@@ -929,7 +936,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 value={formData.taxId}
                 onChange={(e) => handleInputChange('taxId', formatTaxId(e.target.value))}
                 maxLength={13}
-                placeholder="111/2222/333"
+                placeholder="111/2222/3333"
                 className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('taxId')}`}
               />
               {renderFieldError('taxId')}
@@ -946,7 +953,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               <select
                 value={formData.industry}
                 onChange={(e) => handleInputChange('industry', e.target.value)}
-                className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white text-black ${getInputStyling('industry')}`}
+                className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white text-black ${getInputStyling('industry')} ${formData.industry === 'pleaseSelect' ? 'text-gray-100' : ''}`}
               >
                 <option value="pleaseSelect">{t('industryOptions.pleaseSelect')}</option>
                 <option value="health">{t('industryOptions.health')}</option>
@@ -970,6 +977,18 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               </select>
             </div>
 
+            <div className="mt-10 flex items-center gap-3 mb-6">
+              <div className="p-2.5 bg-purple-50 rounded-lg border border-purple-100">
+                <Users className="h-5 w-5 text-purple-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">{t('employeesTitle')}</h2>
+            </div>
+
+            <div className="mt-6 text-gray-500">
+              {t('employeesHelp')}
+            Total Number of Employees
+            </div>
+
             {/* Total Number of Employees */}
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -982,10 +1001,11 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 type="number"
                 min="0"
                 step="1"
-                value={formData.totalEmployees || ''}
+                value={formData.totalEmployees === null ? '' : formData.totalEmployees}
                 onChange={(e) => handleInputChange('totalEmployees', e.target.value)}
-                placeholder="e.g., 15"
+                placeholder="15"
                 className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('totalEmployees')}`}
+                onWheel={e => e.target.blur()}
               />
               {renderFieldError('totalEmployees')}
               <p className="text-xs text-gray-500 mt-1">
@@ -1005,9 +1025,33 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 type="number"
                 min="0"
                 step="0.1"
+                value={formData.fullTimeEquivalents === null ? '' : formData.fullTimeEquivalents}
+                onChange={(e) => handleInputChange('fullTimeEquivalents', e.target.value)}
+                placeholder="12.5"
+                className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('fullTimeEquivalents')}`}
+                onWheel={e => e.target.blur()}
+              />
+              {renderFieldError('fullTimeEquivalents')}
+              <p className="text-xs text-gray-500 mt-1">
+                Counting based on weekly hours (e.g., 0.5 for half-time employee)
+              </p>
+            </div>
+
+            {/* Full Time Equivalents */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <span className="flex items-center gap-2">
+                  Full Time Equivalents
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">MID</span>
+                </span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
                 value={formData.fullTimeEquivalents || ''}
                 onChange={(e) => handleInputChange('fullTimeEquivalents', e.target.value)}
-                placeholder="e.g., 12.5"
+                placeholder="12.5"
                 className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('fullTimeEquivalents')}`}
               />
               {renderFieldError('fullTimeEquivalents')}
@@ -1152,7 +1196,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 value={formData.poBox}
                 onChange={(e) => handleInputChange('poBox', e.target.value)}
                   maxLength={150}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white placeholder-gray-200"
                 placeholder={t('poBoxPlaceholder')}
                 />
             </div>
@@ -1208,7 +1252,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                     value={formData.phoneAreaCode}
                     onChange={(e) => handleInputChange('phoneAreaCode', e.target.value)}
                     disabled={isSubmitting}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black placeholder-gray-200"
                   >
                     <option value="+49">🇩🇪 +49 (Germany)</option>
                     <option value="+43">🇦🇹 +43 (Austria)</option>
@@ -1280,9 +1324,9 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 <select
                   value={formData.contactSalutation}
                   onChange={(e) => handleInputChange('contactSalutation', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black placeholder-gray-200"
                 >
-                  <option value="pleaseSelect">Please Select</option>
+                  <option className='text-gray-10' value="pleaseSelect">Please Select</option>
                   <option value="mr">{t('salutationOptions.mr')}</option>
                   <option value="mrs">{t('salutationOptions.mrs')}</option>
                   <option value="diverse">{t('salutationOptions.diverse')}</option>
@@ -1378,7 +1422,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   type="text"
                   value={formData.contactRole}
                   onChange={(e) => handleInputChange('contactRole', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white placeholder-gray-200"
                 />
               </div>
             </div>
@@ -1422,7 +1466,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 <select
                   value={formData.projectContactSalutation}
                   onChange={(e) => handleInputChange('projectContactSalutation', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black placeholder-gray-200"
                 >
                   <option value="pleaseSelect">Please Select</option>
                   <option value="mr">{t('salutationOptions.mr')}</option>
@@ -1453,7 +1497,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   type="text"
                   value={formData.projectContactFirstName}
                   onChange={(e) => handleInputChange('projectContactFirstName', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white placeholder-gray-200"
                 />
               </div>
               <div>
@@ -1464,7 +1508,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   type="text"
                   value={formData.projectContactLastName}
                   onChange={(e) => handleInputChange('projectContactLastName', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white placeholder-gray-200"
                 />
               </div>
             </div>
@@ -1509,7 +1553,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   type="text"
                   value={formData.projectContactRole}
                   onChange={(e) => handleInputChange('projectContactRole', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white placeholder-gray-200"
                 />
               </div>
             </div>
@@ -1674,7 +1718,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                       type="date"
                       value={formData.lastMIDDigitisationApprovalDate}
                       onChange={(e) => handleInputChange('lastMIDDigitisationApprovalDate', e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black placeholder-gray-200"
                     />
                     <p className="text-xs text-gray-600 mt-2">
                       {t('cooldownExplanation')}
@@ -1732,7 +1776,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                       type="date"
                       value={formData.lastMIDDigitalSecurityApprovalDate}
                       onChange={(e) => handleInputChange('lastMIDDigitalSecurityApprovalDate', e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black placeholder-gray-200"
                     />
                     <p className="text-xs text-gray-600 mt-2">
                       {t('cooldownExplanation')}

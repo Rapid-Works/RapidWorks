@@ -1030,15 +1030,15 @@ const Dashboard = () => {
                       setSelectedTaskId(null); // Clear when leaving tasks area
                       setIsMobileMenuOpen(false); // Close mobile menu
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                    className={`ml-0.5 w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
                       activeTab === 'financing'
                         ? 'bg-[#7C3BEC] text-white shadow-lg'
                         : 'text-gray-700 hover:bg-white hover:shadow-md'
                     }`}
                   >
-                    <span className="text-lg font-bold">€</span>
+                    <span className="pl-0.5 text-lg font-bold">€</span>
                     <div className="flex-1">
-                      <div className="font-medium">Rapid Financing</div>
+                      <div className="pl-1.5 font-medium">Rapid Financing</div>
                     </div>
                   </button>
                 )}
@@ -1198,6 +1198,8 @@ const Dashboard = () => {
                       onNavigateToMIDWithFields={(missingFields) => {
                         setMissingMIDFields(missingFields);
                         setActiveTab('mid');
+                        // Add returnTo parameter to URL so MID form knows to redirect back
+                        window.history.replaceState(null, '', '/dashboard?tab=mid&returnTo=home');
                       }}
                       onOpenInviteModal={() => {
                         setActiveTab('members');
