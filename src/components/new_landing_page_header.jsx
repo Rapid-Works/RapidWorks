@@ -304,7 +304,7 @@ export default function RapidWorksHeader() {
 
             {/* Right-aligned Auth */}
             <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2 lg:gap-3">
-              {currentUser ? (
+              {currentUser && currentUser.emailVerified ? (
                 <>
                   {/* Notification Bell - Only for logged in users */}
                   <div className="relative">
@@ -411,7 +411,7 @@ export default function RapidWorksHeader() {
             </Link>
           ))}
           <div className="border-t border-gray-100 pt-3 mt-2 space-y-2">
-            {currentUser ? (
+            {currentUser && currentUser.emailVerified ? (
               <>
                 <div className="flex items-center px-4 py-2 text-sm text-gray-700">
                   {renderUserAvatar(true)}
@@ -465,10 +465,12 @@ export default function RapidWorksHeader() {
                   <User className="h-4 w-4 mr-3" />
                   Sign In
                 </button>
-                <button onClick={() => { setShowLoginModal(true); setMobileMenuOpen(false); }} className="flex items-center w-full px-4 py-3 rounded-lg transition-all duration-300" style={{ color: accentColor, border: `1px solid ${accentColor}` }}>
-                  <User className="h-4 w-4 mr-3" />
-                  Sign Up
-                </button>
+                {!currentUser && (
+                  <button onClick={() => { setShowLoginModal(true); setMobileMenuOpen(false); }} className="flex items-center w-full px-4 py-3 rounded-lg transition-all duration-300" style={{ color: accentColor, border: `1px solid ${accentColor}` }}>
+                    <User className="h-4 w-4 mr-3" />
+                    Sign Up
+                  </button>
+                )}
               </>
             )}
             <a href="https://calendly.com/yannick-familie-heeren/30min" target="_blank" rel="noopener noreferrer" className="flex items-center w-full px-4 py-3 rounded-lg transition-all duration-300" style={{ background: accentColor, color: '#fff' }} onClick={() => setMobileMenuOpen(false)}>
