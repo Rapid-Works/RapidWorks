@@ -8,7 +8,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import ScrollToTop from '@/components/ScrollToTop';
 import Footer from '@/components/Footer';
 import CookieConsent from '@/components/CookieConsent';
-import AIAssistantChatbot from '@/components/AIAssistantChatbot';
+// import AIAssistantChatbot from '@/components/AIAssistantChatbot';
 import AutoNotificationRegistration from '@/components/AutoNotificationRegistration';
 
 /**
@@ -26,7 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <LanguageProvider>
           <ScrollToTop />
           {children}
-          {!isDashboardPage && <AIAssistantChatbot />}
+          {/* {!isDashboardPage && <AIAssistantChatbot />} */}
           {!isDashboardPage && <Footer onFAQClick={() => {}} />}
           <CookieConsent />
         </LanguageProvider>
