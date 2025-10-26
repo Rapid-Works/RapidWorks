@@ -29,7 +29,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/opengraphimage.png" />
+        <link rel="apple-touch-icon" href="/opengraphimage.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning={true}>
