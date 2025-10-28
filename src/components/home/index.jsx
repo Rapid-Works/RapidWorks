@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   CheckCircle2, 
@@ -34,7 +34,8 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     midFieldsStatus,
     sendVerificationEmail,
     markTaskComplete,
-    markTaskSkipped
+    markTaskSkipped,
+    refreshOnboarding
   } = useOnboarding();
   
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -45,6 +46,14 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
   const [isSubmittingOptOut, setIsSubmittingOptOut] = useState(false);
   const [optOutSuccess, setOptOutSuccess] = useState(false);
   const [showWalkthroughModal, setShowWalkthroughModal] = useState(false);
+
+  // Refresh onboarding data when component mounts (useful when redirected to dashboard)
+  useEffect(() => {
+    if (currentUser && refreshOnboarding) {
+      console.log('🔄 Refreshing onboarding data on HomePage mount');
+      refreshOnboarding();
+    }
+  }, [currentUser, refreshOnboarding]);
 
   const handleSendVerificationEmail = async () => {
     setSendingEmail(true);
@@ -58,10 +67,9 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
   };
 
   const handleRefreshEmailStatus = () => {
-    if (currentUser) {
-      currentUser.reload().then(() => {
-        console.log('Email verification status refreshed');
-      });
+    if (currentUser && refreshOnboarding) {
+      console.log('🔄 Refreshing email verification status');
+      refreshOnboarding();
     }
   };
 

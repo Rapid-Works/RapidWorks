@@ -80,6 +80,10 @@ export function AuthProvider({ children }) {
 
   // Logout
   function logout() {
+    // Clear dashboard tab preference on logout
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('dashboardActiveTab');
+    }
     return signOut(auth);
   }
 

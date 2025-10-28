@@ -54,6 +54,12 @@ const Dashboard = () => {
       const savedTab = localStorage.getItem('dashboardActiveTab');
       // Default to 'home' for new users with incomplete onboarding, unless URL specifies otherwise
       const urlTab = new URLSearchParams(window.location.search).get('tab');
+      
+      // If no current user, always start with 'home' (prevents showing previous user's tab)
+      if (!currentUser) {
+        return urlTab || 'home';
+      }
+      
       return urlTab || savedTab || 'home';
     }
     return 'home';
@@ -113,6 +119,20 @@ const Dashboard = () => {
       localStorage.setItem('dashboardActiveTab', activeTab);
     }
   }, [activeTab]);
+
+  // Clear localStorage when user changes (new login)
+  useEffect(() => {
+    if (currentUser && typeof window !== 'undefined') {
+      // Check if this is a new user session by comparing with stored user ID
+      const storedUserId = localStorage.getItem('lastUserId');
+      if (storedUserId && storedUserId !== currentUser.uid) {
+        // Different user logged in, clear tab preference
+        localStorage.removeItem('dashboardActiveTab');
+      }
+      // Update stored user ID
+      localStorage.setItem('lastUserId', currentUser.uid);
+    }
+  }, [currentUser]);
 
   // Close mobile menu on desktop
   useEffect(() => {
@@ -1194,6 +1214,7 @@ const Dashboard = () => {
                     className="p-3 lg:p-6"
                   >
                     <HomePage 
+                      key={`home-${currentUser?.uid || 'no-user'}`}
                       onNavigateToTab={(tab) => setActiveTab(tab)}
                       onNavigateToMIDWithFields={(missingFields) => {
                         setMissingMIDFields(missingFields);

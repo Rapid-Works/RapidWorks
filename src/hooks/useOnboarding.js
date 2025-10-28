@@ -288,6 +288,43 @@ export const useOnboarding = () => {
     }
   };
 
+  // Refresh onboarding data (useful when user is redirected to dashboard)
+  const refreshOnboarding = useCallback(async () => {
+    if (!currentUser) return;
+    
+    try {
+      // Reload user to get fresh verification status
+      await currentUser.reload();
+      
+      // Force refresh the onboarding document
+      const onboardingRef = doc(db, 'userOnboarding', currentUser.uid);
+      const docSnapshot = await onSnapshot(onboardingRef, (doc) => {
+        if (doc.exists()) {
+          const data = doc.data();
+          setOnboardingData(data);
+          
+          // Recalculate progress
+          const tasks = [
+            data.emailVerified,
+            data.organizationCreated,
+            data.midApplied || data.midSkipped,
+            data.bookingCallCompleted,
+            data.coworkersInvited === true || data.coworkersInvited === 'skipped',
+          ];
+          const completedCount = tasks.filter(Boolean).length;
+          setProgress(Math.round((completedCount / 5) * 100));
+        }
+      });
+      
+      // Unsubscribe after getting the data
+      setTimeout(() => docSnapshot(), 100);
+      
+      console.log('🔄 Onboarding data refreshed');
+    } catch (error) {
+      console.error('Error refreshing onboarding data:', error);
+    }
+  }, [currentUser]);
+
   return {
     loading,
     progress,
@@ -309,5 +346,6 @@ export const useOnboarding = () => {
     markTaskSkipped,
     checkExistingInvites,
     updateInviteStatus,
+    refreshOnboarding,
   };
 };
