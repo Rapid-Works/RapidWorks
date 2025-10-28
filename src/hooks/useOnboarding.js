@@ -9,18 +9,20 @@ import { getUserMIDFormSubmissions } from '../services/midFormService';
 
 /**
  * Hook to manage user onboarding progress
- * Tracks 5 tasks (step 6 walkthrough is temporarily hidden):
+ * Tracks 6 tasks (step 7 walkthrough is temporarily hidden):
  * 1. Email Verification
- * 2. Organization Information
- * 3. Apply to MID
- * 4. Book a Free Coaching Call
- * 5. Invite Coworkers
- * 6. Platform Walkthrough (commented out)
+ * 2. Complete Profile
+ * 3. Organization Information
+ * 4. Apply to MID
+ * 5. Book a Free Coaching Call
+ * 6. Invite Coworkers
+ * 7. Platform Walkthrough (commented out)
  */
 export const useOnboarding = () => {
   const { currentUser, sendVerificationEmail: sendVerificationEmailFromAuth } = useAuth();
   const [onboardingData, setOnboardingData] = useState({
     emailVerified: false,
+    profileCompleted: false,
     organizationCreated: false,
     midApplied: false,
     midSkipped: false,
@@ -52,21 +54,23 @@ export const useOnboarding = () => {
         const data = docSnapshot.data();
         setOnboardingData(data);
         
-        // Calculate progress (now 5 steps instead of 6)
+        // Calculate progress (now 6 steps instead of 7)
         const tasks = [
           data.emailVerified,
+          data.profileCompleted,
           data.organizationCreated,
           data.midApplied || data.midSkipped, // Either applied or skipped counts as completion
           data.bookingCallCompleted,
           data.coworkersInvited === true || data.coworkersInvited === 'skipped', // Either invited or skipped counts
-          // data.walkthroughCompleted, // Commented out step 6
+          // data.walkthroughCompleted, // Commented out step 7
         ];
         const completedCount = tasks.filter(Boolean).length;
-        setProgress(Math.round((completedCount / 5) * 100));
+        setProgress(Math.round((completedCount / 6) * 100));
       } else {
         // Initialize onboarding document
         const initialData = {
           emailVerified: currentUser.emailVerified || false,
+          profileCompleted: false,
           organizationCreated: false,
           midApplied: false,
           midSkipped: false,
@@ -78,7 +82,7 @@ export const useOnboarding = () => {
         };
         setDoc(onboardingRef, initialData);
         setOnboardingData(initialData);
-        setProgress(currentUser.emailVerified ? 25 : 0);
+        setProgress(currentUser.emailVerified ? 17 : 0); // 1/6 = ~17%
       }
       setLoading(false);
     });
@@ -215,14 +219,15 @@ export const useOnboarding = () => {
 
   const completedTasks = [
     onboardingData.emailVerified,
+    onboardingData.profileCompleted,
     onboardingData.organizationCreated,
     onboardingData.midApplied || onboardingData.midSkipped, // Either applied or skipped counts
     onboardingData.bookingCallCompleted,
     onboardingData.coworkersInvited === true || onboardingData.coworkersInvited === 'skipped', // Either invited or skipped counts
-    // onboardingData.walkthroughCompleted, // Commented out step 6
+    // onboardingData.walkthroughCompleted, // Commented out step 7
   ].filter(Boolean).length;
 
-  const isComplete = completedTasks === 5;
+  const isComplete = completedTasks === 6;
 
   const sendVerificationEmail = async () => {
     if (!currentUser || currentUser.emailVerified) {
@@ -288,6 +293,25 @@ export const useOnboarding = () => {
     }
   };
 
+  // Check if profile is completed (has both first and last name)
+  const checkProfileCompletion = () => {
+    if (!currentUser?.displayName) return false;
+    
+    const nameParts = currentUser.displayName.trim().split(' ');
+    return nameParts.length >= 2 && nameParts[0].length > 0 && nameParts[1].length > 0;
+  };
+
+  // Mark profile as completed
+  const markProfileCompleted = async () => {
+    if (!currentUser) return;
+
+    const onboardingRef = doc(db, 'userOnboarding', currentUser.uid);
+    await setDoc(onboardingRef, { 
+      profileCompleted: true,
+      profileCompletedAt: new Date().toISOString()
+    }, { merge: true });
+  };
+
   // Refresh onboarding data (useful when user is redirected to dashboard)
   const refreshOnboarding = useCallback(async () => {
     if (!currentUser) return;
@@ -306,13 +330,14 @@ export const useOnboarding = () => {
           // Recalculate progress
           const tasks = [
             data.emailVerified,
+            data.profileCompleted,
             data.organizationCreated,
             data.midApplied || data.midSkipped,
             data.bookingCallCompleted,
             data.coworkersInvited === true || data.coworkersInvited === 'skipped',
           ];
           const completedCount = tasks.filter(Boolean).length;
-          setProgress(Math.round((completedCount / 5) * 100));
+          setProgress(Math.round((completedCount / 6) * 100));
         }
       });
       
@@ -329,10 +354,11 @@ export const useOnboarding = () => {
     loading,
     progress,
     completedTasks,
-    totalTasks: 5,
+    totalTasks: 6,
     isComplete,
     tasks: {
       emailVerified: onboardingData.emailVerified,
+      profileCompleted: onboardingData.profileCompleted,
       organizationCreated: onboardingData.organizationCreated,
       midApplied: onboardingData.midApplied,
       midSkipped: onboardingData.midSkipped,
@@ -347,5 +373,7 @@ export const useOnboarding = () => {
     checkExistingInvites,
     updateInviteStatus,
     refreshOnboarding,
+    checkProfileCompletion,
+    markProfileCompleted,
   };
 };

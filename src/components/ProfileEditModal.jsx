@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Upload, User, Save, Loader2, Camera } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-const ProfileEditModal = ({ isOpen, onClose }) => {
+const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
   const { currentUser, updateUserProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -13,10 +13,23 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
   const [success, setSuccess] = useState('');
   
   const [formData, setFormData] = useState({
-    displayName: currentUser?.displayName || '',
+    firstName: '',
+    lastName: '',
     photoFile: null,
     photoPreview: currentUser?.photoURL || null
   });
+
+  // Initialize first and last name from display name
+  useEffect(() => {
+    if (currentUser?.displayName) {
+      const nameParts = currentUser.displayName.split(' ');
+      setFormData(prev => ({
+        ...prev,
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || ''
+      }));
+    }
+  }, [currentUser]);
 
   // Cloudinary configuration
   const cloudinaryConfig = {
@@ -81,6 +94,13 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
     setError('');
     setSuccess('');
 
+    // Validate first and last name
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      setError('Both first name and last name are required');
+      setLoading(false);
+      return;
+    }
+
     try {
       let photoURL = currentUser?.photoURL;
 
@@ -91,13 +111,21 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
         setUploadingImage(false);
       }
 
+      // Combine first and last name for displayName
+      const displayName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
+
       // Update Firebase Auth profile
       await updateUserProfile(currentUser, {
-        displayName: formData.displayName.trim(),
+        displayName: displayName,
         photoURL: photoURL
       });
 
       setSuccess('Profile updated successfully!');
+      
+      // Notify parent that profile is completed
+      if (onProfileCompleted) {
+        onProfileCompleted();
+      }
       
       // Close modal after 2 seconds
       setTimeout(() => {
@@ -194,19 +222,36 @@ const ProfileEditModal = ({ isOpen, onClose }) => {
                 </p>
               </div>
 
-              {/* Display Name */}
+              {/* First Name */}
               <div>
-                <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Display Name
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                  First Name *
                 </label>
                 <input
-                  id="displayName"
-                  name="displayName"
+                  id="firstName"
+                  name="firstName"
                   type="text"
-                  value={formData.displayName}
+                  value={formData.firstName}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent"
-                  placeholder="Enter your display name"
+                  placeholder="Enter your first name"
+                  required
+                />
+              </div>
+
+              {/* Last Name */}
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Last Name *
+                </label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent"
+                  placeholder="Enter your last name"
                   required
                 />
               </div>

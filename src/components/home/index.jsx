@@ -14,11 +14,13 @@ import {
   Calendar,
   Users,
   CheckCircle,
-  Play
+  Play,
+  User
 } from 'lucide-react';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { useAuth } from '../../contexts/AuthContext';
 import CalendlyModal from '../CalendlyModal';
+import ProfileEditModal from '../ProfileEditModal';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../firebase/config';
 
@@ -35,7 +37,9 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     sendVerificationEmail,
     markTaskComplete,
     markTaskSkipped,
-    refreshOnboarding
+    refreshOnboarding,
+    checkProfileCompletion,
+    markProfileCompleted
   } = useOnboarding();
   
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -46,6 +50,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
   const [isSubmittingOptOut, setIsSubmittingOptOut] = useState(false);
   const [optOutSuccess, setOptOutSuccess] = useState(false);
   const [showWalkthroughModal, setShowWalkthroughModal] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Refresh onboarding data when component mounts (useful when redirected to dashboard)
   useEffect(() => {
@@ -70,6 +75,15 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     if (currentUser && refreshOnboarding) {
       console.log('🔄 Refreshing email verification status');
       refreshOnboarding();
+    }
+  };
+
+  const handleProfileCompleted = async () => {
+    try {
+      await markProfileCompleted();
+      console.log('✅ Profile completion marked in onboarding');
+    } catch (error) {
+      console.error('Error marking profile as completed:', error);
     }
   };
 
@@ -211,8 +225,43 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       ),
     },
     {
-      id: 'organizationCreated',
+      id: 'profileCompleted',
       stepNumber: 2,
+      title: 'Complete Profile',
+      description: tasks.profileCompleted 
+        ? 'Profile completed!' 
+        : checkProfileCompletion() 
+          ? 'Profile needs completion - first and last name required'
+          : 'Add your first and last name to complete your profile',
+      completed: tasks.profileCompleted,
+      icon: User,
+      color: checkProfileCompletion() ? 'orange' : 'purple',
+      requiresPrevious: true,
+      action: tasks.profileCompleted ? null : (
+        <div className="mt-3 space-y-3">
+          <button
+            onClick={() => setIsProfileModalOpen(true)}
+            className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors ${
+              checkProfileCompletion() 
+                ? 'bg-orange-600 hover:bg-orange-700' 
+                : 'bg-[#7C3BEC] hover:bg-[#6B32D6]'
+            }`}
+          >
+            <User className="h-4 w-4" />
+            Complete Profile
+            <ArrowRight className="h-4 w-4" />
+          </button>
+          {checkProfileCompletion() && (
+            <p className="text-xs text-orange-700">
+              First and last name must be filled to continue
+            </p>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: 'organizationCreated',
+      stepNumber: 3,
       title: 'Create your organization',
       description: 'Fill out your organization form to get started',
       completed: tasks.organizationCreated,
@@ -233,23 +282,16 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
             <ArrowRight className="h-4 w-4" />
           </button>
           <div className="text-center">
-            <button
-              onClick={() => {
-                // Mark organization as created for users who are already part of an organization
-                markTaskComplete('organizationCreated');
-                console.log('✅ Organization task marked as complete for existing member');
-              }}
-              className="text-sm text-gray-500 hover:text-gray-700 underline transition-colors"
-            >
+            <p className="text-sm text-gray-500">
               Already part of an organization? Reach out to your admin to add you.
-            </button>
+            </p>
           </div>
         </div>
       ),
     },
     {
       id: 'midApplied',
-      stepNumber: 3,
+      stepNumber: 4,
       title: 'Apply to MID Funding',
       description: midFieldsStatus.isLoading
         ? 'Checking MID requirements...'
@@ -337,7 +379,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     },
     {
       id: 'bookingCallCompleted',
-      stepNumber: 4,
+      stepNumber: 5,
       title: 'Book a Free Coaching Call',
       description: tasks.bookingCallCompleted 
         ? 'Coaching call booked!' 
@@ -360,7 +402,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     },
     {
       id: 'coworkersInvited',
-      stepNumber: 5,
+      stepNumber: 6,
       title: 'Invite Your Coworkers',
       description: tasks.coworkersInvited === true 
         ? 'Team members invited!' 
@@ -719,6 +761,13 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
           </div>
         </div>
       )}
+
+      {/* Profile Edit Modal */}
+      <ProfileEditModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        onProfileCompleted={handleProfileCompleted}
+      />
     </div>
   );
 };

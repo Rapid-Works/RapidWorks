@@ -23,7 +23,8 @@ const LoginModal = ({
   const [isSignup, setIsSignup] = useState(modalContext === 'task' || modalContext === 'branding');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-  const { login, signup, loginWithGoogle } = useAuth();
+  const [showEmailNotVerified, setShowEmailNotVerified] = useState(false);
+  const { login, signup, loginWithGoogle, sendVerificationEmail } = useAuth();
   const router = useRouter();
   const context = useLanguage();
   const language = context?.language || 'en';
@@ -87,7 +88,9 @@ const LoginModal = ({
       signUp: "Sign up",
       passwordRequirement: "Password must be at least 6 characters long",
       signupSuccess: "Account created successfully!",
-      checkEmailMessage: "Please check your email for a verification link to activate your account."
+      checkEmailMessage: "Please check your email for a verification link to activate your account.",
+      emailNotVerified: "Your account is not verified. Please check your email for a verification link and click it to activate your account.",
+      emailNotVerifiedLogin: "Please verify your email address before signing in. Check your inbox for a verification link."
     },
     de: {
       emailLabel: "E-Mail-Adresse",
@@ -108,7 +111,9 @@ const LoginModal = ({
       signUp: "Registrieren",
       passwordRequirement: "Passwort muss mindestens 6 Zeichen lang sein",
       signupSuccess: "Konto erfolgreich erstellt!",
-      checkEmailMessage: "Bitte überprüfen Sie Ihre E-Mail für einen Bestätigungslink zur Aktivierung Ihres Kontos."
+      checkEmailMessage: "Bitte überprüfen Sie Ihre E-Mail für einen Bestätigungslink zur Aktivierung Ihres Kontos.",
+      emailNotVerified: "Ihr Konto ist nicht verifiziert. Bitte überprüfen Sie Ihre E-Mail für einen Bestätigungslink und klicken Sie darauf, um Ihr Konto zu aktivieren.",
+      emailNotVerifiedLogin: "Bitte verifizieren Sie Ihre E-Mail-Adresse vor der Anmeldung. Überprüfen Sie Ihren Posteingang auf einen Bestätigungslink."
     }
   };
 
@@ -145,8 +150,6 @@ const LoginModal = ({
       setLoading(true);
       
       let result;
-      // TEMPORARY: Email verification disabled for Microsoft 365 SMTP fix
-      const EMAIL_VERIFICATION_DISABLED = true;
 
       if (isSignup) {
         result = await signup(email, password);
@@ -158,16 +161,18 @@ const LoginModal = ({
       } else {
         result = await login(email, password);
         
-        // For login, check if email is verified (skip if disabled)
-        if (!EMAIL_VERIFICATION_DISABLED && result.user && !result.user.emailVerified) {
-          router.push('/verify-email');
+        // Check if email is verified - block login if not verified
+        if (result.user && !result.user.emailVerified) {
+          setError(currentLabels.emailNotVerifiedLogin);
+          setLoading(false);
+          return;
+        }
+        
+        // Call success callback or navigate to dashboard
+        if (onLoginSuccess) {
+          onLoginSuccess(result);
         } else {
-          // Call success callback or navigate to dashboard
-          if (onLoginSuccess) {
-            onLoginSuccess(result);
-          } else {
-            router.push(redirectTo);
-          }
+          router.push(redirectTo);
         }
       }
       
@@ -217,6 +222,11 @@ const LoginModal = ({
           case 'auth/network-request-failed':
             errorMessage = 'Network error. Please check your connection and try again';
             break;
+          case 'auth/email-not-verified':
+            setShowEmailNotVerified(true);
+            setError('');
+            setLoading(false);
+            return;
           default:
             errorMessage = 'Failed to log in. Please check your credentials';
         }
@@ -279,6 +289,7 @@ const LoginModal = ({
     setError('');
     setShowPassword(false);
     setShowSuccess(false);
+    setShowEmailNotVerified(false);
     // Reset to appropriate mode based on context
     setIsSignup(modalContext === 'task' || modalContext === 'branding');
   };
@@ -292,6 +303,27 @@ const LoginModal = ({
     setIsSignup(!isSignup);
     setError('');
     setConfirmPassword('');
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) return;
+    
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Create a temporary user object with the email
+      const tempUser = { email };
+      await sendVerificationEmail(tempUser);
+      
+      setShowEmailNotVerified(false);
+      setShowSuccess(true);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error sending verification email:', error);
+      setError('Failed to send verification email. Please try again.');
+      setLoading(false);
+    }
   };
 
 
@@ -348,6 +380,38 @@ const LoginModal = ({
               <p className="text-green-700">
                 {currentLabels.checkEmailMessage}
               </p>
+            </div>
+          </div>
+        ) : showEmailNotVerified ? (
+          <div className="text-center">
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-6 py-8 rounded-lg mb-6">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-yellow-100 rounded-full">
+                <Mail className="w-6 h-6 text-yellow-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                {language === 'de' ? 'E-Mail nicht verifiziert' : 'Email Not Verified'}
+              </h3>
+              <p className="text-yellow-700 mb-4">
+                {currentLabels.emailNotVerified}
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={handleResendVerification}
+                  disabled={loading}
+                  className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                  {loading ? (language === 'de' ? 'Wird gesendet...' : 'Sending...') : (language === 'de' ? 'Bestätigungs-E-Mail erneut senden' : 'Resend Verification Email')}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEmailNotVerified(false);
+                    setError('');
+                  }}
+                  className="w-full text-yellow-600 hover:text-yellow-700 underline text-sm"
+                >
+                  {language === 'de' ? 'Zurück zur Anmeldung' : 'Back to Sign In'}
+                </button>
+              </div>
             </div>
           </div>
         ) : (
