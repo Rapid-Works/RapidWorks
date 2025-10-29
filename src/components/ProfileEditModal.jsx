@@ -4,9 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Upload, User, Save, Loader2, Camera } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useMIDTranslation } from '../hooks/useMIDTranslation';
 
 const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
   const { currentUser, updateUserProfile } = useAuth();
+  const { t } = useMIDTranslation();
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState('');
@@ -173,7 +175,7 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900">Edit Profile</h2>
+              <h2 className="text-2xl font-bold text-gray-900">{t('onboarding.profile.title')}</h2>
               <button
                 onClick={onClose}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -216,16 +218,16 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
                 </div>
                 
                 <p className="text-sm text-gray-500 text-center">
-                  Click the camera icon to upload a new profile picture
+                  {t('onboarding.profile.addProfilePicture')}
                   <br />
-                  <span className="text-xs">Max file size: 5MB</span>
+                  <span className="text-xs">{t('onboarding.profile.maxFileSize')}</span>
                 </p>
               </div>
 
               {/* First Name */}
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                  First Name *
+                  {t('onboarding.profile.firstName')} *
                 </label>
                 <input
                   id="firstName"
@@ -234,7 +236,7 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
                   value={formData.firstName}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent"
-                  placeholder="Enter your first name"
+                  placeholder={t('onboarding.profile.firstNamePlaceholder')}
                   required
                 />
               </div>
@@ -242,7 +244,7 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
               {/* Last Name */}
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Last Name *
+                  {t('onboarding.profile.lastName')} *
                 </label>
                 <input
                   id="lastName"
@@ -251,7 +253,7 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
                   value={formData.lastName}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent"
-                  placeholder="Enter your last name"
+                  placeholder={t('onboarding.profile.lastNamePlaceholder')}
                   required
                 />
               </div>
@@ -259,7 +261,7 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
               {/* Email (read-only) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
+                  {t('onboarding.profile.email')}
                 </label>
                 <input
                   type="email"
@@ -268,7 +270,7 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
                   disabled
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Email cannot be changed from here
+                  {t('onboarding.profile.contactSupport')}
                 </p>
               </div>
 
@@ -293,7 +295,7 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
                   onClick={onClose}
                   className="flex-1 px-6 py-3 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  {t('onboarding.profile.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -308,7 +310,7 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
                   ) : (
                     <>
                       <Save className="h-4 w-4" />
-                      Save Changes
+                      {t('onboarding.profile.save')}
                     </>
                   )}
                 </button>

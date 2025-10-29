@@ -208,6 +208,54 @@ export const midTranslations = {
         title: 'Kostenfreien Coaching Call vereinbaren',
         description: 'Vereinbare einen kostenfreien 30-minütigen Coaching Call mit einem unserer Digitalisierungs-Coaches.',
         buttonText: 'Kostenfreien Call vereinbaren'
+      },
+      createOrganization: {
+        title: 'Lege deine Organisation an',
+        description: 'Fülle dein Organisationsformular aus, um zu beginnen',
+        buttonText: 'Organisation anlegen',
+        alreadyPartOf: 'Jemand aus deiner Organisation hat diese bereits bei uns registriert? Dann bitte den Organisations-Admin dich einzuladen.'
+      },
+      inviteCoworkers: {
+        title: 'Team-Mitglieder einladen',
+        description: 'Lade deine Kollegen ein, deiner Organisation beizutreten',
+        teamInvited: 'Team-Mitglieder eingeladen!',
+        inviteSkipped: 'Einladungsaufgabe übersprungen',
+        buttonText: 'Team-Mitglieder einladen',
+        skipForNow: 'Für jetzt überspringen'
+      },
+      profile: {
+        title: 'Dein Profil',
+        addProfilePicture: 'Click auf das Kamera-Icon, um ein Profilbild hinzuzufügen.',
+        maxFileSize: 'Maximale Dateigröße 5MB',
+        firstName: 'Vorname',
+        firstNamePlaceholder: 'Max',
+        lastName: 'Nachname',
+        lastNamePlaceholder: 'Mustermann',
+        email: 'Email',
+        contactSupport: 'Kontaktiere unseren Support, um deine E-Mail Adresse zu ändern',
+        cancel: 'Abbrechen',
+        save: 'Speichern'
+      },
+      completeProfile: {
+        title: 'Profil vervollständigen',
+        completed: 'Profil vervollständigt!',
+        needsCompletion: 'Profil muss vervollständigt werden - Vor- und Nachname erforderlich',
+        addNames: 'Füge deinen Vor- und Nachnamen hinzu, um dein Profil zu vervollständigen',
+        buttonText: 'Profil vervollständigen',
+        namesRequired: 'Vor- und Nachname müssen ausgefüllt werden, um fortzufahren'
+      },
+      dashboard: {
+        welcome: 'Willkommen, {name}.',
+        subtitle: 'Schließe in 6 einfachen Schritten deine Registrierung ab.',
+        progress: 'Dein Fortschritt',
+        progressText: '{completed} von {total} Schritten erledigt.',
+        verifyEmail: 'Email verifizieren',
+        completed: 'Erledigt',
+        verifyEmailDescription: 'Verifiziere deine E-Mail Adresse.',
+        completeProfileDescription: 'Füge deinen Vor- und Nachnamen zu deinem Profil hinzu.',
+        completeProfileButton: 'Profil vervollständigen →',
+        createOrganization: 'Organisation anlegen',
+        completeStepFirst: 'Schließe zuerst Schritt {step} ab'
       }
     }
   },
@@ -421,6 +469,54 @@ export const midTranslations = {
         title: 'Book a Free Coaching Call',
         description: 'Schedule a free 30-minute coaching call with one of our digitalization coaches.',
         buttonText: 'Schedule Free Call'
+      },
+      createOrganization: {
+        title: 'Create your organization',
+        description: 'Fill out your organization form to get started',
+        buttonText: 'Create Organization',
+        alreadyPartOf: 'Already part of an organization? Reach out to your admin to add you.'
+      },
+      inviteCoworkers: {
+        title: 'Invite Your Coworkers',
+        description: 'Invite your colleagues to join your organization',
+        teamInvited: 'Team members invited!',
+        inviteSkipped: 'Invite task skipped',
+        buttonText: 'Invite Team Members',
+        skipForNow: 'Skip for now'
+      },
+      profile: {
+        title: 'Your Profile',
+        addProfilePicture: 'Click on the camera icon to add a profile picture.',
+        maxFileSize: 'Maximum file size 5MB',
+        firstName: 'First Name',
+        firstNamePlaceholder: 'Max',
+        lastName: 'Last Name',
+        lastNamePlaceholder: 'Mustermann',
+        email: 'Email',
+        contactSupport: 'Contact our support to change your email address',
+        cancel: 'Cancel',
+        save: 'Save'
+      },
+      completeProfile: {
+        title: 'Complete Profile',
+        completed: 'Profile completed!',
+        needsCompletion: 'Profile needs completion - first and last name required',
+        addNames: 'Add your first and last name to complete your profile',
+        buttonText: 'Complete Profile',
+        namesRequired: 'First and last name must be filled to continue'
+      },
+      dashboard: {
+        welcome: 'Welcome back, {name} 👋',
+        subtitle: 'Let\'s get your account set up in {total} simple steps',
+        progress: 'Your Progress',
+        progressText: '{completed} of {total} steps completed',
+        verifyEmail: 'Verify your email',
+        completed: 'Completed',
+        verifyEmailDescription: 'Confirm your email address to secure your account',
+        completeProfileDescription: 'Add your first and last name to complete your profile',
+        completeProfileButton: 'Complete Profile →',
+        createOrganization: 'Create Organization',
+        completeStepFirst: 'Complete step {step} first'
       }
     }
   }

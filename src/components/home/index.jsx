@@ -188,8 +188,8 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     {
       id: 'emailVerified',
       stepNumber: 1,
-      title: 'Verify your email',
-      description: 'Confirm your email address to secure your account',
+      title: t('onboarding.dashboard.verifyEmail'),
+      description: t('onboarding.dashboard.verifyEmailDescription'),
       completed: tasks.emailVerified,
       icon: Mail,
       color: 'blue',
@@ -231,12 +231,12 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     {
       id: 'profileCompleted',
       stepNumber: 2,
-      title: 'Complete Profile',
+      title: t('onboarding.completeProfile.title'),
       description: tasks.profileCompleted 
-        ? 'Profile completed!' 
+        ? t('onboarding.completeProfile.completed')
         : checkProfileCompletion() 
-          ? 'Profile needs completion - first and last name required'
-          : 'Add your first and last name to complete your profile',
+          ? t('onboarding.completeProfile.needsCompletion')
+          : t('onboarding.completeProfile.addNames'),
       completed: tasks.profileCompleted,
       icon: User,
       color: checkProfileCompletion() ? 'orange' : 'purple',
@@ -252,12 +252,12 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
             }`}
           >
             <User className="h-4 w-4" />
-            Complete Profile
+            {t('onboarding.completeProfile.buttonText')}
             <ArrowRight className="h-4 w-4" />
           </button>
           {checkProfileCompletion() && (
             <p className="text-xs text-orange-700">
-              First and last name must be filled to continue
+              {t('onboarding.completeProfile.namesRequired')}
             </p>
           )}
         </div>
@@ -266,8 +266,8 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     {
       id: 'organizationCreated',
       stepNumber: 3,
-      title: 'Create your organization',
-      description: 'Fill out your organization form to get started',
+      title: t('onboarding.createOrganization.title'),
+      description: t('onboarding.createOrganization.description'),
       completed: tasks.organizationCreated,
       icon: Building2,
       color: 'purple',
@@ -282,12 +282,12 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
             }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3BEC] hover:bg-[#6B32D6] text-white text-sm font-medium rounded-lg transition-colors"
           >
-            Create Organization
+            {t('onboarding.createOrganization.buttonText')}
             <ArrowRight className="h-4 w-4" />
           </button>
           <div className="text-center">
             <p className="text-sm text-gray-500">
-              Already part of an organization? Reach out to your admin to add you.
+              {t('onboarding.createOrganization.alreadyPartOf')}
             </p>
           </div>
         </div>
@@ -407,12 +407,12 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     {
       id: 'coworkersInvited',
       stepNumber: 6,
-      title: 'Invite Your Coworkers',
+      title: t('onboarding.inviteCoworkers.title'),
       description: tasks.coworkersInvited === true 
-        ? 'Team members invited!' 
+        ? t('onboarding.inviteCoworkers.teamInvited')
         : tasks.coworkersInvited === 'skipped'
-        ? 'Invite task skipped'
-        : 'Invite your colleagues to join your organization',
+        ? t('onboarding.inviteCoworkers.inviteSkipped')
+        : t('onboarding.inviteCoworkers.description'),
       completed: tasks.coworkersInvited === true || tasks.coworkersInvited === 'skipped',
       icon: Users,
       color: 'purple',
@@ -433,7 +433,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
             className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Users className="h-4 w-4" />
-            Invite Team Members
+            {t('onboarding.inviteCoworkers.buttonText')}
           </button>
           {tasks.coworkersInvited !== 'skipped' && (
             <div className="text-center">
@@ -448,7 +448,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                 }}
                 className="text-sm text-gray-500 hover:text-gray-700 underline transition-colors"
               >
-                Skip for now
+                {t('onboarding.inviteCoworkers.skipForNow')}
               </button>
             </div>
           )}
@@ -487,10 +487,10 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Welcome back, {userName} 👋
+          {t('onboarding.dashboard.welcome').replace('{name}', userName)}
         </h1>
         <p className="text-gray-500 text-lg">
-          Let's get your account set up in {totalTasks} simple steps
+          {t('onboarding.dashboard.subtitle').replace('{total}', totalTasks)}
         </p>
       </div>
 
@@ -498,9 +498,9 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       <div className="bg-gradient-to-br from-[#7C3BEC] to-[#9F7AEA] rounded-2xl p-8 mb-8 shadow-lg">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <div className="text-white/90 text-sm font-medium mb-1">Your Progress</div>
+            <div className="text-white/90 text-sm font-medium mb-1">{t('onboarding.dashboard.progress')}</div>
             <div className="text-white text-2xl font-bold">
-              {completedTasks} of {totalTasks} steps completed
+              {t('onboarding.dashboard.progressText').replace('{completed}', completedTasks).replace('{total}', totalTasks)}
             </div>
           </div>
           <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -582,14 +582,14 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                             ? 'bg-yellow-100 text-yellow-700'
                             : 'bg-green-100 text-green-700'
                         }`}>
-                          {(task.id === 'midApplied' && tasks.midSkipped) || (task.id === 'coworkersInvited' && tasks.coworkersInvited === 'skipped') ? 'Skipped' : '✓ Completed'}
+                          {(task.id === 'midApplied' && tasks.midSkipped) || (task.id === 'coworkersInvited' && tasks.coworkersInvited === 'skipped') ? 'Skipped' : `✓ ${t('onboarding.dashboard.completed')}`}
                         </span>
                       )}
                     </div>
                     <p className={`text-sm leading-relaxed mb-1 ${
                       isLocked ? 'text-gray-400' : 'text-gray-600'
                     }`}>
-                      {isLocked ? `Complete step ${task.stepNumber - 1} first` : task.description}
+                      {isLocked ? t('onboarding.dashboard.completeStepFirst').replace('{step}', task.stepNumber - 1) : task.description}
                     </p>
                     
                     {/* Action Button */}
