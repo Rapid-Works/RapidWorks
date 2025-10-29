@@ -755,7 +755,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         {/* Header */}
         <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            {isCreationMode ? 'Create Organization' : 'Organization Information'}
+            {isCreationMode ? t('createOrganization') : 'Organization Information'}
           </h1>
           <p className="text-sm text-gray-600 leading-relaxed">
             {isCreationMode 
@@ -986,14 +986,13 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
 
             <div className="mt-6 text-gray-500">
               {t('employeesHelp')}
-            Total Number of Employees
             </div>
 
             {/* Total Number of Employees */}
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <span className="flex items-center gap-2">
-                  Total Number of Employees
+                  {t('totalEmployees')}
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">MID</span>
                 </span>
               </label>
@@ -1009,7 +1008,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               />
               {renderFieldError('totalEmployees')}
               <p className="text-xs text-gray-500 mt-1">
-                Count every social secured employee as one complete employee, indifferent of worked hours
+                {t('totalEmployeesHelp')}
               </p>
             </div>
 
@@ -1017,7 +1016,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <span className="flex items-center gap-2">
-                  Full Time Equivalents
+                  {t('fullTimeEquivalents')}
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">MID</span>
                 </span>
               </label>
@@ -1033,32 +1032,10 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               />
               {renderFieldError('fullTimeEquivalents')}
               <p className="text-xs text-gray-500 mt-1">
-                Counting based on weekly hours (e.g., 0.5 for half-time employee)
+                {t('fullTimeEquivalentsHelp')}
               </p>
             </div>
 
-            {/* Full Time Equivalents */}
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <span className="flex items-center gap-2">
-                  Full Time Equivalents
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">MID</span>
-                </span>
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.1"
-                value={formData.fullTimeEquivalents || ''}
-                onChange={(e) => handleInputChange('fullTimeEquivalents', e.target.value)}
-                placeholder="12.5"
-                className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('fullTimeEquivalents')}`}
-              />
-              {renderFieldError('fullTimeEquivalents')}
-              <p className="text-xs text-gray-500 mt-1">
-                Counting based on weekly hours (e.g., 0.5 for half-time employee)
-              </p>
-            </div>
 
             {/* Company Category */}
             <div className="mt-6">
@@ -1153,7 +1130,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <span className="flex items-center gap-2">
-                    Street <span className="text-red-500 text-base font-bold">*</span>
+                    {t('street')} <span className="text-red-500 text-base font-bold">*</span>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">MID</span>
                   </span>
                 </label>
@@ -1163,14 +1140,14 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   onChange={(e) => handleInputChange('street', e.target.value)}
                   maxLength={150}
                   required={isCreationMode}
-                  placeholder={isCreationMode ? "Enter street name" : "Musterstraße"}
+                  placeholder={isCreationMode ? "Mustermannstraße" : "Musterstraße"}
                   className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('street')}`}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <span className="flex items-center gap-2">
-                    Number <span className="text-red-500 text-base font-bold">*</span>
+                    {t('streetNumber')} <span className="text-red-500 text-base font-bold">*</span>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">MID</span>
                   </span>
                 </label>
@@ -1180,7 +1157,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   onChange={(e) => handleInputChange('streetNumber', e.target.value)}
                   maxLength={150}
                   required={isCreationMode}
-                  placeholder={isCreationMode ? "Enter house number" : "24a"}
+                  placeholder={isCreationMode ? "42" : "24a"}
                   className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('streetNumber')}`}
                 />
               </div>
@@ -1217,7 +1194,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   onBlur={() => handleFieldBlur('postalCode')}
                   maxLength={5}
                   required={isCreationMode}
-                  placeholder={isCreationMode ? "Enter postal code" : "12345"}
+                  placeholder={t('postalCodePlaceholder')}
                   className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('postalCode')}`}
                 />
                 {renderFieldError('postalCode')}
@@ -1235,7 +1212,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   onChange={(e) => handleInputChange('city', e.target.value)}
                   maxLength={150}
                   required={isCreationMode}
-                  placeholder={isCreationMode ? "Enter city" : "Musterstadt"}
+                  placeholder={t('cityPlaceholder')}
                   className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('city')}`}
                 />
               </div>
@@ -1246,7 +1223,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Country Code (optional)
+                    {t('phoneAreaCode')}
                   </label>
                   <select
                     value={formData.phoneAreaCode}
@@ -1254,7 +1231,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                     disabled={isSubmitting}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black placeholder-gray-200"
                   >
-                    <option value="+49">🇩🇪 +49 (Germany)</option>
+                    <option value="+49">🇩🇪 +49 (Deutschland)</option>
                     <option value="+43">🇦🇹 +43 (Austria)</option>
                     <option value="+41">🇨🇭 +41 (Switzerland)</option>
                     <option value="+1">🇺🇸 +1 (USA)</option>
@@ -1268,7 +1245,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number (optional)
+                    {t('phoneNumber')}
                   </label>
                   <input
                     type="tel"
@@ -1280,7 +1257,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   />
                   {renderFieldError('phoneNumber')}
                   <p className="text-xs text-gray-500 mt-1">
-                    Enter number without leading zeros (e.g., 157 123 456 78)
+                    {t('phoneNumberHelp')}
                   </p>
                 </div>
               </div>
@@ -1313,8 +1290,11 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               <div className="p-2.5 bg-purple-50 rounded-lg border border-purple-100">
                 <User className="h-5 w-5 text-purple-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">Managing Director</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t('managingDirectorTitle')}</h2>
             </div>
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              {t('managingDirectorDescription')}
+            </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -1326,7 +1306,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   onChange={(e) => handleInputChange('contactSalutation', e.target.value)}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black placeholder-gray-200"
                 >
-                  <option className='text-gray-10' value="pleaseSelect">Please Select</option>
+                  <option className='text-gray-10' value="pleaseSelect">{t('salutationOptions.pleaseSelect')}</option>
                   <option value="mr">{t('salutationOptions.mr')}</option>
                   <option value="mrs">{t('salutationOptions.mrs')}</option>
                   <option value="diverse">{t('salutationOptions.diverse')}</option>
@@ -1468,7 +1448,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   onChange={(e) => handleInputChange('projectContactSalutation', e.target.value)}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white text-black placeholder-gray-200"
                 >
-                  <option value="pleaseSelect">Please Select</option>
+                  <option value="pleaseSelect">{t('salutationOptions.pleaseSelect')}</option>
                   <option value="mr">{t('salutationOptions.mr')}</option>
                   <option value="mrs">{t('salutationOptions.mrs')}</option>
                   <option value="diverse">{t('salutationOptions.diverse')}</option>
@@ -1596,7 +1576,6 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('iban')}`}
                 />
                 {renderFieldError('iban')}
-                <p className="text-xs text-gray-500 mt-1">{t('ibanFormat')}</p>
               </div>
 
               <div>
@@ -1834,11 +1813,11 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 <Building className="h-5 w-5" />
               )}
               {showSuccess 
-                ? (isCreationMode ? 'Organization Created!' : (existingSubmission ? 'Updated Successfully!' : 'Saved Successfully!'))
+                ? (isCreationMode ? t('organizationCreated') : (existingSubmission ? 'Updated Successfully!' : 'Saved Successfully!'))
                 : isSubmitting 
-                  ? (isCreationMode ? 'Creating Organization...' : (existingSubmission ? t('updating') : t('saving')))
+                  ? (isCreationMode ? t('creatingOrganization') : (existingSubmission ? t('updating') : t('saving')))
                   : (isCreationMode 
-                    ? 'Create Organization'
+                    ? t('createOrganization')
                     : (existingSubmission 
                       ? (hasChanges ? t('saveChanges') : t('noChanges'))
                       : t('submit')

@@ -5,6 +5,9 @@ export const midTranslations = {
     title: 'BENUTZER',
     required: '* Pflichtfeld',
     projectId: 'Projekt-Id: 11776',
+    createOrganization: 'Organisation erstellen',
+    organizationCreated: 'Organisation angelegt!',
+    creatingOrganization: 'Organisation wird erstellt...',
     
     // User section
     username: 'Benutzername',
@@ -15,8 +18,11 @@ export const midTranslations = {
     
     // Business contact section
     businessContactTitle: 'Kontaktdaten der Geschäftsführung',
+    managingDirectorTitle: 'Geschäftsführer',
+    managingDirectorDescription: 'Falls deine Organisation keinen Geschäftsführer hat, dann gib hier den Hauptverantwortlichen deiner Organisation an.',
     salutation: 'Anrede',
     salutationOptions: {
+      pleaseSelect: 'Bitte wählen',
       mr: 'Herr',
       mrs: 'Frau',
       diverse: 'Divers'
@@ -45,17 +51,23 @@ export const midTranslations = {
       austria: 'Österreich',
       switzerland: 'Schweiz'
     },
-    street: 'Straße, Nr.',
+    street: 'Straße',
+    streetNumber: 'Hausnummer',
     poBox: 'Postfach',
     poBoxPlaceholder: 'Optional - falls vorhanden',
     postalCode: 'PLZ',
+    postalCodePlaceholder: '52070',
     city: 'Stadt',
+    cityPlaceholder: 'Aachen',
     
     // Project contact section
     projectContactTitle: 'Projektleiter/in beim Antragsteller',
     projectContactHelp: 'Bitte tragen Sie hier den technischen Ansprechpartner ein.',
     useManagementContactData: 'Geschäftsführungsdaten verwenden',
     phone: 'Telefon',
+    phoneAreaCode: 'Vorwahl',
+    phoneNumber: 'Telefonnummer',
+    phoneNumberHelp: 'Ohne führende Nullen (bspw. 157 123 456 78)',
     role: 'Funktion',
     
     // Company description section
@@ -124,6 +136,10 @@ export const midTranslations = {
     },
     employeesTitle: 'Mitarbeiter',
     employeesHelp: "Einigen Förderprogramme verwenden die Gesamtzahl der Beschäftigten, andere die Vollzeitäquivalente. Falls du die exakten Zahlen nicht auswendig kennst, reichen grobe Werte. Allerdings liegen die Schwellenwerte für Förderungen bei 10, 50 und 250 Mitarbeitern. Es ist also nur wichtig, dass deine Zahl im richtigen Bereich (0-9, 10-49, 50-249, 250+) liegt. Innerhalb dieses Bereiches darf sie ruhig ungenau sein (bspw. 25 statt 29 ist ok, aber 10 statt 9 ist ein relevanter Unterschied).",
+    totalEmployees: 'Anzahl Mitarbeiter',
+    totalEmployeesHelp: 'Die Anzahl aller sozialversicherungspflichtig angestellter Mitarbeiter, unabhängig von ihrer Arbeitsstundenanzahl.',
+    fullTimeEquivalents: 'Vollzeitäquivalente',
+    fullTimeEquivalentsHelp: 'Stundenbasierte Zählung relativ zu Vollzeitmitarbeitern (bspw. 1 für 40h-Stelle, 0,5 für 20h-Stelle, etc.)',
     employees: 'Mitarbeiteranzahl einschließlich Partner- und verbundener Unternehmen (Entsprechend Vollzeit-äquivalente)',
     
     // MID Funding History
@@ -172,7 +188,28 @@ export const midTranslations = {
     errorMessage: 'Fehler beim Übermitteln des Formulars. Bitte versuchen Sie es erneut.',
     saveChanges: 'Änderungen speichern',
     noChanges: 'Keine Änderungen',
-    updating: 'Wird aktualisiert...'
+    updating: 'Wird aktualisiert...',
+    
+    // Onboarding translations
+    onboarding: {
+      applyToMID: {
+        title: 'MID Digitalisierungszuschuss beantragen',
+        description: 'Beauftrage uns dein Los für das Förderprogramm MID Digitalisierung einzureichen, über welches du einen Zuschuss von bis zu 15.000€ für ein Digitalisierungsprojekt erhalten kannst.',
+        buttonText: 'MID Digitalisierung Los einreichen',
+        skipText: 'Überspringen',
+        checkingRequirements: 'MID-Anforderungen werden überprüft...',
+        midSkipped: 'MID-Antrag übersprungen - du kannst zum nächsten Schritt fortfahren',
+        midSubmitted: 'MID-Antrag eingereicht!',
+        completeFields: 'Vervollständige die erforderlichen Felder, um einen MID-Antrag zu stellen',
+        alreadyApplied: 'Bereits bei MID beworben',
+        applyToMID: 'Bei MID bewerben'
+      },
+      bookCoachingCall: {
+        title: 'Kostenfreien Coaching Call vereinbaren',
+        description: 'Vereinbare einen kostenfreien 30-minütigen Coaching Call mit einem unserer Digitalisierungs-Coaches.',
+        buttonText: 'Kostenfreien Call vereinbaren'
+      }
+    }
   },
   
   en: {
@@ -180,6 +217,9 @@ export const midTranslations = {
     title: 'USER',
     required: '* Required field',
     projectId: 'Project-Id: 11776',
+    createOrganization: 'Create Organization',
+    organizationCreated: 'Organization Created!',
+    creatingOrganization: 'Creating Organization...',
     
     // User section
     username: 'Username',
@@ -190,8 +230,11 @@ export const midTranslations = {
     
     // Business contact section
     businessContactTitle: 'Management Contact Details',
+    managingDirectorTitle: 'Managing Director',
+    managingDirectorDescription: 'If your organization does not have a managing director, please enter the name of the person primarily responsible for your organization here.',
     salutation: 'Salutation',
     salutationOptions: {
+      pleaseSelect: 'Please Select',
       mr: 'Mr.',
       mrs: 'Ms.',
       diverse: 'Diverse'
@@ -220,17 +263,23 @@ export const midTranslations = {
       austria: 'Austria',
       switzerland: 'Switzerland'
     },
-    street: 'Street, No.',
+    street: 'Street',
+    streetNumber: 'Number',
     poBox: 'P.O. Box',
     poBoxPlaceholder: 'Optional - if applicable',
     postalCode: 'Postal code',
+    postalCodePlaceholder: '52070',
     city: 'City',
+    cityPlaceholder: 'Aachen',
     
     // Project contact section
     projectContactTitle: 'Project Manager at Applicant',
     projectContactHelp: 'Please enter the technical contact person here.',
     useManagementContactData: 'Use management contact data',
     phone: 'Phone',
+    phoneAreaCode: 'Country Code',
+    phoneNumber: 'Phone Number',
+    phoneNumberHelp: 'Enter number without leading zeros (e.g., 157 123 456 78)',
     role: 'Function',
     
     // Company description section
@@ -300,6 +349,10 @@ export const midTranslations = {
 
     employeesTitle: 'Employees',
     employeesHelp: "Some subsidy programs use the total number of employees, others use full-time equivalents. If you don't know the exact figures off the top of your head, rough estimates will suffice. However, the thresholds for subsidies are 10, 50, and 250 employees. So it is only important that your number is in the correct range (0-9, 10-49, 50-249, 250+). Within this range, it can be inaccurate (e.g., 25 instead of 29 is okay, but 10 instead of 9 is a relevant difference).",
+    totalEmployees: 'Total Number of Employees',
+    totalEmployeesHelp: 'Count every social secured employee as one complete employee, indifferent of worked hours',
+    fullTimeEquivalents: 'Full Time Equivalents',
+    fullTimeEquivalentsHelp: 'Counting based on weekly hours (e.g., 0.5 for half-time employee)',
     employees: 'Number of employees including partner and affiliated companies (Full-time equivalents)',
     
     // MID Funding History
@@ -348,6 +401,27 @@ export const midTranslations = {
     errorMessage: 'Error submitting form. Please try again.',
     saveChanges: 'Save Changes',
     noChanges: 'No Changes',
-    updating: 'Updating...'
+    updating: 'Updating...',
+    
+    // Onboarding translations
+    onboarding: {
+      applyToMID: {
+        title: 'Apply to MID Funding',
+        description: 'Apply for up to €15,000 in MID funding',
+        buttonText: 'Apply for €15,000 MID Funding',
+        skipText: 'Skip this step',
+        checkingRequirements: 'Checking MID requirements...',
+        midSkipped: 'MID application skipped - you can proceed to the next step',
+        midSubmitted: 'MID application submitted!',
+        completeFields: 'Complete required fields to apply for MID funding',
+        alreadyApplied: 'Already Applied to MID',
+        applyToMID: 'Apply to MID'
+      },
+      bookCoachingCall: {
+        title: 'Book a Free Coaching Call',
+        description: 'Schedule a free 30-minute coaching call with one of our digitalization coaches.',
+        buttonText: 'Schedule Free Call'
+      }
+    }
   }
 };

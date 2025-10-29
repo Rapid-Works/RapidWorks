@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useMIDTranslation } from '../../hooks/useMIDTranslation';
 import CalendlyModal from '../CalendlyModal';
 import ProfileEditModal from '../ProfileEditModal';
 import { httpsCallable } from 'firebase/functions';
@@ -27,6 +29,8 @@ import { functions } from '../../firebase/config';
 export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInviteModal, currentContext }) => {
   const { currentUser } = useAuth();
   const router = useRouter();
+  const { language } = useLanguage();
+  const { t } = useMIDTranslation();
   const { 
     loading, 
     progress, 
@@ -292,16 +296,16 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     {
       id: 'midApplied',
       stepNumber: 4,
-      title: 'Apply to MID Funding',
+      title: t('onboarding.applyToMID.title'),
       description: midFieldsStatus.isLoading
-        ? 'Checking MID requirements...'
+        ? t('onboarding.applyToMID.checkingRequirements')
         : tasks.midSkipped
-          ? 'MID application skipped - you can proceed to the next step'
+          ? t('onboarding.applyToMID.midSkipped')
           : midFieldsStatus.hasMIDSubmission 
-            ? 'MID application submitted!' 
+            ? t('onboarding.applyToMID.midSubmitted')
             : midFieldsStatus.allFieldsFilled 
-              ? 'Apply for up to €15,000 in MID funding' 
-              : 'Complete required fields to apply for MID funding',
+              ? t('onboarding.applyToMID.description')
+              : t('onboarding.applyToMID.completeFields'),
       completed: tasks.midApplied || tasks.midSkipped,
       icon: midFieldsStatus.isLoading ? Loader2 : (midFieldsStatus.allFieldsFilled ? Euro : FileCheck),
       color: midFieldsStatus.isLoading ? 'gray' : (midFieldsStatus.allFieldsFilled ? 'green' : 'orange'),
@@ -311,7 +315,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
           {midFieldsStatus.isLoading ? (
             <div className="flex items-center gap-2 text-gray-500 text-sm">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Checking requirements...
+              {t('onboarding.applyToMID.checkingRequirements')}
             </div>
           ) : midFieldsStatus.allFieldsFilled ? (
             <div className="flex items-center gap-4">
@@ -324,7 +328,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm"
               >
                 <Euro className="h-4 w-4" />
-                Apply for €15,000 MID Funding
+                {t('onboarding.applyToMID.buttonText')}
                 <ArrowRight className="h-4 w-4" />
               </button>
               
@@ -335,7 +339,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                 }}
                 className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
-                Skip this step
+                {t('onboarding.applyToMID.skipText')}
               </button>
             </div>
           ) : (
@@ -380,10 +384,10 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     {
       id: 'bookingCallCompleted',
       stepNumber: 5,
-      title: 'Book a Free Coaching Call',
+      title: t('onboarding.bookCoachingCall.title'),
       description: tasks.bookingCallCompleted 
         ? 'Coaching call booked!' 
-        : 'Schedule a free 30-minute coaching session with our team',
+        : t('onboarding.bookCoachingCall.description'),
       completed: tasks.bookingCallCompleted,
       icon: Calendar,
       color: 'blue',
@@ -395,7 +399,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Calendar className="h-4 w-4" />
-            Book Your Call on Calendly
+            {t('onboarding.bookCoachingCall.buttonText')}
           </button>
         </div>
       ),

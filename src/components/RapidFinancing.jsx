@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
+import { useMIDTranslation } from '../hooks/useMIDTranslation';
 import { DollarSign, Calendar, ExternalLink, AlertCircle, FileCheck, CheckCircle, Clock, XCircle, Eye, EyeOff, Edit, MoreVertical, Trash2, Key, Check, Copy, X, ArrowRight } from 'lucide-react';
 import { getFinancingApplications } from '../utils/financingService';
 import { getUserMIDFormSubmissions, deleteMIDFormSubmission } from '../services/midFormService';
@@ -140,6 +141,7 @@ const ActionsMenu = ({ application, onView, onEdit, onDelete, onViewCredentials 
 
 const RapidFinancing = ({ onNavigateToCompanyInfo, onNavigateToTab }) => {
   const { currentUser } = useAuth();
+  const { t } = useMIDTranslation();
   const pathname = usePathname();
   const [financingApplications, setFinancingApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -612,7 +614,7 @@ const RapidFinancing = ({ onNavigateToCompanyInfo, onNavigateToTab }) => {
         }`}
       >
         <FileCheck className="h-4 w-4" />
-        {hasMIDSubmission ? 'Already Applied to MID' : 'Apply to MID'}
+        {hasMIDSubmission ? t('onboarding.applyToMID.alreadyApplied') : t('onboarding.applyToMID.applyToMID')}
       </button>
     </div>
   );
@@ -641,7 +643,7 @@ const RapidFinancing = ({ onNavigateToCompanyInfo, onNavigateToTab }) => {
                 }`}
               >
                 <FileCheck className="h-4 w-4" />
-                {hasMIDSubmission ? 'Already Applied to MID' : 'Apply to MID'}
+                {hasMIDSubmission ? t('onboarding.applyToMID.alreadyApplied') : t('onboarding.applyToMID.applyToMID')}
               </button>
               {/* Commented out Add Application button - users should use Apply to MID */}
               {/* <button
