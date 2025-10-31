@@ -5,7 +5,7 @@ export const midTranslations = {
     title: 'BENUTZER',
     required: '* Pflichtfeld',
     projectId: 'Projekt-Id: 11776',
-    createOrganization: 'Organisation erstellen',
+    createOrganization: 'Deine Organisation',
     organizationCreated: 'Organisation angelegt!',
     creatingOrganization: 'Organisation wird erstellt...',
     
@@ -33,7 +33,9 @@ export const midTranslations = {
     homepage: 'Homepage',
     legalName: 'Rechtsverbindlicher Name der Organisation',
     legalNameHelp: '(Sie finden den rechtsverbindlichen Namen Ihres Unternehmens bspw. im Handelsregisterauszug)',
+    organizationDataTitle: 'Organisations Daten',
     organizationInfoDescription: 'Diese Daten repräsentieren deine Organisation. Alle Felder sind optional, aber die mit MID gekennzeichneten Felder werden zur Teilnahme am MID-Losverfahren benötigt.',
+    organizationCreationDescription: 'Richte dein Organisationskonto ein. Mit * markierte Felder sind erforderlich, um zu beginnen. Du kannst später weitere Details für MID-Anwendungen hinzufügen.',
     quickSetupTitle: 'Schnelleinrichtung',
     quickSetupDescription: 'Du kannst optional hier die Impressums-URL deiner Organisation eingeben und auf den Button klicken, damit unser Formular versucht einige Felder selbst anhand der öffentlichen Angaben deines Impressums zu befüllen. Es dauert nur 1 Sekunde. Du kannst selbstverständlich jedes Feld danach bearbeiten.',
     impressumUrlPlaceholder: 'https://deinewebsite.de/impressum',
@@ -90,7 +92,8 @@ export const midTranslations = {
     bankAccountDescription: 'Wird von MID bereits für die Loseinreichung benötigt.',
     foundingYear: 'Gründungsjahr',
     foundingDate: 'Gründungsdatum',
-    taxId: 'Steuer-Id',
+    taxId: 'Steuernummer',
+    taxIdHelp: 'Die Steuernummer deiner Organisation findest du bspw. auf einem Schreiben des Finanzamtes, in Elster, oder auf der Gewerbeanmeldung.',
     iban: 'IBAN des Geschäftskontos',
     ibanExample: 'DE50512305000018102010',
     ibanFormat: 'Format Beispiel: DE50512305000018102010',
@@ -148,6 +151,8 @@ export const midTranslations = {
     hasReceivedDigitisation: 'Hat Ihr Unternehmen bereits MID Digitalisierungs-Förderung erhalten?',
     hasReceivedDigitalSecurity: 'Hat Ihr Unternehmen bereits MID Digital Security-Förderung erhalten?',
     selectYesNo: 'Bitte wählen Sie Ja oder Nein für in der Vergangenheit erhaltene MID-Förderung',
+    yes: 'Ja',
+    no: 'Nein',
     lastDigitisationApproval: 'Datum der letzten MID Digitalisierungs-Genehmigung',
     lastDigitalSecurityApproval: 'Datum der letzten MID Digital Security-Genehmigung',
     cooldownExplanation: 'Die 24-Monats-Karenzzeit beginnt ab diesem Genehmigungsdatum',
@@ -254,7 +259,7 @@ export const midTranslations = {
         verifyEmailDescription: 'Verifiziere deine E-Mail Adresse.',
         completeProfileDescription: 'Füge deinen Vor- und Nachnamen zu deinem Profil hinzu.',
         completeProfileButton: 'Profil vervollständigen →',
-        createOrganization: 'Organisation anlegen',
+        createOrganization: 'Deine Organisation',
         completeStepFirst: 'Schließe zuerst Schritt {step} ab'
       }
     }
@@ -265,7 +270,7 @@ export const midTranslations = {
     title: 'USER',
     required: '* Required field',
     projectId: 'Project-Id: 11776',
-    createOrganization: 'Create Organization',
+    createOrganization: 'Your organization',
     organizationCreated: 'Organization Created!',
     creatingOrganization: 'Creating Organization...',
     
@@ -293,7 +298,9 @@ export const midTranslations = {
     homepage: 'Homepage',
     legalName: 'Legal name of the organization',
     legalNameHelp: '(You can find the legal name of your company in the commercial register extract)',
+    organizationDataTitle: 'Organization Data',
     organizationInfoDescription: `This data represents your company. All fields are optional, but those marked with MID are required to participate in the MID lottery.`,
+    organizationCreationDescription: 'Set up your organization account. Fields marked with * are required to get started. You can add more details later for MID applications.',
     quickSetupTitle: 'Quick Setup',
     quickSetupDescription: 'You can optionally enter your organization\'s Impressum URL here and click the button so our form tries to fill some fields automatically based on the public information in your Impressum. It only takes 1 second. You can of course edit any field afterwards.',
     impressumUrlPlaceholder: 'https://yourwebsite.com/imprint',
@@ -350,7 +357,8 @@ export const midTranslations = {
     bankAccountDescription: 'Is required by MID for the lottery ticket submission.',
     foundingYear: 'Founding year',
     foundingDate: 'Founding date',
-    taxId: 'Tax ID',
+    taxId: 'Tax Number',
+    taxIdHelp: 'You can find your organization\'s tax number (In Germany "Steuernummer") on a letter from the tax office, in Elster, or on your business registration, for example.',
     iban: 'IBAN of the Business Account',
     ibanExample: 'DE50512305000018102010',
     ibanFormat: 'Format Example: DE50512305000018102010',
@@ -409,6 +417,8 @@ export const midTranslations = {
     hasReceivedDigitisation: 'Has your company previously received MID Digitisation funding?',
     hasReceivedDigitalSecurity: 'Has your company previously received MID Digital Security funding?',
     selectYesNo: 'Please select Yes or No for MID funding received in the past',
+    yes: 'Yes',
+    no: 'No',
     lastDigitisationApproval: 'Date of Last MID Digitisation Approval',
     lastDigitalSecurityApproval: 'Date of Last MID Digital Security Approval',
     cooldownExplanation: 'The 24-month cooldown period begins from this approval date',
@@ -455,8 +465,8 @@ export const midTranslations = {
     onboarding: {
       applyToMID: {
         title: 'Apply to MID Funding',
-        description: 'Apply for up to €15,000 in MID funding',
-        buttonText: 'Apply for €15,000 MID Funding',
+        description: 'Comission us to submit your application for the MID Digitalization funding program through which you can receive a grant of up to €15,000 for a digitization project',
+        buttonText: 'Submit MID digitization lottery entry',
         skipText: 'Skip this step',
         checkingRequirements: 'Checking MID requirements...',
         midSkipped: 'MID application skipped - you can proceed to the next step',
@@ -515,7 +525,7 @@ export const midTranslations = {
         verifyEmailDescription: 'Confirm your email address to secure your account',
         completeProfileDescription: 'Add your first and last name to complete your profile',
         completeProfileButton: 'Complete Profile →',
-        createOrganization: 'Create Organization',
+        createOrganization: 'Your organization',
         completeStepFirst: 'Complete step {step} first'
       }
     }

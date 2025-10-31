@@ -147,7 +147,7 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">Invite Member</h2>
-              <p className="text-sm text-gray-600">Add a new member to {organization.name}</p>
+              <p className="text-sm text-gray-600">Add a new member to your organization</p>
             </div>
           </div>
           <button
@@ -224,14 +224,6 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
                     ))}
                   </div>
                 )}
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={handleClose}
-                  className="px-4 py-2 bg-[#7C3BEC] hover:bg-[#6B32D6] text-white rounded-lg transition-colors"
-                >
-                  Done
-                </button>
               </div>
             </div>
           ) : (

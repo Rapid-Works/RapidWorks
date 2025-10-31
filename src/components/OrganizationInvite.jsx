@@ -283,7 +283,7 @@ const OrganizationInvite = () => {
                     ) : (
                       <div className="text-center">
                         <p className="text-sm text-red-600 mb-4">
-                          Please log in with the correct email address ({invitation.inviteeEmail}) to accept this invitation.
+                          Please log in with the correct email address to accept this invitation.
                         </p>
                         <button
                           onClick={() => setShowLoginModal(true)}

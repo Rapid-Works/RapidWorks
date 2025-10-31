@@ -385,14 +385,16 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       id: 'bookingCallCompleted',
       stepNumber: 5,
       title: t('onboarding.bookCoachingCall.title'),
-      description: tasks.bookingCallCompleted 
+      description: tasks.bookingCallCompleted === true 
         ? 'Coaching call booked!' 
+        : tasks.bookingCallCompleted === 'skipped'
+        ? 'Coaching call skipped'
         : t('onboarding.bookCoachingCall.description'),
-      completed: tasks.bookingCallCompleted,
+      completed: tasks.bookingCallCompleted === true || tasks.bookingCallCompleted === 'skipped',
       icon: Calendar,
       color: 'blue',
       requiresPrevious: true,
-      action: tasks.bookingCallCompleted ? null : (
+      action: (tasks.bookingCallCompleted === true || tasks.bookingCallCompleted === 'skipped') ? null : (
         <div className="mt-3 space-y-3">
           <button
             onClick={() => setIsCalendlyModalOpen(true)}
@@ -401,6 +403,21 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
             <Calendar className="h-4 w-4" />
             {t('onboarding.bookCoachingCall.buttonText')}
           </button>
+          <div className="text-center">
+            <button
+              onClick={async () => {
+                try {
+                  await markTaskSkipped('bookingCallCompleted');
+                  console.log('✅ Coaching call task marked as skipped');
+                } catch (error) {
+                  console.error('Error marking task skipped:', error);
+                }
+              }}
+              className="text-sm text-gray-500 hover:text-gray-700 underline transition-colors"
+            >
+              {t('onboarding.inviteCoworkers.skipForNow')}
+            </button>
+          </div>
         </div>
       ),
     },
@@ -578,11 +595,17 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                       </h3>
                       {isCompleted && (
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                          (task.id === 'midApplied' && tasks.midSkipped) || (task.id === 'coworkersInvited' && tasks.coworkersInvited === 'skipped')
+                          (task.id === 'midApplied' && tasks.midSkipped) || 
+                          (task.id === 'coworkersInvited' && tasks.coworkersInvited === 'skipped') ||
+                          (task.id === 'bookingCallCompleted' && tasks.bookingCallCompleted === 'skipped')
                             ? 'bg-yellow-100 text-yellow-700'
                             : 'bg-green-100 text-green-700'
                         }`}>
-                          {(task.id === 'midApplied' && tasks.midSkipped) || (task.id === 'coworkersInvited' && tasks.coworkersInvited === 'skipped') ? 'Skipped' : `✓ ${t('onboarding.dashboard.completed')}`}
+                          {(task.id === 'midApplied' && tasks.midSkipped) || 
+                           (task.id === 'coworkersInvited' && tasks.coworkersInvited === 'skipped') ||
+                           (task.id === 'bookingCallCompleted' && tasks.bookingCallCompleted === 'skipped') 
+                            ? 'Skipped' 
+                            : `✓ ${t('onboarding.dashboard.completed')}`}
                         </span>
                       )}
                     </div>

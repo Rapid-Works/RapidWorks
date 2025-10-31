@@ -60,7 +60,7 @@ export const useOnboarding = () => {
           data.profileCompleted,
           data.organizationCreated,
           data.midApplied || data.midSkipped, // Either applied or skipped counts as completion
-          data.bookingCallCompleted,
+          data.bookingCallCompleted === true || data.bookingCallCompleted === 'skipped', // Either completed or skipped counts
           data.coworkersInvited === true || data.coworkersInvited === 'skipped', // Either invited or skipped counts
           // data.walkthroughCompleted, // Commented out step 7
         ];
@@ -222,7 +222,7 @@ export const useOnboarding = () => {
     onboardingData.profileCompleted,
     onboardingData.organizationCreated,
     onboardingData.midApplied || onboardingData.midSkipped, // Either applied or skipped counts
-    onboardingData.bookingCallCompleted,
+    onboardingData.bookingCallCompleted === true || onboardingData.bookingCallCompleted === 'skipped', // Either completed or skipped counts
     onboardingData.coworkersInvited === true || onboardingData.coworkersInvited === 'skipped', // Either invited or skipped counts
     // onboardingData.walkthroughCompleted, // Commented out step 7
   ].filter(Boolean).length;
@@ -333,7 +333,7 @@ export const useOnboarding = () => {
             data.profileCompleted,
             data.organizationCreated,
             data.midApplied || data.midSkipped,
-            data.bookingCallCompleted,
+            data.bookingCallCompleted === true || data.bookingCallCompleted === 'skipped',
             data.coworkersInvited === true || data.coworkersInvited === 'skipped',
           ];
           const completedCount = tasks.filter(Boolean).length;

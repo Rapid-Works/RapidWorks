@@ -345,20 +345,22 @@ const LoginModal = ({
           <X size={24} />
         </button>
 
-        <div className="text-center mb-8 mt-4">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {language === 'de' 
-              ? (isSignup ? currentMessage.signupTitleDe : currentMessage.titleDe)
-              : (isSignup ? currentMessage.signupTitle : currentMessage.title)
-            }
-          </h1>
-          <p className="text-gray-600 leading-relaxed">
-            {language === 'de'
-              ? (isSignup ? currentMessage.signupSubtitleDe : currentMessage.subtitleDe)
-              : (isSignup ? currentMessage.signupSubtitle : currentMessage.subtitle)
-            }
-          </p>
-        </div>
+        {!showSuccess && (
+          <div className="text-center mb-8 mt-4">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {language === 'de' 
+                ? (isSignup ? currentMessage.signupTitleDe : currentMessage.titleDe)
+                : (isSignup ? currentMessage.signupTitle : currentMessage.title)
+              }
+            </h1>
+            <p className="text-gray-600 leading-relaxed">
+              {language === 'de'
+                ? (isSignup ? currentMessage.signupSubtitleDe : currentMessage.subtitleDe)
+                : (isSignup ? currentMessage.signupSubtitle : currentMessage.subtitle)
+              }
+            </p>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">

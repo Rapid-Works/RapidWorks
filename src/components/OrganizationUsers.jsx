@@ -102,7 +102,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
   };
 
   // Prepare table data for all members
-  const allMembersHeaders = isAdmin ? ['Member', 'Status', 'Access Level', 'Joined', 'Actions'] : ['Member', 'Status', 'Access Level', 'Joined'];
+  const allMembersHeaders = isAdmin ? ['Member', 'Status', 'Access Level', 'Date', 'Actions'] : ['Member', 'Status', 'Access Level', 'Date'];
   const allMembersData = members.map((member) => {
     const row = [
       <div key="member" className="flex items-center">
@@ -360,7 +360,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Team Directory</h3>
-              <p className="text-sm text-gray-600">A complete list of all team members and their access levels</p>
+              <p className="text-sm text-gray-600">Manage team members and their permissions</p>
             </div>
             <div className="flex items-center gap-3">
               {isNonAdminUser && (
@@ -392,44 +392,6 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
           />
         </div>
       )
-    },
-    {
-      label: 'Active Members',
-      icon: <UserCheck className="h-4 w-4" />,
-      count: activeMembers.length,
-      content: (
-        <StandardTable
-          headers={isAdmin ? ['Member', 'Status', 'Access Level', 'Joined', 'Actions'] : ['Member', 'Status', 'Access Level', 'Joined']}
-          data={activeMembersData}
-          loading={loading}
-          emptyState={
-            <div className="text-center py-12">
-              <UserCheck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Members</h3>
-              <p className="text-gray-600">No active team members found.</p>
-            </div>
-          }
-        />
-      )
-    },
-    {
-      label: 'Pending Invitations',
-      icon: <Clock className="h-4 w-4" />,
-      count: pendingInvitations.length,
-      content: (
-        <StandardTable
-          headers={['Member', 'Status', 'Invited']}
-          data={pendingInvitationsData}
-          loading={loading}
-          emptyState={
-            <div className="text-center py-12">
-              <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Invitations</h3>
-              <p className="text-gray-600">All invitations have been accepted or there are no pending invites.</p>
-            </div>
-          }
-        />
-      )
     }
   ];
 
@@ -438,9 +400,8 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-gray-900">
-          {organization?.name || 'Organization'} Members
+          Your organization
         </h2>
-        <p className="text-gray-600 mt-1">Manage team members and their permissions</p>
       </div>
 
       {/* Tabs */}

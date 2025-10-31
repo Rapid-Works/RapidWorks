@@ -25,7 +25,7 @@ import { functions } from '../firebase/config';
 import { sendOrganizationCreatedNotification } from '../utils/teamsWebhookService';
 
 const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrganizationCreated, onNavigateToTab }) => {
-  const { t } = useMIDTranslation();
+  const { t, language } = useMIDTranslation();
   const { currentUser: user } = useAuth();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -173,6 +173,23 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />
         <span className="text-xs text-red-600">{error}</span>
       </div>
+    );
+  };
+
+  // Helper function to render text with MID pill styling
+  const renderTextWithMIDPill = (text) => {
+    if (!text) return null;
+    const parts = text.split(/(MID)/gi);
+    return (
+      <>
+        {parts.map((part, index) => 
+          part.toUpperCase() === 'MID' ? (
+            <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">MID</span>
+          ) : (
+            part
+          )
+        )}
+      </>
     );
   };
 
@@ -358,7 +375,9 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
           error = null;
           break;
         case 'fullTimeEquivalents':
-          error = validateFTE(value);
+          // Convert comma to period for validation (parseFloat needs periods)
+          const fteValue = typeof value === 'string' ? value.replace(',', '.') : value;
+          error = validateFTE(fteValue);
           break;
         case 'foundingDate':
           error = validateFoundingDate(value);
@@ -405,8 +424,17 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
       [field]: true
     }));
     
+    // For fullTimeEquivalents, convert comma to period on blur for storage
+    let value = formData[field];
+    if (field === 'fullTimeEquivalents' && typeof value === 'string' && language === 'de') {
+      value = value.replace(',', '.');
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+    
     // Re-validate the field after it's been touched (force validation)
-    const value = formData[field];
     const fieldError = validateField(field, value, true);
     setFieldErrors(prev => ({
       ...prev,
@@ -755,13 +783,10 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         {/* Header */}
         <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            {isCreationMode ? t('createOrganization') : 'Organization Information'}
+            {t('createOrganization')}
           </h1>
           <p className="text-sm text-gray-600 leading-relaxed">
-            {isCreationMode 
-              ? 'Set up your organization account. Fields marked with * are required to get started. You can add more details later for MID applications.'
-              : t('organizationInfoDescription')
-            }
+            {renderTextWithMIDPill(t('organizationInfoDescription'))}
           </p>
         </div>
 
@@ -861,7 +886,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               <div className="p-2.5 bg-purple-50 rounded-lg border border-purple-100">
                 <Building className="h-5 w-5 text-purple-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">Organization Data</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t('organizationDataTitle')}</h2>
             </div>
             
             <div>
@@ -940,6 +965,9 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('taxId')}`}
               />
               {renderFieldError('taxId')}
+              <p className="text-xs text-gray-500 mt-1">
+                {t('taxIdHelp')}
+              </p>
             </div>
 
             {/* Industry */}
@@ -1021,12 +1049,13 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 </span>
               </label>
               <input
-                type="number"
-                min="0"
-                step="0.1"
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
                 value={formData.fullTimeEquivalents === null ? '' : formData.fullTimeEquivalents}
                 onChange={(e) => handleInputChange('fullTimeEquivalents', e.target.value)}
-                placeholder="12.5"
+                onBlur={() => handleFieldBlur('fullTimeEquivalents')}
+                placeholder={language === 'de' ? '12,5' : '12.5'}
                 className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('fullTimeEquivalents')}`}
                 onWheel={e => e.target.blur()}
               />
@@ -1666,23 +1695,23 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                       <input
                         type="radio"
                         name="hasReceivedMIDDigitisation"
-                        value="yes"
-                        checked={formData.hasReceivedMIDDigitisation === 'yes'}
-                        onChange={(e) => handleInputChange('hasReceivedMIDDigitisation', e.target.value)}
-                        className="h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300"
-                      />
-                      <span className="text-sm font-medium text-gray-700">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="hasReceivedMIDDigitisation"
                         value="no"
                         checked={formData.hasReceivedMIDDigitisation === 'no'}
                         onChange={(e) => handleInputChange('hasReceivedMIDDigitisation', e.target.value)}
                         className="h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300"
                       />
-                      <span className="text-sm font-medium text-gray-700">No</span>
+                      <span className="text-sm font-medium text-gray-700">{t('no')}</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="hasReceivedMIDDigitisation"
+                        value="yes"
+                        checked={formData.hasReceivedMIDDigitisation === 'yes'}
+                        onChange={(e) => handleInputChange('hasReceivedMIDDigitisation', e.target.value)}
+                        className="h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300"
+                      />
+                      <span className="text-sm font-medium text-gray-700">{t('yes')}</span>
                     </label>
                   </div>
                 </div>
@@ -1724,23 +1753,23 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                       <input
                         type="radio"
                         name="hasReceivedMIDDigitalSecurity"
-                        value="yes"
-                        checked={formData.hasReceivedMIDDigitalSecurity === 'yes'}
-                        onChange={(e) => handleInputChange('hasReceivedMIDDigitalSecurity', e.target.value)}
-                        className="h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300"
-                      />
-                      <span className="text-sm font-medium text-gray-700">Yes</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="hasReceivedMIDDigitalSecurity"
                         value="no"
                         checked={formData.hasReceivedMIDDigitalSecurity === 'no'}
                         onChange={(e) => handleInputChange('hasReceivedMIDDigitalSecurity', e.target.value)}
                         className="h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300"
                       />
-                      <span className="text-sm font-medium text-gray-700">No</span>
+                      <span className="text-sm font-medium text-gray-700">{t('no')}</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="hasReceivedMIDDigitalSecurity"
+                        value="yes"
+                        checked={formData.hasReceivedMIDDigitalSecurity === 'yes'}
+                        onChange={(e) => handleInputChange('hasReceivedMIDDigitalSecurity', e.target.value)}
+                        className="h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300"
+                      />
+                      <span className="text-sm font-medium text-gray-700">{t('yes')}</span>
                     </label>
                   </div>
                 </div>

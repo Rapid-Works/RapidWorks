@@ -18,7 +18,7 @@ import OrganizationSwitcher from './OrganizationSwitcher';
 import CreateOrganizationModal from './CreateOrganizationModal';
 import OrganizationUsers from './OrganizationUsers';
 import OrganizationsList from './OrganizationsList';
-import Analytics from './Analytics';
+// import Analytics from './Analytics';
 import AllUsers from './AllUsers';
 import RapidCoachings from './RapidCoachings';
 import RapidFinancing from './RapidFinancing';
@@ -250,12 +250,12 @@ const Dashboard = () => {
   const canAccessOrganizations = currentUser && currentUser.email?.endsWith('@rapid-works.io');
   
   // Check if user can access analytics (available to all authenticated users)
-  const canAccessAnalytics = currentUser !== null;
+  // const canAccessAnalytics = currentUser !== null;
   
   // Check if user can access all users list (rapid-works.io emails only)
   const canAccessAllUsers = currentUser && currentUser.email?.endsWith('@rapid-works.io');
   
-  // Check if user can access Rapid Coachings and Rapid Financing (all authenticated users)
+  // Check if user can access Rapid Coaching and Rapid Financing (all authenticated users)
   const canAccessRapidServices = currentUser !== null;
 
   // Handle navigation from invoicing to task chat
@@ -743,9 +743,35 @@ const Dashboard = () => {
                 >
                   <Home className="h-5 w-5" />
                   <div className="flex-1">
-                    <div className="font-medium">Home</div>
+                    <div className="font-medium">Setup</div>
                   </div>
                 </button>
+                
+                {canAccessMembers && (
+                  <button
+                    onClick={() => {
+                      setActiveTab('members');
+                      setSelectedTaskId(null); // Clear when leaving tasks area
+                      setIsMobileMenuOpen(false); // Close mobile menu
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                      activeTab === 'members'
+                        ? 'bg-[#7C3BEC] text-white shadow-lg'
+                        : 'text-gray-700 hover:bg-white hover:shadow-md'
+                    }`}
+                  >
+                    {currentUser?.email?.endsWith('@rapid-works.io') ? (
+                      <Users className="h-5 w-5" />
+                    ) : (
+                      <Building className="h-5 w-5" />
+                    )}
+                    <div className="flex-1">
+                      <div className="font-medium">
+                        {currentUser?.email?.endsWith('@rapid-works.io') ? 'Members' : 'Your organization'}
+                      </div>
+                    </div>
+                  </button>
+                )}
                 
                 <button
                   onClick={() => {
@@ -877,7 +903,7 @@ const Dashboard = () => {
                       <Users className="h-5 w-5" />
                       <div className="flex-1">
                         <div className="font-medium">
-                          {userIsExpert ? 'Expert Tasks' : (currentUser?.email?.endsWith('@rapid-works.io') ? 'My Requests' : 'Rapid Expert Tasks')}
+                          {userIsExpert ? 'Expert Tasks' : (currentUser?.email?.endsWith('@rapid-works.io') ? 'My Requests' : 'Rapid Experts')}
                         </div>
                       </div>
                       {userIsExpert && unreadTotal > 0 && (
@@ -1001,7 +1027,7 @@ const Dashboard = () => {
                   </button>
                 )}
 
-                {canAccessAnalytics && (
+                {/* {canAccessAnalytics && (
                   <button
                     onClick={() => {
                       setActiveTab('analytics');
@@ -1019,9 +1045,9 @@ const Dashboard = () => {
                       <div className="font-medium">Rapid Analytics</div>
                     </div>
                   </button>
-                )}
+                )} */}
 
-                {/* Rapid Coachings - For non-admin users only */}
+                {/* Rapid Coaching - For non-admin users only */}
                 {canAccessRapidServices && (
                   <button
                     onClick={() => {
@@ -1037,7 +1063,7 @@ const Dashboard = () => {
                   >
                     <Compass className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium">Rapid Coachings</div>
+                      <div className="font-medium">Rapid Coaching</div>
                     </div>
                   </button>
                 )}
@@ -1113,32 +1139,6 @@ const Dashboard = () => {
                 )}
 
                 {/* Twilio WhatsApp Test - Temporarily hidden (integrated into organization creation) */}
-
-                {canAccessMembers && (
-                  <button
-                    onClick={() => {
-                      setActiveTab('members');
-                      setSelectedTaskId(null); // Clear when leaving tasks area
-                      setIsMobileMenuOpen(false); // Close mobile menu
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                      activeTab === 'members'
-                        ? 'bg-[#7C3BEC] text-white shadow-lg'
-                        : 'text-gray-700 hover:bg-white hover:shadow-md'
-                    }`}
-                  >
-                    {currentUser?.email?.endsWith('@rapid-works.io') ? (
-                      <Users className="h-5 w-5" />
-                    ) : (
-                      <Building className="h-5 w-5" />
-                    )}
-                    <div className="flex-1">
-                      <div className="font-medium">
-                        {currentUser?.email?.endsWith('@rapid-works.io') ? 'Members' : 'Organization'}
-                      </div>
-                    </div>
-                  </button>
-                )}
                 </div>
 
                 {/* Sticky Help Section */}
@@ -1179,15 +1179,15 @@ const Dashboard = () => {
                   </svg>
                 </button>
                 <h1 className="text-lg font-semibold text-gray-900 truncate">
-                  {activeTab === 'home' && 'Home'}
+                  {activeTab === 'home' && 'Setup'}
                   {activeTab === 'branding' && 'Rapid Branding'}
-                  {activeTab === 'tasks' && (userIsExpert ? 'Expert Tasks' : (currentUser?.email?.endsWith('@rapid-works.io') ? 'My Requests' : 'Rapid Expert Tasks'))}
+                  {activeTab === 'tasks' && (userIsExpert ? 'Expert Tasks' : (currentUser?.email?.endsWith('@rapid-works.io') ? 'My Requests' : 'Rapid Experts'))}
                   {activeTab === 'agreements' && 'Agreements'}
                   {activeTab === 'invoicing' && 'Invoicing'}
                   {activeTab === 'organizations' && 'Organizations'}
                   {activeTab === 'users' && 'Users'}
-                  {activeTab === 'analytics' && 'Rapid Analytics'}
-                  {activeTab === 'coachings' && 'Rapid Coachings'}
+                  {/* {activeTab === 'analytics' && 'Rapid Analytics'} */}
+                  {activeTab === 'coachings' && 'Rapid Coaching'}
                   {activeTab === 'financing' && 'Rapid Financing'}
                   {activeTab === 'mid' && (
                     !currentContext?.organization?.id && !currentUser?.email?.endsWith('@rapid-works.io')
@@ -1324,7 +1324,7 @@ const Dashboard = () => {
                   </motion.div>
                 )}
 
-                {activeTab === 'analytics' && canAccessAnalytics && (
+                {/* {activeTab === 'analytics' && canAccessAnalytics && (
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -1333,7 +1333,7 @@ const Dashboard = () => {
                   >
                     <Analytics />
                   </motion.div>
-                )}
+                )} */}
 
                 {/* Twilio test content temporarily hidden */}
 
