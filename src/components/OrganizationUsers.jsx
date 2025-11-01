@@ -24,8 +24,10 @@ import InviteUserModal from './InviteUserModal';
 import LeaveOrganizationModal from './LeaveOrganizationModal';
 import { useAuth } from '../contexts/AuthContext';
 import StandardTabs, { StandardTable } from './ui/StandardTabs';
+import MIDForm from './MIDForm';
+import { Building } from 'lucide-react';
 
-const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, onInviteModalClose, onOpenInviteModal, onInviteCompleted }) => {
+const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, onInviteModalClose, onOpenInviteModal, onInviteCompleted, currentContext, missingMIDFields, onFieldsUpdated, onOrganizationCreated, onNavigateToTab }) => {
   const { currentUser } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,16 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
   const [selectedMember, setSelectedMember] = useState(null);
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const [isLeaveOrgModalOpen, setIsLeaveOrgModalOpen] = useState(false);
+  
+  // Set active tab to "Organization Info" (index 0) if there are missing MID fields
+  const [activeTabIndex, setActiveTabIndex] = useState(missingMIDFields && missingMIDFields.length > 0 ? 0 : 0);
+  
+  // Update active tab when missingMIDFields changes
+  useEffect(() => {
+    if (missingMIDFields && missingMIDFields.length > 0) {
+      setActiveTabIndex(0); // Switch to Organization Info tab
+    }
+  }, [missingMIDFields]);
 
   const isAdmin = currentUserPermissions?.role === 'admin' || currentUserPermissions?.permissions?.canManageMembers;
   const isNonAdminUser = !currentUser?.email?.endsWith('@rapid-works.io');
@@ -349,47 +361,66 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
     </div>
   );
 
+
   // Define tabs
   const tabs = [
+    {
+      label: 'Organization Info',
+      icon: <Building className="h-4 w-4" />,
+      content: (
+        <div>
+          <MIDForm 
+            currentContext={currentContext} 
+            missingMIDFields={missingMIDFields || []}
+            onFieldsUpdated={onFieldsUpdated || (() => {})}
+            onOrganizationCreated={onOrganizationCreated || (() => {})}
+            onNavigateToTab={onNavigateToTab || (() => {})}
+          />
+        </div>
+      )
+    },
     {
       label: 'All Members',
       icon: <Users className="h-4 w-4" />,
       count: members.length,
       content: (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Team Directory</h3>
-              <p className="text-sm text-gray-600">Manage team members and their permissions</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {isNonAdminUser && (
-                <button
-                  onClick={() => setIsLeaveOrgModalOpen(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Leave Organization
-                </button>
-              )}
-              {isAdmin && (
-                <button
-                  onClick={() => setShowInviteModal(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3BEC] text-white rounded-lg hover:bg-[#6B32D6] transition-colors"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Invite Member
-                </button>
-              )}
-            </div>
-          </div>
-
+        <div className="space-y-0">
           <StandardTable
             headers={allMembersHeaders}
             data={allMembersData}
             loading={loading}
             emptyState={emptyState}
           />
+          
+          {/* Invite Member Row - Outside the table for flexibility */}
+          {isAdmin && allMembersData.length > 0 && (
+            <div className="border-t-2 border-dashed border-gray-300 bg-white">
+              <div className="flex items-center justify-center py-4 px-6">
+                <button
+                  onClick={() => setShowInviteModal(true)}
+                  className="inline-flex items-center gap-3 px-4 py-2 text-sm font-medium text-[#7C3BEC] hover:text-[#6B32D6] hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-100">
+                    <UserPlus className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <span>Invite Member</span>
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Show invite button in empty state if admin */}
+          {isAdmin && allMembersData.length === 0 && !loading && (
+            <div className="text-center py-8">
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3BEC] text-white rounded-lg hover:bg-[#6B32D6] transition-colors"
+              >
+                <UserPlus className="h-4 w-4" />
+                Invite Member
+              </button>
+            </div>
+          )}
         </div>
       )
     }
@@ -398,14 +429,27 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">
           Your organization
         </h2>
+        {isNonAdminUser && (
+          <button
+            onClick={() => setIsLeaveOrgModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Leave Organization
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
-      <StandardTabs tabs={tabs} />
+      <StandardTabs 
+        tabs={tabs} 
+        activeTabIndex={activeTabIndex}
+        onTabChange={(index) => setActiveTabIndex(index)}
+      />
 
       {/* Permissions Modal */}
       {showPermissionsModal && selectedMember && (

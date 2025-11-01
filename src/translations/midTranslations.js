@@ -203,9 +203,9 @@ export const midTranslations = {
         buttonText: 'MID Digitalisierung Los einreichen',
         skipText: 'Überspringen',
         checkingRequirements: 'MID-Anforderungen werden überprüft...',
-        midSkipped: 'MID-Antrag übersprungen - du kannst zum nächsten Schritt fortfahren',
-        midSubmitted: 'MID-Antrag eingereicht!',
-        completeFields: 'Vervollständige die erforderlichen Felder, um einen MID-Antrag zu stellen',
+        midSkipped: 'MID-Antrag übersprungen - du kannst zum nächsten Schritt fortfahren.',
+        midSubmitted: 'MID-Antrag eingereicht.',
+        completeFields: 'Vervollständige die erforderlichen Felder, um einen MID-Antrag zu stellen.',
         alreadyApplied: 'Bereits bei MID beworben',
         applyToMID: 'Bei MID bewerben'
       },
@@ -216,38 +216,38 @@ export const midTranslations = {
       },
       createOrganization: {
         title: 'Lege deine Organisation an',
-        description: 'Fülle dein Organisationsformular aus, um zu beginnen',
+        description: 'Fülle dein Organisationsformular aus, um zu beginnen.',
         buttonText: 'Organisation anlegen',
         alreadyPartOf: 'Jemand aus deiner Organisation hat diese bereits bei uns registriert? Dann bitte den Organisations-Admin dich einzuladen.'
       },
       inviteCoworkers: {
         title: 'Team-Mitglieder einladen',
-        description: 'Lade deine Kollegen ein, deiner Organisation beizutreten',
-        teamInvited: 'Team-Mitglieder eingeladen!',
-        inviteSkipped: 'Einladungsaufgabe übersprungen',
+        description: 'Lade deine Kollegen ein, deiner Organisation beizutreten.',
+        teamInvited: 'Team-Mitglieder eingeladen.',
+        inviteSkipped: 'Einladungsaufgabe übersprungen.',
         buttonText: 'Team-Mitglieder einladen',
         skipForNow: 'Für jetzt überspringen'
       },
       profile: {
         title: 'Dein Profil',
-        addProfilePicture: 'Click auf das Kamera-Icon, um ein Profilbild hinzuzufügen.',
+        addProfilePicture: 'Klicke auf das Kamera-Icon, um ein Profilbild hinzuzufügen.',
         maxFileSize: 'Maximale Dateigröße 5MB',
         firstName: 'Vorname',
         firstNamePlaceholder: 'Max',
         lastName: 'Nachname',
         lastNamePlaceholder: 'Mustermann',
         email: 'Email',
-        contactSupport: 'Kontaktiere unseren Support, um deine E-Mail Adresse zu ändern',
+        contactSupport: 'Kontaktiere unseren Support, um deine E-Mail Adresse zu ändern.',
         cancel: 'Abbrechen',
         save: 'Speichern'
       },
       completeProfile: {
         title: 'Profil vervollständigen',
-        completed: 'Profil vervollständigt!',
-        needsCompletion: 'Profil muss vervollständigt werden - Vor- und Nachname erforderlich',
-        addNames: 'Füge deinen Vor- und Nachnamen hinzu, um dein Profil zu vervollständigen',
+        completed: 'Profil vervollständigt.',
+        needsCompletion: 'Profil muss vervollständigt werden - Vor- und Nachname erforderlich.',
+        addNames: 'Füge deinen Vor- und Nachnamen hinzu, um dein Profil zu vervollständigen.',
         buttonText: 'Profil vervollständigen',
-        namesRequired: 'Vor- und Nachname müssen ausgefüllt werden, um fortzufahren'
+        namesRequired: 'Vor- und Nachname müssen ausgefüllt werden, um fortzufahren.'
       },
       dashboard: {
         welcome: 'Willkommen, {name}.',
@@ -260,7 +260,7 @@ export const midTranslations = {
         completeProfileDescription: 'Füge deinen Vor- und Nachnamen zu deinem Profil hinzu.',
         completeProfileButton: 'Profil vervollständigen →',
         createOrganization: 'Deine Organisation',
-        completeStepFirst: 'Schließe zuerst Schritt {step} ab'
+        completeStepFirst: 'Schließe zuerst Schritt {step} ab.'
       }
     }
   },
@@ -465,13 +465,13 @@ export const midTranslations = {
     onboarding: {
       applyToMID: {
         title: 'Apply to MID Funding',
-        description: 'Comission us to submit your application for the MID Digitalization funding program through which you can receive a grant of up to €15,000 for a digitization project',
+        description: 'Comission us to submit your application for the MID Digitalization funding program through which you can receive a grant of up to €15,000 for a digitization project.',
         buttonText: 'Submit MID digitization lottery entry',
         skipText: 'Skip this step',
         checkingRequirements: 'Checking MID requirements...',
-        midSkipped: 'MID application skipped - you can proceed to the next step',
-        midSubmitted: 'MID application submitted!',
-        completeFields: 'Complete required fields to apply for MID funding',
+        midSkipped: 'MID application skipped - you can proceed to the next step.',
+        midSubmitted: 'MID application submitted.',
+        completeFields: 'Complete required fields to apply for MID funding.',
         alreadyApplied: 'Already Applied to MID',
         applyToMID: 'Apply to MID'
       },
@@ -482,15 +482,15 @@ export const midTranslations = {
       },
       createOrganization: {
         title: 'Create your organization',
-        description: 'Fill out your organization form to get started',
+        description: 'Fill out your organization form to get started.',
         buttonText: 'Create Organization',
         alreadyPartOf: 'Already part of an organization? Reach out to your admin to add you.'
       },
       inviteCoworkers: {
         title: 'Invite Your Coworkers',
-        description: 'Invite your colleagues to join your organization',
-        teamInvited: 'Team members invited!',
-        inviteSkipped: 'Invite task skipped',
+        description: 'Invite your colleagues to join your organization.',
+        teamInvited: 'Team members invited.',
+        inviteSkipped: 'Invite task skipped.',
         buttonText: 'Invite Team Members',
         skipForNow: 'Skip for now'
       },
@@ -503,30 +503,30 @@ export const midTranslations = {
         lastName: 'Last Name',
         lastNamePlaceholder: 'Mustermann',
         email: 'Email',
-        contactSupport: 'Contact our support to change your email address',
+        contactSupport: 'Contact our support to change your email address.',
         cancel: 'Cancel',
         save: 'Save'
       },
       completeProfile: {
         title: 'Complete Profile',
-        completed: 'Profile completed!',
-        needsCompletion: 'Profile needs completion - first and last name required',
-        addNames: 'Add your first and last name to complete your profile',
+        completed: 'Profile completed.',
+        needsCompletion: 'Profile needs completion - first and last name required.',
+        addNames: 'Add your first and last name to complete your profile.',
         buttonText: 'Complete Profile',
-        namesRequired: 'First and last name must be filled to continue'
+        namesRequired: 'First and last name must be filled to continue.'
       },
       dashboard: {
         welcome: 'Welcome back, {name} 👋',
-        subtitle: 'Let\'s get your account set up in {total} simple steps',
+        subtitle: 'Let\'s get your account set up in {total} simple steps.',
         progress: 'Your Progress',
-        progressText: '{completed} of {total} steps completed',
+        progressText: '{completed} of {total} steps completed.',
         verifyEmail: 'Verify your email',
         completed: 'Completed',
-        verifyEmailDescription: 'Confirm your email address to secure your account',
-        completeProfileDescription: 'Add your first and last name to complete your profile',
+        verifyEmailDescription: 'Confirm your email address to secure your account.',
+        completeProfileDescription: 'Add your first and last name to complete your profile.',
         completeProfileButton: 'Complete Profile →',
         createOrganization: 'Your organization',
-        completeStepFirst: 'Complete step {step} first'
+        completeStepFirst: 'Complete step {step} first.'
       }
     }
   }

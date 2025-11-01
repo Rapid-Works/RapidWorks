@@ -6,15 +6,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 const StandardTabs = ({ 
   tabs, 
   defaultTab = 0, 
+  activeTabIndex: controlledActiveTabIndex,
   onTabChange,
   className = "",
   tabClassName = "",
   contentClassName = ""
 }) => {
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [internalActiveTab, setInternalActiveTab] = useState(defaultTab);
+  const activeTab = controlledActiveTabIndex !== undefined ? controlledActiveTabIndex : internalActiveTab;
 
   const handleTabChange = (index) => {
-    setActiveTab(index);
+    if (controlledActiveTabIndex === undefined) {
+      setInternalActiveTab(index);
+    }
     if (onTabChange) {
       onTabChange(index, tabs[index]);
     }
@@ -144,7 +148,10 @@ export const StandardTable = ({
                 onClick={() => onRowClick && onRowClick(row, index)}
               >
                 {row.map((cell, cellIndex) => (
-                  <td key={cellIndex} className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td 
+                    key={cellIndex} 
+                    className="px-6 py-4 whitespace-nowrap text-sm"
+                  >
                     {cell}
                   </td>
                 ))}

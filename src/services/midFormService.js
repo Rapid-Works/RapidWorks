@@ -335,11 +335,20 @@ export const validateURL = (url) => {
   }
 };
 
-// Postal code validation (5 digits for Germany)
-export const validatePostalCode = (postalCode) => {
+// Postal code validation (5 digits format check only)
+export const validatePostalCode = (postalCode, language = 'en') => {
   if (!postalCode || postalCode.trim() === '') return null;
+  
+  // Check format (5 digits)
   const postalCodeRegex = /^\d{5}$/;
-  return postalCodeRegex.test(postalCode) ? null : 'Postal code must be exactly 5 digits';
+  const cleaned = postalCode.replace(/\s/g, '');
+  if (!postalCodeRegex.test(cleaned)) {
+    return language === 'de' 
+      ? 'Die Postleitzahl muss genau 5 Ziffern lang sein.'
+      : 'Postal code must be exactly 5 digits.';
+  }
+  
+  return null;
 };
 
 // Tax ID validation (XXX/XXXX/XXX format)
@@ -360,8 +369,10 @@ export const validateIBAN = (iban) => {
 // BIC validation (8-11 alphanumeric characters)
 export const validateBIC = (bic) => {
   if (!bic || bic.trim() === '') return null;
+  // BIC should be uppercase alphanumeric, 8-11 characters
+  const cleaned = bic.trim().toUpperCase();
   const bicRegex = /^[A-Z0-9]{8,11}$/;
-  return bicRegex.test(bic) ? null : 'BIC must be 8-11 alphanumeric characters (e.g., DEUTDEDB180 or QNTODEB2XXX)';
+  return bicRegex.test(cleaned) ? null : 'BIC must be 8-11 alphanumeric characters (e.g., DEUTDEDB180 or QNTODEB2XXX)';
 };
 
 // Phone number validation (basic format check)
@@ -484,11 +495,12 @@ export const validateMIDFormData = (formData, isUpdate = false) => {
     }
   }
   
-  // BIC validation (8 or 11 letters)
+  // BIC validation (8-11 alphanumeric characters)
   if (formData.bic && formData.bic.trim() !== '') {
-    const bicRegex = /^[A-Z]{8,11}$/;
-    if (!bicRegex.test(formData.bic)) {
-      errors.push('BIC must be 8 or 11 letters (e.g., QNTODEB2XXX)');
+    const cleaned = formData.bic.trim().toUpperCase();
+    const bicRegex = /^[A-Z0-9]{8,11}$/;
+    if (!bicRegex.test(cleaned)) {
+      errors.push('BIC must be 8-11 alphanumeric characters (e.g., DEUTDEDB180 or QNTODEB2XXX)');
     }
   }
   

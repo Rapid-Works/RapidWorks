@@ -231,13 +231,13 @@ export const useOnboarding = () => {
 
   const sendVerificationEmail = async () => {
     if (!currentUser || currentUser.emailVerified) {
-      return { success: false, message: 'Already verified or no user' };
+      return { success: false, message: 'Already verified or no user.' };
     }
 
     try {
       // Use SMTP-based verification email from AuthContext
       await sendVerificationEmailFromAuth(currentUser);
-      return { success: true, message: 'Verification email sent!' };
+      return { success: true, message: 'Verification email sent.' };
     } catch (error) {
       console.error('Error sending verification email:', error);
       return { success: false, message: error.message };

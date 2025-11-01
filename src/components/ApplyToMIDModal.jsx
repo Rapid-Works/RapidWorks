@@ -10,6 +10,7 @@ import { getOrganizationInfo } from '../utils/organizationService';
 import { getCurrentUserContext } from '../utils/organizationService';
 import { checkMIDFieldsCompletion } from '../utils/midFieldsChecker';
 import { useLanguage } from '../contexts/LanguageContext';
+import { isPostalCodeInNRW } from '../utils/nrwPostalCodes';
 
 const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, hasMIDSubmission }) => {
   const { currentUser } = useAuth();
@@ -26,6 +27,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
   const [cooldownMessage, setCooldownMessage] = useState('');
   const [isLargeOrganization, setIsLargeOrganization] = useState(false);
   const [hasTooManyEmployees, setHasTooManyEmployees] = useState(false);
+  const [isNotInNRW, setIsNotInNRW] = useState(false);
 
   // Translation object
   const translations = {
@@ -52,6 +54,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
         },
         buttons: {
           cancel: "Cancel",
+          changeEntries: "Change entries",
           submit: "Submit Application",
           submitting: "Submitting...",
           submitted: "Submitted Successfully!",
@@ -66,7 +69,9 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
           privacyRequired: "Please accept the privacy policy to continue.",
           signatureRequired: "Please accept the digital signature to continue.",
           termsRequired: "Please accept the terms and conditions to continue.",
-          submitError: "Failed to submit MID application. Please try again."
+          submitError: "Failed to submit MID application. Please try again.",
+          notEligible: "Not Eligible for MID Applications",
+          notInNRW: "The postal code is not in North Rhine-Westphalia. MID funding is only available for companies located in NRW."
         }
       }
     },
@@ -93,6 +98,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
         },
         buttons: {
           cancel: "Abbrechen",
+          changeEntries: "Einträge ändern",
           submit: "Antrag einreichen",
           submitting: "Wird eingereicht...",
           submitted: "Erfolgreich eingereicht!",
@@ -107,7 +113,9 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
           privacyRequired: "Bitte akzeptieren Sie die Datenschutzerklärung, um fortzufahren.",
           signatureRequired: "Bitte akzeptieren Sie die digitale Signatur, um fortzufahren.",
           termsRequired: "Bitte akzeptieren Sie die Geschäftsbedingungen, um fortzufahren.",
-          submitError: "MID-Antrag konnte nicht eingereicht werden. Bitte versuchen Sie es erneut."
+          submitError: "MID-Antrag konnte nicht eingereicht werden. Bitte versuchen Sie es erneut.",
+          notEligible: "Nicht berechtigt für MID-Anträge",
+          notInNRW: "Die Postleitzahl befindet sich nicht in Nordrhein-Westfalen. MID-Förderungen sind nur für Unternehmen in NRW verfügbar."
         }
       }
     }
@@ -135,6 +143,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
       setTermsAccepted(false);
       setIsInCooldown(false);
       setCooldownMessage('');
+      setIsNotInNRW(false);
     }
   }, [isOpen]);
 
@@ -227,6 +236,11 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
         const hasTooMany = !isNaN(employeeCount) && employeeCount >= 250;
         setHasTooManyEmployees(hasTooMany);
         
+        // Check if postal code is in NRW
+        const postalCode = dataWithEmail.postalCode;
+        const notInNRW = postalCode ? !isPostalCodeInNRW(postalCode) : false;
+        setIsNotInNRW(notInNRW);
+        
         setSubmissionData(dataWithEmail);
         setMissingFields(missingFieldsList);
       } else {
@@ -234,6 +248,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
         setMissingFields(missingFieldsList);
         setIsLargeOrganization(false);
         setHasTooManyEmployees(false);
+        setIsNotInNRW(false);
       }
     } catch (error) {
       console.error('Error loading organization data for MID:', error);
@@ -270,6 +285,12 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
     // Check for employee count > 250
     if (hasTooManyEmployees) {
       alert('Organizations with 250 or more employees are not eligible for MID applications. Please contact us for alternative funding options.');
+      return;
+    }
+    
+    // Check if postal code is in NRW
+    if (isNotInNRW) {
+      alert('MID funding is only available for companies located in North Rhine-Westphalia (NRW). Please update your postal code to a valid NRW postal code.');
       return;
     }
 
@@ -503,7 +524,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                         </div>
                         <div className="ml-3">
                           <h3 className="text-sm font-medium text-red-800">
-                            Not Eligible for MID Applications
+                            {t.modal.alerts.notEligible}
                           </h3>
                           <div className="mt-2 text-sm text-red-700">
                             <p>Large enterprises are not eligible for MID applications. Please contact us for alternative funding options.</p>
@@ -524,10 +545,31 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                         </div>
                         <div className="ml-3">
                           <h3 className="text-sm font-medium text-red-800">
-                            Not Eligible for MID Applications
+                            {t.modal.alerts.notEligible}
                           </h3>
                           <div className="mt-2 text-sm text-red-700">
                             <p>Organizations with 250 or more employees are not eligible for MID applications. Please contact us for alternative funding options.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* NRW Postal Code Exclusion Banner */}
+                  {isNotInNRW && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-red-800">
+                            {t.modal.alerts.notEligible}
+                          </h3>
+                          <div className="mt-2 text-sm text-red-700">
+                            <p>{t.modal.alerts.notInNRW}</p>
                           </div>
                         </div>
                       </div>
@@ -685,12 +727,25 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
             </button>
             {missingFields.length === 0 && submissionData && (
               <button
+                onClick={() => {
+                  handleClose();
+                  if (onNavigateToCompanyInfo) {
+                    onNavigateToCompanyInfo();
+                  }
+                }}
+                className="px-5 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-white border border-gray-300 rounded-lg transition-all duration-200 font-medium"
+              >
+                {t.modal.buttons.changeEntries}
+              </button>
+            )}
+            {missingFields.length === 0 && submissionData && (
+              <button
                 onClick={handleSubmit}
-                disabled={!privacyAccepted || !digitalSignatureAccepted || !termsAccepted || isSubmitting || showSuccess || isInCooldown || isLargeOrganization || hasTooManyEmployees}
+                disabled={!privacyAccepted || !digitalSignatureAccepted || !termsAccepted || isSubmitting || showSuccess || isInCooldown || isLargeOrganization || hasTooManyEmployees || isNotInNRW}
                 className={`inline-flex items-center gap-2 px-6 py-2.5 text-white rounded-lg font-semibold transition-all duration-200 shadow-sm ${
                   showSuccess
                     ? 'bg-gradient-to-r from-green-600 to-green-700'
-                    : !privacyAccepted || !digitalSignatureAccepted || !termsAccepted || isSubmitting || isInCooldown || isLargeOrganization || hasTooManyEmployees
+                    : !privacyAccepted || !digitalSignatureAccepted || !termsAccepted || isSubmitting || isInCooldown || isLargeOrganization || hasTooManyEmployees || isNotInNRW
                       ? 'bg-gradient-to-r from-purple-600 to-purple-700 opacity-60 cursor-not-allowed' 
                       : 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 hover:shadow-md'
                 }`}
@@ -719,6 +774,11 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                   <>
                     <CheckCircle className="h-4 w-4" />
                     Not Eligible (Too Many Employees)
+                  </>
+                ) : isNotInNRW ? (
+                  <>
+                    <CheckCircle className="h-4 w-4" />
+                    Not Eligible (Not in NRW)
                   </>
                 ) : (
                   <>

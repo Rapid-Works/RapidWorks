@@ -23,6 +23,8 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useMIDTranslation } from '../../hooks/useMIDTranslation';
 import CalendlyModal from '../CalendlyModal';
 import ProfileEditModal from '../ProfileEditModal';
+import MIDForm from '../MIDForm';
+import ApplyToMIDModal from '../ApplyToMIDModal';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../firebase/config';
 
@@ -55,6 +57,9 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
   const [optOutSuccess, setOptOutSuccess] = useState(false);
   const [showWalkthroughModal, setShowWalkthroughModal] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isOrganizationModalOpen, setIsOrganizationModalOpen] = useState(false);
+  const [isMIDModalOpen, setIsMIDModalOpen] = useState(false);
+  const [hasMIDSubmission, setHasMIDSubmission] = useState(false);
 
   // Refresh onboarding data when component mounts (useful when redirected to dashboard)
   useEffect(() => {
@@ -63,6 +68,21 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       refreshOnboarding();
     }
   }, [currentUser, refreshOnboarding]);
+
+  // Check if user has MID submission
+  useEffect(() => {
+    const checkMIDSubmission = async () => {
+      if (!currentUser) return;
+      try {
+        const { getUserMIDFormSubmissions } = await import('../services/midFormService');
+        const submissions = await getUserMIDFormSubmissions(currentUser.uid);
+        setHasMIDSubmission(submissions.length > 0);
+      } catch (error) {
+        console.error('Error checking MID submissions:', error);
+      }
+    };
+    checkMIDSubmission();
+  }, [currentUser, midFieldsStatus.hasMIDSubmission]);
 
   const handleSendVerificationEmail = async () => {
     setSendingEmail(true);
@@ -164,7 +184,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
               Welcome back, {userName}! 👋
             </h1>
           <p className="text-gray-500 text-lg">
-            Everything has been set up for you by your admin
+            Everything has been set up for you by your admin.
           </p>
         </div>
 
@@ -216,14 +236,14 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
           ) : (
             <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
               <CheckCircle2 className="h-4 w-4" />
-              Email sent! Check your inbox
+              Email sent! Check your inbox.
             </div>
           )}
           <button
             onClick={handleRefreshEmailStatus}
             className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
-            Already verified? Refresh
+            Already verified? Refresh.
           </button>
         </div>
       ),
@@ -275,11 +295,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       action: tasks.organizationCreated ? null : (
         <div className="mt-3 space-y-3">
           <button
-            onClick={() => {
-              // Navigate to organization form with returnTo parameter
-              router.push('/dashboard?tab=mid&returnTo=home');
-              onNavigateToTab('mid');
-            }}
+            onClick={() => setIsOrganizationModalOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3BEC] hover:bg-[#6B32D6] text-white text-sm font-medium rounded-lg transition-colors"
           >
             {t('onboarding.createOrganization.buttonText')}
@@ -320,11 +336,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
           ) : midFieldsStatus.allFieldsFilled ? (
             <div className="flex items-center gap-4">
               <button
-                onClick={() => {
-                  // Navigate to Rapid Financing and auto-open MID modal
-                  router.push('/dashboard?tab=financing&openMID=true');
-                  onNavigateToTab('financing');
-                }}
+                onClick={() => setIsMIDModalOpen(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm"
               >
                 <Euro className="h-4 w-4" />
@@ -351,18 +363,18 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                     onNavigateToMIDWithFields(midFieldsStatus.missingFields);
                   } else {
                     // Fallback to regular navigation
-                    router.push('/dashboard?tab=mid&returnTo=home');
-                    onNavigateToTab('mid');
+                    router.push('/dashboard?tab=members&returnTo=home');
+                    onNavigateToTab('members');
                   }
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors"
               >
                 <FileCheck className="h-4 w-4" />
-                Complete Required Fields
+                Complete Required Fields.
                 <ArrowRight className="h-4 w-4" />
               </button>
               <p className="text-xs text-orange-700">
-                {midFieldsStatus.missingFields.length} required fields need to be filled
+                {midFieldsStatus.missingFields.length} required fields need to be filled.
               </p>
               
               <div className="text-center">
@@ -373,7 +385,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                   }}
                   className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  Skip this step
+                  Skip this step.
                 </button>
               </div>
             </div>
@@ -386,9 +398,9 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       stepNumber: 5,
       title: t('onboarding.bookCoachingCall.title'),
       description: tasks.bookingCallCompleted === true 
-        ? 'Coaching call booked!' 
+        ? 'Coaching call booked.' 
         : tasks.bookingCallCompleted === 'skipped'
-        ? 'Coaching call skipped'
+        ? 'Coaching call skipped.'
         : t('onboarding.bookCoachingCall.description'),
       completed: tasks.bookingCallCompleted === true || tasks.bookingCallCompleted === 'skipped',
       icon: Calendar,
@@ -666,13 +678,13 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                 
                 <div className="mb-6">
                   <label htmlFor="optOutReason" className="block text-sm font-medium text-gray-700 mb-2">
-                    Reason for not applying to MID
+                    Reason for not applying to MID.
                   </label>
                   <textarea
                     id="optOutReason"
                     value={optOutReason}
                     onChange={(e) => setOptOutReason(e.target.value)}
-                    placeholder="Please share your reason (e.g., not eligible, not interested, timing, etc.)"
+                    placeholder="Please share your reason (e.g., not eligible, not interested, timing, etc.)."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent resize-none"
                     rows={4}
                     required
@@ -794,6 +806,83 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         onProfileCompleted={handleProfileCompleted}
+      />
+
+      {/* Organization Creation Modal */}
+      {isOrganizationModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-50" style={{backgroundColor: 'rgba(0, 0, 0, 0.5)'}}>
+          <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {language === 'de' ? 'Organisation anlegen' : 'Create organization'}
+              </h2>
+              <button
+                onClick={() => setIsOrganizationModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <MIDForm 
+                currentContext={currentContext} 
+                missingMIDFields={[]}
+                onFieldsUpdated={() => {}}
+                onOrganizationCreated={(organization) => {
+                  // Note: MIDForm already marks organizationCreated: true in Firestore
+                  // The real-time listener in useOnboarding will automatically update the UI
+                  // Wait a moment for the success animation, then close the modal
+                  setTimeout(() => {
+                    setIsOrganizationModalOpen(false);
+                    // Refresh onboarding to ensure UI is updated
+                    if (refreshOnboarding) {
+                      refreshOnboarding();
+                    }
+                  }, 2500); // Slightly longer than MIDForm's 2s success display
+                }}
+                onNavigateToTab={(tab) => {
+                  // If navigation is requested (e.g., after creation), close modal and navigate
+                  setIsOrganizationModalOpen(false);
+                  if (onNavigateToTab) {
+                    onNavigateToTab(tab);
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Apply to MID Modal */}
+      <ApplyToMIDModal
+        isOpen={isMIDModalOpen}
+        onClose={() => setIsMIDModalOpen(false)}
+        onSuccess={() => {
+          // Mark MID application as complete
+          markTaskComplete('midApplied');
+          // Close the modal
+          setIsMIDModalOpen(false);
+          // Refresh onboarding to update progress
+          if (refreshOnboarding) {
+            refreshOnboarding();
+          }
+          // Update hasMIDSubmission state
+          setHasMIDSubmission(true);
+        }}
+        onNavigateToCompanyInfo={(missingFields) => {
+          // Close modal and navigate to members tab with missing fields
+          setIsMIDModalOpen(false);
+          if (onNavigateToMIDWithFields) {
+            onNavigateToMIDWithFields(missingFields || []);
+          } else {
+            // Fallback: navigate to members tab
+            router.push('/dashboard?tab=members&returnTo=home');
+            onNavigateToTab('members');
+          }
+        }}
+        hasMIDSubmission={hasMIDSubmission || midFieldsStatus.hasMIDSubmission}
       />
     </div>
   );

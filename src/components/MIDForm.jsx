@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Building, User, FileText, Briefcase, Check, AlertTriangle, Globe, Loader2, PersonStanding, Users, Wand, Wand2Icon, LucideWand2, WandSparklesIcon, WandSparkles } from 'lucide-react';
+import { Building, User, FileText, Briefcase, Check, AlertTriangle, Globe, Loader2, PersonStanding, Users, Wand, Wand2Icon, LucideWand2, WandSparklesIcon, WandSparkles, Info } from 'lucide-react';
 import { useMIDTranslation } from '../hooks/useMIDTranslation';
 import { 
   validateMIDFormData, 
@@ -177,30 +177,74 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
   };
 
   // Helper function to render text with MID pill styling
+  // Only the first standalone "MID" becomes a pill, "MID lottery"/"MID-Losverfahren" stays plain text
   const renderTextWithMIDPill = (text) => {
     if (!text) return null;
-    const parts = text.split(/(MID)/gi);
+    
+    // Protect "MID lottery" and "MID-Losverfahren" with placeholders
+    const placeholders = [];
+    let placeholderIndex = 0;
+    
+    let protectedText = text
+      .replace(/MID\s+lottery/gi, () => {
+        placeholders.push('MID lottery');
+        return `__PLACEHOLDER_${placeholderIndex++}__`;
+      })
+      .replace(/MID-Losverfahren/gi, () => {
+        placeholders.push('MID-Losverfahren');
+        return `__PLACEHOLDER_${placeholderIndex++}__`;
+      });
+    
+    // Split by standalone MID (not followed by lottery/Losverfahren)
+    const parts = protectedText.split(/(MID)/gi);
+    let firstMidFound = false;
+    
     return (
       <>
-        {parts.map((part, index) => 
-          part.toUpperCase() === 'MID' ? (
-            <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">MID</span>
-          ) : (
-            part
-          )
-        )}
+        {parts.map((part, index) => {
+          // Restore placeholders first
+          let restoredPart = part;
+          placeholders.forEach((placeholder, idx) => {
+            restoredPart = restoredPart.replace(`__PLACEHOLDER_${idx}__`, placeholder);
+          });
+          
+          // Convert only the first standalone MID to a pill
+          if (restoredPart.toUpperCase() === 'MID' && !firstMidFound) {
+            firstMidFound = true;
+            return (
+              <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">MID</span>
+            );
+          }
+          
+          return <span key={index}>{restoredPart}</span>;
+        })}
       </>
     );
   };
 
-  // Format Tax ID with slashes
+  // Format Tax ID with slashes (allow free typing and deletion)
+  // Format: XXX/XXXX/XXXX - slashes appear immediately after each completed segment
   const formatTaxId = (value) => {
+    // Remove all slashes first, then extract only digits
+    // This handles backspace properly - slashes won't interfere with deletion
     const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length < 3) return cleaned;
-    if (cleaned.length === 3) return `${cleaned}/`;
-    if (cleaned.length < 7) return `${cleaned.slice(0, 3)}/${cleaned.slice(3)}`;
-    if (cleaned.length === 7) return `${cleaned.slice(0, 3)}/${cleaned.slice(3, 7)}/`;
-    return `${cleaned.slice(0, 3)}/${cleaned.slice(3, 7)}/${cleaned.slice(7, 11)}`;
+    if (cleaned.length === 0) return '';
+    
+    // First segment: 3 digits, show slash immediately after 3rd digit
+    if (cleaned.length <= 3) {
+      return cleaned.length === 3 ? `${cleaned}/` : cleaned;
+    }
+    
+    // Second segment: 4 more digits (positions 4-7), show slash after 7th digit
+    if (cleaned.length <= 7) {
+      const firstPart = `${cleaned.slice(0, 3)}/`;
+      const secondPart = cleaned.slice(3);
+      // Show second slash immediately after completing 7 digits
+      return cleaned.length === 7 ? `${firstPart}${secondPart}/` : `${firstPart}${secondPart}`;
+    }
+    
+    // Third segment: remaining digits (allow free typing, validation will catch excess)
+    return `${cleaned.slice(0, 3)}/${cleaned.slice(3, 7)}/${cleaned.slice(7)}`;
   };
 
   // Format IBAN with spaces
@@ -209,9 +253,9 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
     return cleaned.replace(/(.{4})/g, '$1 ').trim();
   };
 
-  // Format postal code (5 digits only)
+  // Format postal code (strip non-digits, but allow free typing)
   const formatPostalCode = (value) => {
-    return value.replace(/\D/g, '').slice(0, 5);
+    return value.replace(/\D/g, '');
   };
 
 
@@ -339,18 +383,28 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
   const validateField = (field, value, forceValidation = false) => {
     let error = null;
     
-    // For postal code, IBAN, and BIC - only validate if field is touched and has enough content
+    // For postal code, IBAN, BIC, and Tax ID - validate on blur OR when exceeding expected length
+    // Also validate if field has been touched and has content (to clear errors when user fixes them)
+    // This provides seamless UX but catches errors when users exceed limits and clears them when fixed
     if (field === 'postalCode') {
-      if (forceValidation || (fieldTouched[field] && value.length >= 3)) {
-        error = validatePostalCode(value);
+      if (forceValidation || value.length > 5 || (fieldTouched[field] && value.length > 0)) {
+        error = validatePostalCode(value, language);
       }
     } else if (field === 'iban') {
-      if (forceValidation || (fieldTouched[field] && value.length >= 10)) {
+      // IBAN: 2 letters + 20 digits = 22 chars (without spaces)
+      const cleanedIban = value.replace(/\s/g, '');
+      if (forceValidation || cleanedIban.length > 22 || (fieldTouched[field] && cleanedIban.length > 0)) {
         error = validateIBAN(value);
       }
     } else if (field === 'bic') {
-      if (forceValidation || (fieldTouched[field] && value.length >= 6)) {
+      // BIC: 8-11 alphanumeric characters
+      if (forceValidation || value.length > 11 || (fieldTouched[field] && value.length > 0)) {
         error = validateBIC(value);
+      }
+    } else if (field === 'taxId') {
+      // Tax ID: XXX/XXXX/XXXX format (11 digits = 13 chars with slashes)
+      if (forceValidation || value.length > 13 || (fieldTouched[field] && value.length > 0)) {
+        error = validateTaxId(value);
       }
     } else {
       // For other fields, validate normally
@@ -361,9 +415,6 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
           break;
         case 'homepage':
           error = validateURL(value);
-          break;
-        case 'taxId':
-          error = validateTaxId(value);
           break;
         case 'contactPhone':
         case 'projectContactPhone':
@@ -396,10 +447,51 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
       [field]: value
     }));
     
-    // For postal code, IBAN, and BIC - only validate on blur, not on every keystroke
-    if (field === 'postalCode' || field === 'iban' || field === 'bic') {
-      // Don't validate these fields on every keystroke
-      // Validation will happen on blur
+    // For IBAN, BIC, Tax ID, and postal code - validate only when exceeding expected length
+    // Otherwise validate on blur (handled in handleFieldBlur) for seamless UX
+    if (field === 'postalCode' || field === 'iban' || field === 'bic' || field === 'taxId') {
+      // Validate immediately if user exceeds expected length, otherwise wait for blur
+      const fieldError = validateField(field, value);
+      setFieldErrors(prev => ({
+        ...prev,
+        [field]: fieldError
+      }));
+      
+      // Clear form-level error if this field was causing the error and is now fixed
+      if (!fieldError && error) {
+        // Re-validate entire form to see if all errors are cleared
+        const validateForm = async () => {
+          try {
+            const { validateMIDFormData } = await import('../services/midFormService');
+            const updatedFormData = { ...formData, [field]: value };
+            const validation = validateMIDFormData(updatedFormData, !!existingSubmission);
+            if (validation.isValid) {
+              setError('');
+            } else {
+              // If there are still other errors, update the error message
+              // But only if this specific field's error was in the message
+              const errorIncludesThisField = error.includes('BIC') && field === 'bic' ||
+                                            error.includes('IBAN') && field === 'iban' ||
+                                            error.includes('Tax ID') && field === 'taxId' ||
+                                            error.includes('Postal code') && field === 'postalCode';
+              if (errorIncludesThisField) {
+                // If this was the only error, clear it; otherwise keep other errors
+                if (validation.errors.length === 0 || !validation.errors.some(err => 
+                  (field === 'bic' && err.includes('BIC')) ||
+                  (field === 'iban' && err.includes('IBAN')) ||
+                  (field === 'taxId' && err.includes('Tax ID')) ||
+                  (field === 'postalCode' && err.includes('Postal code'))
+                )) {
+                  setError('');
+                }
+              }
+            }
+          } catch (err) {
+            console.error('Error validating form:', err);
+          }
+        };
+        validateForm();
+      }
     } else {
       // For other fields, validate normally
       const fieldError = validateField(field, value);
@@ -445,7 +537,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
   // Handle Impressum data extraction
   const handleExtractCompanyData = async () => {
     if (!impressumUrl.trim()) {
-      setExtractionError('Please enter a valid Impressum URL');
+        setExtractionError('Please enter a valid Impressum URL.');
       return;
     }
 
@@ -453,7 +545,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
     try {
       new URL(impressumUrl);
     } catch {
-      setExtractionError('Please enter a valid URL (e.g., https://example.com/impressum)');
+      setExtractionError('Please enter a valid URL (e.g., https://example.com/impressum).');
       return;
     }
 
@@ -503,7 +595,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         console.log('✅ Company data extracted and autofilled:', extractedData);
       } else {
         console.warn('⚠️ Extraction reported failure:', extractedData);
-        setExtractionError(extractedData.error || 'Failed to extract company data from the provided URL');
+        setExtractionError(extractedData.error || 'Failed to extract company data from the provided URL.');
       }
     } catch (error) {
       console.error('❌ Error extracting company data:', error);
@@ -521,12 +613,12 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
     if (isCreationMode) {
       // Validate required fields for creation
       if (!formData.legalName.trim()) {
-        setError('Organization name is required');
+        setError('Organization name is required.');
         return;
       }
       
       if (!formData.street.trim() || !formData.streetNumber.trim() || !formData.city.trim() || !formData.postalCode.trim()) {
-        setError('Complete address (Street, Number, City, Postal Code) is required');
+        setError('Complete address (Street, Number, City, Postal Code) is required.');
         return;
       }
       
@@ -554,7 +646,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
       const validation = validateMIDFormData(formData, !!existingSubmission);
       if (!validation.isValid) {
         console.error('❌ Form validation failed:', validation.errors);
-        setError(`Please fix the following errors:\n${validation.errors.join('\n')}`);
+        setError(`Please fix the following errors:\n${validation.errors.join('\n')}.`);
         return;
       }
       
@@ -760,37 +852,58 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
   // Show loading state while fetching existing data
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7C3BEC]"></div>
-            <span className="ml-4 text-gray-600">Loading your form data...</span>
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7C3BEC]"></div>
+        <span className="ml-4 text-gray-600">Loading your form data.</span>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div>
       <style jsx>{`
         input::placeholder,
         textarea::placeholder {
           color: #e5e7eb !important;
         }
+        
+        /* Fix dropdown options styling for Windows browsers */
+        /* Force explicit colors to override Windows browser defaults */
+        select {
+          color: #111827 !important;
+          background-color: #ffffff !important;
+        }
+        
+        select option {
+          color: #111827 !important;
+          background-color: #ffffff !important;
+        }
+        
+        select option:checked,
+        select option:focus {
+          background-color: #f3f4f6 !important;
+          color: #111827 !important;
+        }
+        
+        select option:hover {
+          background-color: #f3f4f6 !important;
+          color: #111827 !important;
+        }
+        
+        select option:disabled {
+          color: #d1d5db !important;
+          background-color: #ffffff !important;
+        }
       `}</style>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        {/* Header */}
-        <div className="px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            {t('createOrganization')}
-          </h1>
+      <div>
+        {/* Description */}
+        <div className="pt-4 pb-6">
           <p className="text-sm text-gray-600 leading-relaxed">
             {renderTextWithMIDPill(t('organizationInfoDescription'))}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-10">
+        <form onSubmit={handleSubmit} className="pb-8 space-y-6">
           {/* Missing Fields Guidance */}
           {!isCreationMode && missingMIDFields.length > 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
@@ -806,7 +919,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
           )}
 
           {/* Impressum Data Extraction Section */}
-          <div className="pt-6">
+          <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2.5 bg-purple-50 rounded-lg border border-purple-100">
                 <Globe className="h-5 w-5 text-purple-600" />
@@ -880,8 +993,8 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
             </div>
           </div>
 
-          {/* Organization Name Section */}
-          <div className="border-t border-gray-100 pt-10">
+          {/* Organization Data Section */}
+          <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2.5 bg-purple-50 rounded-lg border border-purple-100">
                 <Building className="h-5 w-5 text-purple-600" />
@@ -959,8 +1072,52 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               <input
                 type="text"
                 value={formData.taxId}
-                onChange={(e) => handleInputChange('taxId', formatTaxId(e.target.value))}
-                maxLength={13}
+                onChange={(e) => {
+                  const inputValue = e.target.value;
+                  const cursorPosition = e.target.selectionStart;
+                  const oldValue = formData.taxId;
+                  
+                  // Format the value (this removes all slashes and reformats)
+                  const formatted = formatTaxId(inputValue);
+                  
+                  // Calculate new cursor position
+                  // Count digits before cursor in original input
+                  const digitsBeforeCursor = inputValue.slice(0, cursorPosition).replace(/\D/g, '').length;
+                  
+                  // Find position in formatted string where we have same number of digits
+                  let newCursorPosition = formatted.length;
+                  let digitCount = 0;
+                  for (let i = 0; i < formatted.length; i++) {
+                    if (/\d/.test(formatted[i])) {
+                      digitCount++;
+                      if (digitCount >= digitsBeforeCursor) {
+                        newCursorPosition = i + 1;
+                        break;
+                      }
+                    } else {
+                      // If we hit a slash and haven't reached the digit count yet, position after it
+                      if (digitCount < digitsBeforeCursor) {
+                        newCursorPosition = i + 1;
+                      }
+                    }
+                  }
+                  
+                  // If we're at the end or past the end, place cursor at end of formatted string
+                  if (digitCount < digitsBeforeCursor || newCursorPosition > formatted.length) {
+                    newCursorPosition = formatted.length;
+                  }
+                  
+                  handleInputChange('taxId', formatted);
+                  
+                  // Set cursor position after React updates
+                  setTimeout(() => {
+                    const input = e.target;
+                    if (input) {
+                      input.setSelectionRange(newCursorPosition, newCursorPosition);
+                    }
+                  }, 0);
+                }}
+                onBlur={() => handleFieldBlur('taxId')}
                 placeholder="111/2222/3333"
                 className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('taxId')}`}
               />
@@ -1132,7 +1289,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
           </div>
 
           {/* Address Section */}
-          <div className="border-t border-gray-100 pt-10">
+          <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1221,7 +1378,6 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   value={formData.postalCode}
                   onChange={(e) => handleInputChange('postalCode', formatPostalCode(e.target.value))}
                   onBlur={() => handleFieldBlur('postalCode')}
-                  maxLength={5}
                   required={isCreationMode}
                   placeholder={t('postalCodePlaceholder')}
                   className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('postalCode')}`}
@@ -1294,7 +1450,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
           </div>
 
           {/* Brief Description Section - moved above Management Contact Details */}
-          <div className="border-t border-gray-100 pt-10">
+          <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <span className="flex items-center gap-2">
@@ -1314,7 +1470,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
           </div>
 
           {/* Business Contact Section */}
-          <div className="border-t border-gray-100 pt-10">
+          <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2.5 bg-purple-50 rounded-lg border border-purple-100">
                 <User className="h-5 w-5 text-purple-600" />
@@ -1439,7 +1595,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
           </div>
 
           {/* Project Contact Section */}
-          <div className="border-t border-gray-100 pt-10">
+          <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2.5 bg-purple-50 rounded-lg border border-purple-100">
                 <User className="h-5 w-5 text-purple-600" />
@@ -1575,7 +1731,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
 
 
           {/* Bank Account Information Section */}
-          <div className="border-t border-gray-100 pt-10">
+          <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2.5 bg-purple-50 rounded-lg border border-purple-100">
                 <Briefcase className="h-5 w-5 text-purple-600" />
@@ -1600,7 +1756,6 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   value={formData.iban}
                   onChange={(e) => handleInputChange('iban', formatIBAN(e.target.value))}
                   onBlur={() => handleFieldBlur('iban')}
-                  maxLength={32}
                   placeholder="DE11 2222 3333 4444 5555 55"
                   className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('iban')}`}
                 />
@@ -1617,9 +1772,8 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 <input
                   type="text"
                   value={formData.bic}
-                  onChange={(e) => handleInputChange('bic', e.target.value)}
+                  onChange={(e) => handleInputChange('bic', e.target.value.toUpperCase())}
                   onBlur={() => handleFieldBlur('bic')}
-                  maxLength={150}
                   placeholder="QNTODEB2XXX"
                   className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('bic')}`}
                 />
@@ -1662,7 +1816,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
           </div>
 
           {/* MID Funding History Section */}
-          <div className="border-t border-gray-100 pt-10">
+          <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2.5 bg-purple-50 rounded-lg border border-purple-100">
                 <FileText className="h-5 w-5 text-purple-600" />
@@ -1815,7 +1969,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
                   <span className="text-sm font-medium text-amber-900">
-                    {existingSubmission ? 'You have unsaved changes' : 'Form ready to submit'}
+                    {existingSubmission ? 'You have unsaved changes.' : 'Form ready to submit.'}
                   </span>
                 </div>
               </div>
@@ -1842,11 +1996,11 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 <Building className="h-5 w-5" />
               )}
               {showSuccess 
-                ? (isCreationMode ? t('organizationCreated') : (existingSubmission ? 'Updated Successfully!' : 'Saved Successfully!'))
+                ? (isCreationMode ? t('organizationCreated') : (existingSubmission ? 'Updated successfully.' : 'Saved successfully.'))
                 : isSubmitting 
                   ? (isCreationMode ? t('creatingOrganization') : (existingSubmission ? t('updating') : t('saving')))
                   : (isCreationMode 
-                    ? t('createOrganization')
+                    ? t('onboarding.createOrganization.buttonText')
                     : (existingSubmission 
                       ? (hasChanges ? t('saveChanges') : t('noChanges'))
                       : t('submit')

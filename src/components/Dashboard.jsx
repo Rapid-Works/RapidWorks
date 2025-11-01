@@ -727,52 +727,57 @@ const Dashboard = () => {
               {/* Navigation Items */}
               <nav className="flex-1 flex flex-col min-h-0">
                 {/* Scrollable Navigation Items */}
-                <div className="flex-1 p-4 space-y-2 overflow-y-auto min-h-0">
-                  {/* Home - Always visible */}
-                <button
-                  onClick={() => {
-                    setActiveTab('home');
-                    setSelectedTaskId(null);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                    activeTab === 'home'
-                      ? 'bg-[#7C3BEC] text-white shadow-lg'
-                      : 'text-gray-700 hover:bg-white hover:shadow-md'
-                  }`}
-                >
-                  <Home className="h-5 w-5" />
-                  <div className="flex-1">
-                    <div className="font-medium">Setup</div>
-                  </div>
-                </button>
-                
-                {canAccessMembers && (
-                  <button
-                    onClick={() => {
-                      setActiveTab('members');
-                      setSelectedTaskId(null); // Clear when leaving tasks area
-                      setIsMobileMenuOpen(false); // Close mobile menu
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                      activeTab === 'members'
-                        ? 'bg-[#7C3BEC] text-white shadow-lg'
-                        : 'text-gray-700 hover:bg-white hover:shadow-md'
-                    }`}
-                  >
-                    {currentUser?.email?.endsWith('@rapid-works.io') ? (
-                      <Users className="h-5 w-5" />
-                    ) : (
-                      <Building className="h-5 w-5" />
-                    )}
-                    <div className="flex-1">
-                      <div className="font-medium">
-                        {currentUser?.email?.endsWith('@rapid-works.io') ? 'Members' : 'Your organization'}
+                <div className="flex-1 p-4 space-y-4 overflow-y-auto min-h-0">
+                  {/* Setup & Organization Section */}
+                  <div className="border border-gray-200 rounded-xl p-3 bg-gradient-to-br from-white to-gray-50 space-y-2">
+                    {/* Home - Always visible */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('home');
+                        setSelectedTaskId(null);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                        activeTab === 'home'
+                          ? 'bg-[#7C3BEC] text-white shadow-lg'
+                          : 'text-gray-700 hover:bg-white hover:shadow-md'
+                      }`}
+                    >
+                      <Home className="h-5 w-5" />
+                      <div className="flex-1">
+                        <div className="font-medium">Setup</div>
                       </div>
-                    </div>
-                  </button>
-                )}
-                
+                    </button>
+                    
+                    {canAccessMembers && (
+                      <button
+                        onClick={() => {
+                          setActiveTab('members');
+                          setSelectedTaskId(null); // Clear when leaving tasks area
+                          setIsMobileMenuOpen(false); // Close mobile menu
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                          activeTab === 'members'
+                            ? 'bg-[#7C3BEC] text-white shadow-lg'
+                            : 'text-gray-700 hover:bg-white hover:shadow-md'
+                        }`}
+                      >
+                        {currentUser?.email?.endsWith('@rapid-works.io') ? (
+                          <Users className="h-5 w-5" />
+                        ) : (
+                          <Building className="h-5 w-5" />
+                        )}
+                        <div className="flex-1">
+                          <div className="font-medium">
+                            {currentUser?.email?.endsWith('@rapid-works.io') ? 'Members' : 'Your organization'}
+                          </div>
+                        </div>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Services & Tools Section */}
+                  <div className="border border-gray-200 rounded-xl p-3 bg-gradient-to-br from-white to-gray-50 space-y-2">
                 <button
                   onClick={() => {
                     setActiveTab('branding');
@@ -1089,26 +1094,6 @@ const Dashboard = () => {
                   </button>
                 )}
 
-                {/* MID Form - For all authenticated users */}
-                {currentUser && (
-                  <button
-                    onClick={() => {
-                      setActiveTab('mid');
-                      setSelectedTaskId(null); // Clear when leaving tasks area
-                      setIsMobileMenuOpen(false); // Close mobile menu
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                      activeTab === 'mid'
-                        ? 'bg-[#7C3BEC] text-white shadow-lg'
-                        : 'text-gray-700 hover:bg-white hover:shadow-md'
-                    }`}
-                  >
-                    <FileText className="h-5 w-5" />
-                    <div className="flex-1">
-                      <div className="font-medium">Organization Information</div>
-                    </div>
-                  </button>
-                )}
 
                 {/* MID Submissions - For rapid-works.io admin users only */}
                 {currentUser?.email?.endsWith('@rapid-works.io') && (
@@ -1139,6 +1124,7 @@ const Dashboard = () => {
                 )}
 
                 {/* Twilio WhatsApp Test - Temporarily hidden (integrated into organization creation) */}
+                  </div>
                 </div>
 
                 {/* Sticky Help Section */}
@@ -1189,11 +1175,6 @@ const Dashboard = () => {
                   {/* {activeTab === 'analytics' && 'Rapid Analytics'} */}
                   {activeTab === 'coachings' && 'Rapid Coaching'}
                   {activeTab === 'financing' && 'Rapid Financing'}
-                  {activeTab === 'mid' && (
-                    !currentContext?.organization?.id && !currentUser?.email?.endsWith('@rapid-works.io')
-                      ? 'Create Organization' 
-                      : (currentUser?.email?.endsWith('@rapid-works.io') ? 'Organization Information' : 'Organization')
-                  )}
                   {activeTab === 'mid-submissions' && currentUser?.email?.endsWith('@rapid-works.io') && 'MID Submissions'}
                   {/* {activeTab === 'twilio-test' && 'Twilio Test'} */}
                   {activeTab === 'members' && (currentUser?.email?.endsWith('@rapid-works.io') ? 'Members' : 'Organization')}
@@ -1218,9 +1199,9 @@ const Dashboard = () => {
                       onNavigateToTab={(tab) => setActiveTab(tab)}
                       onNavigateToMIDWithFields={(missingFields) => {
                         setMissingMIDFields(missingFields);
-                        setActiveTab('mid');
+                        setActiveTab('members');
                         // Add returnTo parameter to URL so MID form knows to redirect back
-                        window.history.replaceState(null, '', '/dashboard?tab=mid&returnTo=home');
+                        window.history.replaceState(null, '', '/dashboard?tab=members&returnTo=home');
                       }}
                       onOpenInviteModal={() => {
                         setActiveTab('members');
@@ -1358,24 +1339,8 @@ const Dashboard = () => {
                     <RapidFinancing 
                       onNavigateToCompanyInfo={(missingFields) => {
                         setMissingMIDFields(missingFields || []);
-                        setActiveTab('mid');
+                        setActiveTab('members');
                       }}
-                      onNavigateToTab={setActiveTab}
-                    />
-                  </motion.div>
-                )}
-
-                {activeTab === 'mid' && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <MIDForm 
-                      currentContext={currentContext} 
-                      missingMIDFields={missingMIDFields}
-                      onFieldsUpdated={() => setMissingMIDFields([])}
-                      onOrganizationCreated={handleOrganizationCreated}
                       onNavigateToTab={setActiveTab}
                     />
                   </motion.div>
@@ -1404,6 +1369,11 @@ const Dashboard = () => {
                       currentUserPermissions={currentContext.permissions}
                       openInvite={isInviteModalOpen}
                       onInviteModalClose={() => setIsInviteModalOpen(false)}
+                      currentContext={currentContext}
+                      missingMIDFields={missingMIDFields}
+                      onFieldsUpdated={() => setMissingMIDFields([])}
+                      onOrganizationCreated={handleOrganizationCreated}
+                      onNavigateToTab={setActiveTab}
                     />
                   </motion.div>
                 )}
