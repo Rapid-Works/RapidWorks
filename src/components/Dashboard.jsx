@@ -33,6 +33,7 @@ import { HomePage } from './home';
 import { isExpert, getExpertByEmail, isAdmin, getAllExperts } from '../utils/expertService';
 import { getCurrentUserContext, hasUserOrganizationMembership } from '../utils/organizationService';
 import { checkOrganizationFrameworkStatus } from '../utils/frameworkAgreementService';
+import { useOnboarding } from '../hooks/useOnboarding';
 // notification helpers handled inside NotificationSettingsModal
 
 
@@ -41,6 +42,7 @@ import { checkOrganizationFrameworkStatus } from '../utils/frameworkAgreementSer
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
+  const { isComplete: onboardingComplete } = useOnboarding();
   // const router = useRouter();
   const { kitId, taskId } = useParams();
   const pathname = usePathname();
@@ -261,7 +263,7 @@ const Dashboard = () => {
   // Handle navigation from invoicing to task chat
   const handleNavigateToTask = (taskId) => {
     setSelectedTaskId(taskId);
-    setActiveTab('tasks');
+    handleTabChange('tasks');
   };
 
   // Function to show expert selection modal
@@ -673,6 +675,23 @@ const Dashboard = () => {
   const canAccessMembers = currentContext?.type === 'organization' && 
     (currentContext.permissions?.role === 'admin' || currentContext.permissions?.permissions?.canManageMembers);
 
+  // Helper to check if tab should be disabled (all tabs except 'home' until onboarding is complete)
+  const isTabDisabled = (tabName) => {
+    // Never disable 'home' tab
+    if (tabName === 'home') return false;
+    // Disable all other tabs if onboarding is not complete
+    // Exception: rapid-works.io staff can access all tabs regardless of onboarding
+    if (currentUser?.email?.endsWith('@rapid-works.io')) return false;
+    return !onboardingComplete;
+  };
+
+  // Wrapper for setActiveTab that respects onboarding completion
+  const handleTabChange = (tabName) => {
+    if (!isTabDisabled(tabName)) {
+      setActiveTab(tabName);
+    }
+  };
+
 
   if (contextLoading) {
     return (
@@ -749,7 +768,37 @@ const Dashboard = () => {
                       </div>
                     </button>
                     
-                    {canAccessMembers && (
+                    {/* Show Organization tab for all users - allows creation if no org exists */}
+                    {currentUser && !currentUser?.email?.endsWith('@rapid-works.io') && (
+                      <button
+                        onClick={() => {
+                          if (!isTabDisabled('members')) {
+                            setActiveTab('members');
+                            setSelectedTaskId(null); // Clear when leaving tasks area
+                            setIsMobileMenuOpen(false); // Close mobile menu
+                          }
+                        }}
+                        disabled={isTabDisabled('members')}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                          isTabDisabled('members')
+                            ? 'text-gray-400 cursor-not-allowed opacity-50'
+                            : activeTab === 'members'
+                            ? 'bg-[#7C3BEC] text-white shadow-lg'
+                            : 'text-gray-700 hover:bg-white hover:shadow-md'
+                        }`}
+                        title={isTabDisabled('members') ? 'Complete onboarding to access this tab' : ''}
+                      >
+                        <Building className="h-5 w-5" />
+                        <div className="flex-1">
+                          <div className="font-medium">
+                            {currentContext?.type === 'organization' || canAccessMembers ? 'Your organization' : 'Your organization'}
+                          </div>
+                        </div>
+                      </button>
+                    )}
+                    
+                    {/* Members tab for rapid-works.io staff with canAccessMembers */}
+                    {canAccessMembers && currentUser?.email?.endsWith('@rapid-works.io') && (
                       <button
                         onClick={() => {
                           setActiveTab('members');
@@ -762,15 +811,9 @@ const Dashboard = () => {
                             : 'text-gray-700 hover:bg-white hover:shadow-md'
                         }`}
                       >
-                        {currentUser?.email?.endsWith('@rapid-works.io') ? (
-                          <Users className="h-5 w-5" />
-                        ) : (
-                          <Building className="h-5 w-5" />
-                        )}
+                        <Users className="h-5 w-5" />
                         <div className="flex-1">
-                          <div className="font-medium">
-                            {currentUser?.email?.endsWith('@rapid-works.io') ? 'Members' : 'Your organization'}
-                          </div>
+                          <div className="font-medium">Members</div>
                         </div>
                       </button>
                     )}
@@ -780,15 +823,21 @@ const Dashboard = () => {
                   <div className="border border-gray-200 rounded-xl p-3 bg-gradient-to-br from-white to-gray-50 space-y-2">
                 <button
                   onClick={() => {
-                    setActiveTab('branding');
-                    // Don't clear selectedTaskId - let TaskList preserve its state
-                    setIsMobileMenuOpen(false); // Close mobile menu
+                    if (!isTabDisabled('branding')) {
+                      setActiveTab('branding');
+                      // Don't clear selectedTaskId - let TaskList preserve its state
+                      setIsMobileMenuOpen(false); // Close mobile menu
+                    }
                   }}
+                  disabled={isTabDisabled('branding')}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                    activeTab === 'branding'
+                    isTabDisabled('branding')
+                      ? 'text-gray-400 cursor-not-allowed opacity-50'
+                      : activeTab === 'branding'
                       ? 'bg-[#7C3BEC] text-white shadow-lg'
                       : 'text-gray-700 hover:bg-white hover:shadow-md'
                   }`}
+                  title={isTabDisabled('branding') ? 'Complete onboarding to access this tab' : ''}
                 >
                   <Megaphone className="h-5 w-5" />
                   <div className="flex-1">
@@ -801,19 +850,25 @@ const Dashboard = () => {
                   <>
                     <button
                       onClick={() => {
-                        setExpertTasksExpanded(!expertTasksExpanded);
-                        if (!expertTasksExpanded) {
-                          setActiveTab('tasks');
-                          setSelectedExpert(null);
-                          // Don't clear selectedTaskId when expanding - preserve user selection
+                        if (!isTabDisabled('tasks')) {
+                          setExpertTasksExpanded(!expertTasksExpanded);
+                          if (!expertTasksExpanded) {
+                            setActiveTab('tasks');
+                            setSelectedExpert(null);
+                            // Don't clear selectedTaskId when expanding - preserve user selection
+                          }
+                          setIsMobileMenuOpen(false); // Close mobile menu
                         }
-                        setIsMobileMenuOpen(false); // Close mobile menu
                       }}
+                      disabled={isTabDisabled('tasks')}
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                        activeTab === 'tasks' && !selectedExpert
+                        isTabDisabled('tasks')
+                          ? 'text-gray-400 cursor-not-allowed opacity-50'
+                          : activeTab === 'tasks' && !selectedExpert
                           ? 'bg-[#7C3BEC] text-white shadow-lg'
                           : 'text-gray-700 hover:bg-white hover:shadow-md'
                       }`}
+                      title={isTabDisabled('tasks') ? 'Complete onboarding to access this tab' : ''}
                     >
                       {expertTasksExpanded ? (
                         <ChevronDown className="h-4 w-4" />
@@ -837,16 +892,22 @@ const Dashboard = () => {
                         {/* All Tasks Option */}
                         <button
                           onClick={() => {
-                            setActiveTab('tasks');
-                            setSelectedExpert(null);
-                            // Don't clear selectedTaskId - preserve user selection
-                            setIsMobileMenuOpen(false); // Close mobile menu
+                            if (!isTabDisabled('tasks')) {
+                              setActiveTab('tasks');
+                              setSelectedExpert(null);
+                              // Don't clear selectedTaskId - preserve user selection
+                              setIsMobileMenuOpen(false); // Close mobile menu
+                            }
                           }}
+                          disabled={isTabDisabled('tasks')}
                           className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-left transition-all duration-200 text-sm ${
-                            activeTab === 'tasks' && !selectedExpert
+                            isTabDisabled('tasks')
+                              ? 'text-gray-400 cursor-not-allowed opacity-50'
+                              : activeTab === 'tasks' && !selectedExpert
                               ? 'bg-[#7C3BEC] text-white shadow-lg'
                               : 'text-gray-600 hover:bg-gray-100'
                           }`}
+                          title={isTabDisabled('tasks') ? 'Complete onboarding to access this tab' : ''}
                         >
                           <div className="w-6 h-6 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
                             <MessageSquare className="h-3 w-3 text-white" />
@@ -859,17 +920,23 @@ const Dashboard = () => {
                           <button
                             key={expert.email}
                             onClick={() => {
-                              setActiveTab('tasks');
-                              setSelectedExpert(expert);
-                              // Clear selectedTaskId when switching experts since tasks will be different
-                              setSelectedTaskId(null);
-                              setIsMobileMenuOpen(false); // Close mobile menu
+                              if (!isTabDisabled('tasks')) {
+                                setActiveTab('tasks');
+                                setSelectedExpert(expert);
+                                // Clear selectedTaskId when switching experts since tasks will be different
+                                setSelectedTaskId(null);
+                                setIsMobileMenuOpen(false); // Close mobile menu
+                              }
                             }}
+                            disabled={isTabDisabled('tasks')}
                             className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-left transition-all duration-200 text-sm ${
-                              activeTab === 'tasks' && selectedExpert?.email === expert.email
+                              isTabDisabled('tasks')
+                                ? 'text-gray-400 cursor-not-allowed opacity-50'
+                                : activeTab === 'tasks' && selectedExpert?.email === expert.email
                                 ? 'bg-[#7C3BEC] text-white shadow-lg'
                                 : 'text-gray-600 hover:bg-gray-100'
                             }`}
+                            title={isTabDisabled('tasks') ? 'Complete onboarding to access this tab' : ''}
                           >
                             <div className="w-6 h-6 bg-gradient-to-br from-[#7C3BEC] to-[#9F7AEA] rounded-full flex items-center justify-center overflow-hidden">
                               {expert.avatar ? (
@@ -895,15 +962,21 @@ const Dashboard = () => {
                   (userIsExpert || currentContext?.type === 'organization') && (
                     <button
                       onClick={() => {
-                        setActiveTab('tasks');
-                        // Don't clear selectedTaskId - preserve user selection
-                        setIsMobileMenuOpen(false); // Close mobile menu
+                        if (!isTabDisabled('tasks')) {
+                          setActiveTab('tasks');
+                          // Don't clear selectedTaskId - preserve user selection
+                          setIsMobileMenuOpen(false); // Close mobile menu
+                        }
                       }}
+                      disabled={isTabDisabled('tasks')}
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                        activeTab === 'tasks'
+                        isTabDisabled('tasks')
+                          ? 'text-gray-400 cursor-not-allowed opacity-50'
+                          : activeTab === 'tasks'
                           ? 'bg-[#7C3BEC] text-white shadow-lg'
                           : 'text-gray-700 hover:bg-white hover:shadow-md'
                       }`}
+                      title={isTabDisabled('tasks') ? 'Complete onboarding to access this tab' : ''}
                     >
                       <Users className="h-5 w-5" />
                       <div className="flex-1">
@@ -923,15 +996,21 @@ const Dashboard = () => {
                 {canAccessSignedAgreements && (
                   <button
                     onClick={() => {
-                      setActiveTab('agreements');
-                      setSelectedTaskId(null); // Clear when leaving tasks area
-                      setIsMobileMenuOpen(false); // Close mobile menu
+                      if (!isTabDisabled('agreements')) {
+                        setActiveTab('agreements');
+                        setSelectedTaskId(null); // Clear when leaving tasks area
+                        setIsMobileMenuOpen(false); // Close mobile menu
+                      }
                     }}
+                    disabled={isTabDisabled('agreements')}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                      activeTab === 'agreements'
+                      isTabDisabled('agreements')
+                        ? 'text-gray-400 cursor-not-allowed opacity-50'
+                        : activeTab === 'agreements'
                         ? 'bg-[#7C3BEC] text-white shadow-lg'
                         : 'text-gray-700 hover:bg-white hover:shadow-md'
                     }`}
+                    title={isTabDisabled('agreements') ? 'Complete onboarding to access this tab' : ''}
                   >
                     <FileCheck className="h-5 w-5" />
                     <div className="flex-1">
@@ -952,15 +1031,21 @@ const Dashboard = () => {
                 {canAccessInvoicing && (
                   <button
                     onClick={() => {
-                      setActiveTab('invoicing');
-                      setSelectedTaskId(null); // Clear when leaving tasks area
-                      setIsMobileMenuOpen(false); // Close mobile menu
+                      if (!isTabDisabled('invoicing')) {
+                        setActiveTab('invoicing');
+                        setSelectedTaskId(null); // Clear when leaving tasks area
+                        setIsMobileMenuOpen(false); // Close mobile menu
+                      }
                     }}
+                    disabled={isTabDisabled('invoicing')}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                      activeTab === 'invoicing'
+                      isTabDisabled('invoicing')
+                        ? 'text-gray-400 cursor-not-allowed opacity-50'
+                        : activeTab === 'invoicing'
                         ? 'bg-[#7C3BEC] text-white shadow-lg'
                         : 'text-gray-700 hover:bg-white hover:shadow-md'
                     }`}
+                    title={isTabDisabled('invoicing') ? 'Complete onboarding to access this tab' : ''}
                   >
                     <Receipt className="h-5 w-5" />
                     <div className="flex-1">
@@ -980,15 +1065,21 @@ const Dashboard = () => {
                   <>
                     <button
                       onClick={() => {
-                        setActiveTab('organizations');
-                        setSelectedTaskId(null); // Clear when leaving tasks area
-                        setIsMobileMenuOpen(false); // Close mobile menu
+                        if (!isTabDisabled('organizations')) {
+                          setActiveTab('organizations');
+                          setSelectedTaskId(null); // Clear when leaving tasks area
+                          setIsMobileMenuOpen(false); // Close mobile menu
+                        }
                       }}
+                      disabled={isTabDisabled('organizations')}
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                        activeTab === 'organizations'
+                        isTabDisabled('organizations')
+                          ? 'text-gray-400 cursor-not-allowed opacity-50'
+                          : activeTab === 'organizations'
                           ? 'bg-[#7C3BEC] text-white shadow-lg'
                           : 'text-gray-700 hover:bg-white hover:shadow-md'
                       }`}
+                      title={isTabDisabled('organizations') ? 'Complete onboarding to access this tab' : ''}
                     >
                       <Building className="h-5 w-5" />
                       <div className="flex-1">
@@ -1008,15 +1099,21 @@ const Dashboard = () => {
                 {canAccessAllUsers && (
                   <button
                     onClick={() => {
-                      setActiveTab('users');
-                      setSelectedTaskId(null); // Clear when leaving tasks area
-                      setIsMobileMenuOpen(false); // Close mobile menu
+                      if (!isTabDisabled('users')) {
+                        setActiveTab('users');
+                        setSelectedTaskId(null); // Clear when leaving tasks area
+                        setIsMobileMenuOpen(false); // Close mobile menu
+                      }
                     }}
+                    disabled={isTabDisabled('users')}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                      activeTab === 'users'
+                      isTabDisabled('users')
+                        ? 'text-gray-400 cursor-not-allowed opacity-50'
+                        : activeTab === 'users'
                         ? 'bg-[#7C3BEC] text-white shadow-lg'
                         : 'text-gray-700 hover:bg-white hover:shadow-md'
                     }`}
+                    title={isTabDisabled('users') ? 'Complete onboarding to access this tab' : ''}
                   >
                     <Users className="h-5 w-5" />
                     <div className="flex-1">
@@ -1056,15 +1153,21 @@ const Dashboard = () => {
                 {canAccessRapidServices && (
                   <button
                     onClick={() => {
-                      setActiveTab('coachings');
-                      setSelectedTaskId(null); // Clear when leaving tasks area
-                      setIsMobileMenuOpen(false); // Close mobile menu
+                      if (!isTabDisabled('coachings')) {
+                        setActiveTab('coachings');
+                        setSelectedTaskId(null); // Clear when leaving tasks area
+                        setIsMobileMenuOpen(false); // Close mobile menu
+                      }
                     }}
+                    disabled={isTabDisabled('coachings')}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                      activeTab === 'coachings'
+                      isTabDisabled('coachings')
+                        ? 'text-gray-400 cursor-not-allowed opacity-50'
+                        : activeTab === 'coachings'
                         ? 'bg-[#7C3BEC] text-white shadow-lg'
                         : 'text-gray-700 hover:bg-white hover:shadow-md'
                     }`}
+                    title={isTabDisabled('coachings') ? 'Complete onboarding to access this tab' : ''}
                   >
                     <Compass className="h-5 w-5" />
                     <div className="flex-1">
@@ -1077,15 +1180,21 @@ const Dashboard = () => {
                 {canAccessRapidServices && (
                   <button
                     onClick={() => {
-                      setActiveTab('financing');
-                      setSelectedTaskId(null); // Clear when leaving tasks area
-                      setIsMobileMenuOpen(false); // Close mobile menu
+                      if (!isTabDisabled('financing')) {
+                        setActiveTab('financing');
+                        setSelectedTaskId(null); // Clear when leaving tasks area
+                        setIsMobileMenuOpen(false); // Close mobile menu
+                      }
                     }}
+                    disabled={isTabDisabled('financing')}
                     className={`ml-0.5 w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                      activeTab === 'financing'
+                      isTabDisabled('financing')
+                        ? 'text-gray-400 cursor-not-allowed opacity-50'
+                        : activeTab === 'financing'
                         ? 'bg-[#7C3BEC] text-white shadow-lg'
                         : 'text-gray-700 hover:bg-white hover:shadow-md'
                     }`}
+                    title={isTabDisabled('financing') ? 'Complete onboarding to access this tab' : ''}
                   >
                     <span className="pl-0.5 text-lg font-bold">€</span>
                     <div className="flex-1">
@@ -1099,15 +1208,21 @@ const Dashboard = () => {
                 {currentUser?.email?.endsWith('@rapid-works.io') && (
                   <button
                     onClick={() => {
-                      setActiveTab('mid-submissions');
-                      setSelectedTaskId(null); // Clear when leaving tasks area
-                      setIsMobileMenuOpen(false); // Close mobile menu
+                      if (!isTabDisabled('mid-submissions')) {
+                        setActiveTab('mid-submissions');
+                        setSelectedTaskId(null); // Clear when leaving tasks area
+                        setIsMobileMenuOpen(false); // Close mobile menu
+                      }
                     }}
+                    disabled={isTabDisabled('mid-submissions')}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                      activeTab === 'mid-submissions'
+                      isTabDisabled('mid-submissions')
+                        ? 'text-gray-400 cursor-not-allowed opacity-50'
+                        : activeTab === 'mid-submissions'
                         ? 'bg-[#7C3BEC] text-white shadow-lg'
                         : 'text-gray-700 hover:bg-white hover:shadow-md'
                     }`}
+                    title={isTabDisabled('mid-submissions') ? 'Complete onboarding to access this tab' : ''}
                   >
                     <FileText className="h-5 w-5" />
                     <div className="flex-1">
@@ -1196,14 +1311,16 @@ const Dashboard = () => {
                   >
                     <HomePage 
                       key={`home-${currentUser?.uid || 'no-user'}`}
-                      onNavigateToTab={(tab) => setActiveTab(tab)}
+                      onNavigateToTab={(tab) => handleTabChange(tab)}
                       onNavigateToMIDWithFields={(missingFields) => {
                         setMissingMIDFields(missingFields);
+                        // Allow navigation to 'members' tab for onboarding purposes
                         setActiveTab('members');
                         // Add returnTo parameter to URL so MID form knows to redirect back
                         window.history.replaceState(null, '', '/dashboard?tab=members&returnTo=home');
                       }}
                       onOpenInviteModal={() => {
+                        // Allow navigation to 'members' tab for onboarding purposes (inviting coworkers is step 6)
                         setActiveTab('members');
                         setIsInviteModalOpen(true);
                       }}
@@ -1339,9 +1456,10 @@ const Dashboard = () => {
                     <RapidFinancing 
                       onNavigateToCompanyInfo={(missingFields) => {
                         setMissingMIDFields(missingFields || []);
+                        // Allow navigation to 'members' tab for onboarding purposes
                         setActiveTab('members');
                       }}
-                      onNavigateToTab={setActiveTab}
+                      onNavigateToTab={(tab) => handleTabChange(tab)}
                     />
                   </motion.div>
                 )}
@@ -1357,24 +1475,36 @@ const Dashboard = () => {
                   </motion.div>
                 )}
 
-                {activeTab === 'members' && canAccessMembers && (
+                {activeTab === 'members' && (
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3 }}
                     className="bg-white rounded-lg border border-gray-200 p-4 lg:p-6"
                   >
-                    <OrganizationUsers 
-                      organization={currentContext.organization || {}}
-                      currentUserPermissions={currentContext.permissions}
-                      openInvite={isInviteModalOpen}
-                      onInviteModalClose={() => setIsInviteModalOpen(false)}
-                      currentContext={currentContext}
-                      missingMIDFields={missingMIDFields}
-                      onFieldsUpdated={() => setMissingMIDFields([])}
-                      onOrganizationCreated={handleOrganizationCreated}
-                      onNavigateToTab={setActiveTab}
-                    />
+                    {/* Show OrganizationUsers if user has organization or is rapid-works.io staff */}
+                    {canAccessMembers ? (
+                      <OrganizationUsers 
+                        organization={currentContext.organization || {}}
+                        currentUserPermissions={currentContext.permissions}
+                        openInvite={isInviteModalOpen}
+                        onInviteModalClose={() => setIsInviteModalOpen(false)}
+                        currentContext={currentContext}
+                        missingMIDFields={missingMIDFields}
+                        onFieldsUpdated={() => setMissingMIDFields([])}
+                        onOrganizationCreated={handleOrganizationCreated}
+                        onNavigateToTab={setActiveTab}
+                      />
+                    ) : (
+                      /* Show organization creation form if user has no organization */
+                      <MIDForm 
+                        currentContext={currentContext} 
+                        missingMIDFields={[]}
+                        onFieldsUpdated={() => setMissingMIDFields([])}
+                        onOrganizationCreated={handleOrganizationCreated}
+                        onNavigateToTab={setActiveTab}
+                      />
+                    )}
                   </motion.div>
                 )}
               </div>

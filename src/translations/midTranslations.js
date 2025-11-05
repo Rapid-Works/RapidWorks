@@ -43,6 +43,10 @@ export const midTranslations = {
     midContactTitle: 'MID-Ansprechpartner in deiner Organisation',
     midContactDescription: 'Die Person in deiner Organisation, welche Ansprechpartner für MID-Projekte für RapidWorks und den Fördergeber ist.',
     managingDirectorIsMidContact: 'Geschäftsführer ist auch MID-Ansprechpartner',
+    midContactOptions: {
+      same: 'Geschäftsführer ist auch MID-Ansprechpartner',
+      different: 'MID-Ansprechpartner weicht von Geschäftsführer ab'
+    },
     organizationDescriptionLabel: 'Kurzbeschreibung deiner Organisation',
     
     // Address section
@@ -193,6 +197,12 @@ export const midTranslations = {
     errorMessage: 'Fehler beim Übermitteln des Formulars. Bitte versuchen Sie es erneut.',
     saveChanges: 'Änderungen speichern',
     noChanges: 'Keine Änderungen',
+    unsavedChanges: {
+      title: 'Ungespeicherte Änderungen',
+      message: 'Du hast ungespeicherte Änderungen. Möchtest du wirklich fortfahren? Alle Änderungen gehen verloren.',
+      cancel: 'Abbrechen',
+      leave: 'Verlassen'
+    },
     updating: 'Wird aktualisiert...',
     
     // Onboarding translations
@@ -218,7 +228,9 @@ export const midTranslations = {
         title: 'Lege deine Organisation an',
         description: 'Fülle dein Organisationsformular aus, um zu beginnen.',
         buttonText: 'Organisation anlegen',
-        alreadyPartOf: 'Jemand aus deiner Organisation hat diese bereits bei uns registriert? Dann bitte den Organisations-Admin dich einzuladen.'
+        alreadyPartOf: 'Jemand aus deiner Organisation hat diese bereits bei uns registriert? Dann bitte den Organisations-Admin dich einzuladen.',
+        modalTitle: 'Organisation anlegen',
+        modalTitleCompleteFields: 'Erforderliche Felder vervollständigen'
       },
       inviteCoworkers: {
         title: 'Team-Mitglieder einladen',
@@ -260,7 +272,8 @@ export const midTranslations = {
         completeProfileDescription: 'Füge deinen Vor- und Nachnamen zu deinem Profil hinzu.',
         completeProfileButton: 'Profil vervollständigen →',
         createOrganization: 'Deine Organisation',
-        completeStepFirst: 'Schließe zuerst Schritt {step} ab.'
+        completeStepFirst: 'Schließe zuerst Schritt {step} ab.',
+        allStepsCompleted: 'Alle Schritte abgeschlossen! Es gibt nichts mehr zu tun.'
       }
     }
   },
@@ -308,6 +321,10 @@ export const midTranslations = {
     midContactTitle: 'MID contact in your organization',
     midContactDescription: 'The person in your organisation who is the contact person for MID projects for RapidWorks and the funding agency.',
     managingDirectorIsMidContact: 'Managing Director is also MID contact',
+    midContactOptions: {
+      same: 'Managing Director is also MID contact',
+      different: 'MID contact person differs from managing director'
+    },
     organizationDescriptionLabel: 'Short description of your organization',
     
     // Address section
@@ -459,6 +476,12 @@ export const midTranslations = {
     errorMessage: 'Error submitting form. Please try again.',
     saveChanges: 'Save Changes',
     noChanges: 'No Changes',
+    unsavedChanges: {
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. Are you sure you want to leave? All changes will be lost.',
+      cancel: 'Cancel',
+      leave: 'Leave'
+    },
     updating: 'Updating...',
     
     // Onboarding translations
@@ -484,7 +507,9 @@ export const midTranslations = {
         title: 'Create your organization',
         description: 'Fill out your organization form to get started.',
         buttonText: 'Create Organization',
-        alreadyPartOf: 'Already part of an organization? Reach out to your admin to add you.'
+        alreadyPartOf: 'Already part of an organization? Reach out to your admin to add you.',
+        modalTitle: 'Create organization',
+        modalTitleCompleteFields: 'Complete Required Fields'
       },
       inviteCoworkers: {
         title: 'Invite Your Coworkers',
@@ -526,7 +551,8 @@ export const midTranslations = {
         completeProfileDescription: 'Add your first and last name to complete your profile.',
         completeProfileButton: 'Complete Profile →',
         createOrganization: 'Your organization',
-        completeStepFirst: 'Complete step {step} first.'
+        completeStepFirst: 'Complete step {step} first.',
+        allStepsCompleted: 'All steps completed! There\'s nothing more to do.'
       }
     }
   }

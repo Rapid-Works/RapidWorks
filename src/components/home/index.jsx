@@ -15,7 +15,8 @@ import {
   Users,
   CheckCircle,
   Play,
-  User
+  User,
+  AlertCircle
 } from 'lucide-react';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { useAuth } from '../../contexts/AuthContext';
@@ -27,6 +28,9 @@ import MIDForm from '../MIDForm';
 import ApplyToMIDModal from '../ApplyToMIDModal';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../firebase/config';
+import { getOrganizationInfo } from '../../utils/organizationService';
+import { getCurrentUserContext } from '../../utils/organizationService';
+import { isPostalCodeInNRW } from '../../utils/nrwPostalCodes';
 
 export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInviteModal, currentContext }) => {
   const { currentUser } = useAuth();
@@ -45,7 +49,8 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     markTaskSkipped,
     refreshOnboarding,
     checkProfileCompletion,
-    markProfileCompleted
+    markProfileCompleted,
+    refreshMIDFieldsStatus
   } = useOnboarding();
   
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -58,8 +63,17 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
   const [showWalkthroughModal, setShowWalkthroughModal] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isOrganizationModalOpen, setIsOrganizationModalOpen] = useState(false);
+  const [missingFieldsForModal, setMissingFieldsForModal] = useState([]);
   const [isMIDModalOpen, setIsMIDModalOpen] = useState(false);
+  const [midFormLeaveCheck, setMidFormLeaveCheck] = useState(null);
   const [hasMIDSubmission, setHasMIDSubmission] = useState(false);
+  
+  // Blocking conditions for MID application
+  const [midBlockingStatus, setMidBlockingStatus] = useState({
+    isBlocked: false,
+    reason: '',
+    isLoading: false
+  });
 
   // Refresh onboarding data when component mounts (useful when redirected to dashboard)
   useEffect(() => {
@@ -83,6 +97,105 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     };
     checkMIDSubmission();
   }, [currentUser, midFieldsStatus.hasMIDSubmission]);
+
+  // Check blocking conditions for MID application
+  useEffect(() => {
+    const checkMIDBlockingConditions = async () => {
+      if (!currentUser || !midFieldsStatus.allFieldsFilled) {
+        setMidBlockingStatus({ isBlocked: false, reason: '', isLoading: false });
+        return;
+      }
+
+      setMidBlockingStatus(prev => ({ ...prev, isLoading: true }));
+
+      try {
+        // Get user's current organization context
+        const userContext = await getCurrentUserContext(currentUser.uid);
+        
+        if (!userContext || userContext.type !== 'organization' || !userContext.organization?.id) {
+          setMidBlockingStatus({ isBlocked: false, reason: '', isLoading: false });
+          return;
+        }
+        
+        // Load organization information
+        const orgData = await getOrganizationInfo(userContext.organization.id);
+        
+        if (!orgData) {
+          setMidBlockingStatus({ isBlocked: false, reason: '', isLoading: false });
+          return;
+        }
+
+        const blockingReasons = [];
+
+        // Check for large organization exclusion
+        if (orgData.companyCategory === 'large') {
+          blockingReasons.push(language === 'de' 
+            ? 'Großunternehmen sind nicht für MID-Anträge berechtigt.'
+            : 'Large enterprises are not eligible for MID applications.');
+        }
+
+        // Check for employee count >= 250
+        const employeeCount = parseInt(orgData.totalEmployees || orgData.employees || '0');
+        if (!isNaN(employeeCount) && employeeCount >= 250) {
+          blockingReasons.push(language === 'de'
+            ? 'Unternehmen mit 250 oder mehr Mitarbeitern sind nicht für MID-Anträge berechtigt.'
+            : 'Organizations with 250 or more employees are not eligible for MID applications.');
+        }
+
+        // Check if postal code is in NRW
+        const postalCode = orgData.postalCode;
+        if (postalCode && !isPostalCodeInNRW(postalCode)) {
+          blockingReasons.push(language === 'de'
+            ? 'Ihre Postleitzahl liegt nicht in NRW. MID-Anträge sind nur für Unternehmen in NRW verfügbar.'
+            : 'Your postal code is not in NRW. MID applications are only available for companies in NRW.');
+        }
+
+        // Check cooldown periods
+        if (orgData.hasReceivedMIDDigitisation === true && orgData.lastMIDDigitisationApprovalDate) {
+          const approvalDate = new Date(orgData.lastMIDDigitisationApprovalDate);
+          const currentDate = new Date();
+          const monthsDiff = (currentDate.getFullYear() - approvalDate.getFullYear()) * 12 + 
+                            (currentDate.getMonth() - approvalDate.getMonth());
+          
+          if (monthsDiff < 24) {
+            const reapplyDate = new Date(approvalDate);
+            reapplyDate.setMonth(reapplyDate.getMonth() + 24);
+            const reapplyDateStr = reapplyDate.toLocaleDateString(language === 'de' ? 'de-DE' : 'en-US');
+            blockingReasons.push(language === 'de'
+              ? `Sie können noch nicht erneut für MID Digitalisierung beantragen. Sie müssen bis ${reapplyDateStr} warten.`
+              : `You cannot reapply for MID Digitisation funding yet. You must wait until ${reapplyDateStr} to reapply.`);
+          }
+        }
+
+        if (orgData.hasReceivedMIDDigitalSecurity === true && orgData.lastMIDDigitalSecurityApprovalDate) {
+          const approvalDate = new Date(orgData.lastMIDDigitalSecurityApprovalDate);
+          const currentDate = new Date();
+          const monthsDiff = (currentDate.getFullYear() - approvalDate.getFullYear()) * 12 + 
+                            (currentDate.getMonth() - approvalDate.getMonth());
+          
+          if (monthsDiff < 24) {
+            const reapplyDate = new Date(approvalDate);
+            reapplyDate.setMonth(reapplyDate.getMonth() + 24);
+            const reapplyDateStr = reapplyDate.toLocaleDateString(language === 'de' ? 'de-DE' : 'en-US');
+            blockingReasons.push(language === 'de'
+              ? `Sie können noch nicht erneut für MID Digitale Sicherheit beantragen. Sie müssen bis ${reapplyDateStr} warten.`
+              : `You cannot reapply for MID Digital Security funding yet. You must wait until ${reapplyDateStr} to reapply.`);
+          }
+        }
+
+        setMidBlockingStatus({
+          isBlocked: blockingReasons.length > 0,
+          reason: blockingReasons.join('\n'),
+          isLoading: false
+        });
+      } catch (error) {
+        console.error('Error checking MID blocking conditions:', error);
+        setMidBlockingStatus({ isBlocked: false, reason: '', isLoading: false });
+      }
+    };
+
+    checkMIDBlockingConditions();
+  }, [currentUser, midFieldsStatus.allFieldsFilled, language]);
 
   const handleSendVerificationEmail = async () => {
     setSendingEmail(true);
@@ -214,7 +327,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       icon: Mail,
       color: 'blue',
       action: tasks.emailVerified ? null : (
-        <div className="flex flex-col gap-2 mt-3">
+        <div className="flex flex-col gap-2 mt-2">
           {!emailSent ? (
             <button
               onClick={handleSendVerificationEmail}
@@ -262,7 +375,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       color: checkProfileCompletion() ? 'orange' : 'purple',
       requiresPrevious: true,
       action: tasks.profileCompleted ? null : (
-        <div className="mt-3 space-y-3">
+        <div className="mt-2 space-y-2">
           <button
             onClick={() => setIsProfileModalOpen(true)}
             className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors ${
@@ -293,9 +406,12 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       color: 'purple',
       requiresPrevious: true,
       action: tasks.organizationCreated ? null : (
-        <div className="mt-3 space-y-3">
+        <div className="mt-2 space-y-2">
           <button
-            onClick={() => setIsOrganizationModalOpen(true)}
+            onClick={() => {
+              setMissingFieldsForModal([]); // Clear missing fields when opening normally
+              setIsOrganizationModalOpen(true);
+            }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3BEC] hover:bg-[#6B32D6] text-white text-sm font-medium rounded-lg transition-colors"
           >
             {t('onboarding.createOrganization.buttonText')}
@@ -327,45 +443,78 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       color: midFieldsStatus.isLoading ? 'gray' : (midFieldsStatus.allFieldsFilled ? 'green' : 'orange'),
       requiresPrevious: true,
       action: (tasks.midApplied || tasks.midSkipped) ? null : (
-        <div className="mt-3">
+        <div className="mt-2">
           {midFieldsStatus.isLoading ? (
             <div className="flex items-center gap-2 text-gray-500 text-sm">
               <Loader2 className="h-4 w-4 animate-spin" />
               {t('onboarding.applyToMID.checkingRequirements')}
             </div>
           ) : midFieldsStatus.allFieldsFilled ? (
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsMIDModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm"
-              >
-                <Euro className="h-4 w-4" />
-                {t('onboarding.applyToMID.buttonText')}
-                <ArrowRight className="h-4 w-4" />
-              </button>
-              
-              <button
-                onClick={() => {
-                  // Open opt-out modal
-                  setShowOptOutModal(true);
-                }}
-                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                {t('onboarding.applyToMID.skipText')}
-              </button>
+            <div className="space-y-2">
+              {midBlockingStatus.isLoading ? (
+                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t('onboarding.applyToMID.checkingRequirements')}
+                </div>
+              ) : midBlockingStatus.isBlocked ? (
+                <div className="space-y-2">
+                  <button
+                    disabled
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-400 cursor-not-allowed text-white text-sm font-medium rounded-lg transition-all shadow-sm opacity-60"
+                  >
+                    <AlertCircle className="h-4 w-4" />
+                    {t('onboarding.applyToMID.buttonText')}
+                  </button>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-red-700 leading-relaxed whitespace-pre-line">
+                        {midBlockingStatus.reason}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <button
+                      onClick={() => {
+                        // Open opt-out modal
+                        setShowOptOutModal(true);
+                      }}
+                      className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {t('onboarding.applyToMID.skipText')}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setIsMIDModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm"
+                  >
+                    <Euro className="h-4 w-4" />
+                    {t('onboarding.applyToMID.buttonText')}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      // Open opt-out modal
+                      setShowOptOutModal(true);
+                    }}
+                    className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {t('onboarding.applyToMID.skipText')}
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2">
               <button
                 onClick={() => {
-                  // Pass missing fields data to Dashboard and navigate to MID form
-                  if (onNavigateToMIDWithFields) {
-                    onNavigateToMIDWithFields(midFieldsStatus.missingFields);
-                  } else {
-                    // Fallback to regular navigation
-                    router.push('/dashboard?tab=members&returnTo=home');
-                    onNavigateToTab('members');
-                  }
+                  // Set missing fields and open organization modal
+                  setMissingFieldsForModal(midFieldsStatus.missingFields || []);
+                  setIsOrganizationModalOpen(true);
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors"
               >
@@ -407,7 +556,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       color: 'blue',
       requiresPrevious: true,
       action: (tasks.bookingCallCompleted === true || tasks.bookingCallCompleted === 'skipped') ? null : (
-        <div className="mt-3 space-y-3">
+        <div className="mt-2 space-y-2">
           <button
             onClick={() => setIsCalendlyModalOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -447,7 +596,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       color: 'purple',
       requiresPrevious: true,
       action: tasks.coworkersInvited === true ? null : (
-        <div className="mt-3 space-y-3">
+        <div className="mt-2 space-y-2">
           <button
             onClick={async () => {
               // Open invite modal directly
@@ -512,10 +661,10 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8">
       {/* Header */}
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+      <div className="mb-5">
+        <h1 className="text-3xl font-bold text-gray-900 mb-1">
           {t('onboarding.dashboard.welcome').replace('{name}', userName)}
         </h1>
         <p className="text-gray-500 text-lg">
@@ -524,8 +673,8 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       </div>
 
       {/* Progress Card */}
-      <div className="bg-gradient-to-br from-[#7C3BEC] to-[#9F7AEA] rounded-2xl p-8 mb-8 shadow-lg">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-gradient-to-br from-[#7C3BEC] to-[#9F7AEA] rounded-2xl p-6 mb-6 shadow-lg">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-white/90 text-sm font-medium mb-1">{t('onboarding.dashboard.progress')}</div>
             <div className="text-white text-2xl font-bold">
@@ -547,7 +696,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       </div>
 
       {/* Task List */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {onboardingTasks.map((task, index) => {
           const Icon = task.icon;
           const isCompleted = task.completed;
@@ -580,33 +729,33 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                   : 'border border-gray-200 hover:border-[#7C3BEC]/30 hover:shadow-md'
               }`}
             >
-              <div className="p-6">
-                <div className="flex items-start gap-4">
+              <div className={isCompleted ? 'p-3' : 'p-4'}>
+                <div className="flex items-start gap-3">
                   {/* Step Number */}
-                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                  <div className={`flex-shrink-0 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
                     isCompleted 
-                      ? 'bg-green-500 text-white shadow-lg shadow-green-500/30' 
+                      ? 'w-7 h-7 bg-green-500 text-white shadow-lg shadow-green-500/30' 
                       : isLocked
-                      ? 'bg-gray-100 text-gray-400'
-                      : 'bg-gradient-to-br from-[#7C3BEC] to-[#9F7AEA] text-white shadow-lg shadow-purple-500/30'
+                      ? 'w-10 h-10 bg-gray-100 text-gray-400'
+                      : 'w-10 h-10 bg-gradient-to-br from-[#7C3BEC] to-[#9F7AEA] text-white shadow-lg shadow-purple-500/30'
                   }`}>
                     {isCompleted ? '✓' : task.stepNumber}
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className={`text-lg font-semibold ${
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className={`font-semibold ${
                         isCompleted 
-                          ? 'text-gray-400' 
+                          ? 'text-sm text-gray-400' 
                           : isLocked
-                          ? 'text-gray-400'
-                          : 'text-gray-900'
+                          ? 'text-lg text-gray-400'
+                          : 'text-lg text-gray-900'
                       }`}>
                         {task.title}
                       </h3>
                       {isCompleted && (
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
                           (task.id === 'midApplied' && tasks.midSkipped) || 
                           (task.id === 'coworkersInvited' && tasks.coworkersInvited === 'skipped') ||
                           (task.id === 'bookingCallCompleted' && tasks.bookingCallCompleted === 'skipped')
@@ -621,8 +770,12 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                         </span>
                       )}
                     </div>
-                    <p className={`text-sm leading-relaxed mb-1 ${
-                      isLocked ? 'text-gray-400' : 'text-gray-600'
+                    <p className={`leading-relaxed mb-0.5 ${
+                      isCompleted 
+                        ? 'text-xs text-gray-400' 
+                        : isLocked 
+                        ? 'text-sm text-gray-400' 
+                        : 'text-sm text-gray-600'
                     }`}>
                       {isLocked ? t('onboarding.dashboard.completeStepFirst').replace('{step}', task.stepNumber - 1) : task.description}
                     </p>
@@ -632,14 +785,14 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                   </div>
 
                   {/* Icon - positioned absolutely on the right */}
-                  <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
+                  <div className={`flex-shrink-0 rounded-xl flex items-center justify-center ${
                     isCompleted 
-                      ? 'bg-green-50' 
+                      ? 'w-8 h-8 bg-green-50' 
                       : isLocked
-                      ? 'bg-gray-50'
-                      : currentColor.bg
+                      ? 'w-12 h-12 bg-gray-50'
+                      : 'w-12 h-12 ' + currentColor.bg
                   }`}>
-                    <Icon className={`h-6 w-6 ${isLocked ? 'text-gray-400' : isCompleted ? 'text-green-600' : currentColor.text} ${Icon === Loader2 ? 'animate-spin' : ''}`} />
+                    <Icon className={`${isCompleted ? 'h-4 w-4 text-green-600' : isLocked ? 'h-6 w-6 text-gray-400' : 'h-6 w-6 ' + currentColor.text} ${Icon === Loader2 ? 'animate-spin' : ''}`} />
                   </div>
                 </div>
               </div>
@@ -648,6 +801,14 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
         })}
       </div>
 
+      {/* All Steps Completed Message */}
+      {completedTasks === totalTasks && totalTasks === 6 && (
+        <div className="mt-4 bg-green-50 border-2 border-green-200 rounded-2xl p-5 text-center">
+          <p className="text-green-800 text-lg font-medium">
+            {t('onboarding.dashboard.allStepsCompleted')}
+          </p>
+        </div>
+      )}
 
       {/* Calendly Modal */}
       <CalendlyModal
@@ -810,14 +971,47 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
 
       {/* Organization Creation Modal */}
       {isOrganizationModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center p-4 z-50" style={{backgroundColor: 'rgba(0, 0, 0, 0.5)'}}>
-          <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
+        <div 
+          className="fixed inset-0 flex items-center justify-center p-4 z-50" 
+          style={{backgroundColor: 'rgba(0, 0, 0, 0.5)'}}
+          onClick={(e) => {
+            // Close modal when clicking backdrop (but not the modal content itself)
+            if (e.target === e.currentTarget) {
+              if (midFormLeaveCheck) {
+                midFormLeaveCheck(() => {
+                  setIsOrganizationModalOpen(false);
+                  setMissingFieldsForModal([]);
+                });
+              } else {
+                setIsOrganizationModalOpen(false);
+                setMissingFieldsForModal([]);
+              }
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
               <h2 className="text-2xl font-bold text-gray-900">
-                {language === 'de' ? 'Organisation anlegen' : 'Create organization'}
+                {missingFieldsForModal.length > 0 
+                  ? t('onboarding.createOrganization.modalTitleCompleteFields')
+                  : t('onboarding.createOrganization.modalTitle')}
               </h2>
               <button
-                onClick={() => setIsOrganizationModalOpen(false)}
+                onClick={() => {
+                  // Check for unsaved changes before closing
+                  if (midFormLeaveCheck) {
+                    midFormLeaveCheck(() => {
+                      setIsOrganizationModalOpen(false);
+                      setMissingFieldsForModal([]);
+                    });
+                  } else {
+                    setIsOrganizationModalOpen(false);
+                    setMissingFieldsForModal([]);
+                  }
+                }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -828,23 +1022,48 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
             <div className="p-6">
               <MIDForm 
                 currentContext={currentContext} 
-                missingMIDFields={[]}
-                onFieldsUpdated={() => {}}
-                onOrganizationCreated={(organization) => {
-                  // Note: MIDForm already marks organizationCreated: true in Firestore
-                  // The real-time listener in useOnboarding will automatically update the UI
-                  // Wait a moment for the success animation, then close the modal
+                missingMIDFields={missingFieldsForModal}
+                onTryLeave={(checkCanLeave) => {
+                  setMidFormLeaveCheck(() => checkCanLeave);
+                }}
+                onFieldsUpdated={() => {
+                  // Refresh MID fields status immediately to update the card
+                  if (refreshMIDFieldsStatus) {
+                    refreshMIDFieldsStatus();
+                  }
+                  // Also refresh blocking conditions
+                  // The blocking conditions check will be triggered by midFieldsStatus.allFieldsFilled change
+                  // Close modal quickly after successful update
                   setTimeout(() => {
                     setIsOrganizationModalOpen(false);
+                    setMissingFieldsForModal([]); // Clear missing fields after update
                     // Refresh onboarding to ensure UI is updated
                     if (refreshOnboarding) {
                       refreshOnboarding();
                     }
-                  }, 2500); // Slightly longer than MIDForm's 2s success display
+                  }, 800); // Quick close after showing success state
+                }}
+                onOrganizationCreated={(organization) => {
+                  // Refresh MID fields status immediately to update the card
+                  if (refreshMIDFieldsStatus) {
+                    refreshMIDFieldsStatus();
+                  }
+                  // Note: MIDForm already marks organizationCreated: true in Firestore
+                  // The real-time listener in useOnboarding will automatically update the UI
+                  // Wait a moment for the success animation, then close the modal quickly
+                  setTimeout(() => {
+                    setIsOrganizationModalOpen(false);
+                    setMissingFieldsForModal([]); // Clear missing fields after creation
+                    // Refresh onboarding to ensure UI is updated
+                    if (refreshOnboarding) {
+                      refreshOnboarding();
+                    }
+                  }, 800); // Quick close after showing success state
                 }}
                 onNavigateToTab={(tab) => {
                   // If navigation is requested (e.g., after creation), close modal and navigate
                   setIsOrganizationModalOpen(false);
+                  setMissingFieldsForModal([]); // Clear missing fields when navigating
                   if (onNavigateToTab) {
                     onNavigateToTab(tab);
                   }

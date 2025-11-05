@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
-import { X, AlertCircle, CheckCircle, FileText, Building, User, MapPin, CreditCard, Info, Edit2, Check } from 'lucide-react';
+import { X, AlertCircle, CheckCircle, FileText, Building, User, MapPin, CreditCard, Info, Edit2, Check, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { saveMIDFormSubmission, createDigitalSignatureHash } from '../services/midFormService';
 import { getOrganizationInfo } from '../utils/organizationService';
@@ -28,6 +28,8 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
   const [isLargeOrganization, setIsLargeOrganization] = useState(false);
   const [hasTooManyEmployees, setHasTooManyEmployees] = useState(false);
   const [isNotInNRW, setIsNotInNRW] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [pendingCloseAction, setPendingCloseAction] = useState(null);
 
   // Translation object
   const translations = {
@@ -131,6 +133,25 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentUser]);
 
+  // Check if there are unsaved changes (checkboxes checked but not submitted)
+  const hasChanges = useMemo(() => {
+    return (privacyAccepted || digitalSignatureAccepted || termsAccepted) && !showSuccess;
+  }, [privacyAccepted, digitalSignatureAccepted, termsAccepted, showSuccess]);
+
+  // Handle browser beforeunload
+  useEffect(() => {
+    if (!hasChanges || !isOpen) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasChanges, isOpen]);
+
   // Reset state when modal closes to ensure fresh data on next open
   useEffect(() => {
     if (!isOpen) {
@@ -144,6 +165,8 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
       setIsInCooldown(false);
       setCooldownMessage('');
       setIsNotInNRW(false);
+      setShowLeaveConfirm(false);
+      setPendingCloseAction(null);
     }
   }, [isOpen]);
 
@@ -381,12 +404,45 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
     }
   };
 
-  const handleClose = () => {
+  // Check if user can leave
+  const checkCanLeave = (action) => {
+    if (!hasChanges) {
+      if (action) action();
+      return true;
+    }
+
+    setPendingCloseAction(() => action);
+    setShowLeaveConfirm(true);
+    return false;
+  };
+
+  // Handle confirmed leave
+  const handleConfirmLeave = () => {
+    setShowLeaveConfirm(false);
     setPrivacyAccepted(false);
     setDigitalSignatureAccepted(false);
     setTermsAccepted(false);
     setShowSuccess(false);
-    onClose();
+    if (pendingCloseAction) {
+      pendingCloseAction();
+      setPendingCloseAction(null);
+    }
+  };
+
+  // Handle cancel leave
+  const handleCancelLeave = () => {
+    setShowLeaveConfirm(false);
+    setPendingCloseAction(null);
+  };
+
+  const handleClose = () => {
+    checkCanLeave(() => {
+      setPrivacyAccepted(false);
+      setDigitalSignatureAccepted(false);
+      setTermsAccepted(false);
+      setShowSuccess(false);
+      onClose();
+    });
   };
 
   if (!context) {
@@ -794,7 +850,54 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
     </div>
   );
 
-  return createPortal(modalContent, document.body);
+  const modalWithConfirmation = (
+    <>
+      {modalContent}
+      
+      {/* Leave Confirmation Modal */}
+      {showLeaveConfirm && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-[999999] p-4" style={{backgroundColor: 'rgba(0, 0, 0, 0.5)'}}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-100"
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <AlertTriangle className="h-6 w-6 text-amber-500" />
+                <h3 className="text-xl font-bold text-gray-900">
+                  {language === 'de' ? 'Ungespeicherte Änderungen' : 'Unsaved Changes'}
+                </h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                {language === 'de' 
+                  ? 'Du hast ungespeicherte Änderungen. Möchtest du wirklich fortfahren? Alle Änderungen gehen verloren.'
+                  : 'You have unsaved changes. Are you sure you want to leave? All changes will be lost.'}
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelLeave}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                >
+                  {language === 'de' ? 'Abbrechen' : 'Cancel'}
+                </button>
+                <button
+                  onClick={handleConfirmLeave}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  {language === 'de' ? 'Verlassen' : 'Leave'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </>
+  );
+
+  return createPortal(modalWithConfirmation, document.body);
 };
 
 // Helper component for displaying information

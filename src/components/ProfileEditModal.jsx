@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, User, Save, Loader2, Camera } from 'lucide-react';
+import { X, Upload, User, Save, Loader2, Camera, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useMIDTranslation } from '../hooks/useMIDTranslation';
 
@@ -20,18 +20,49 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
     photoFile: null,
     photoPreview: currentUser?.photoURL || null
   });
+  const [originalFormData, setOriginalFormData] = useState(null);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [pendingCloseAction, setPendingCloseAction] = useState(null);
 
   // Initialize first and last name from display name
   useEffect(() => {
     if (currentUser?.displayName) {
       const nameParts = currentUser.displayName.split(' ');
-      setFormData(prev => ({
-        ...prev,
+      const initialData = {
         firstName: nameParts[0] || '',
-        lastName: nameParts.slice(1).join(' ') || ''
-      }));
+        lastName: nameParts.slice(1).join(' ') || '',
+        photoFile: null,
+        photoPreview: currentUser?.photoURL || null
+      };
+      setFormData(initialData);
+      setOriginalFormData(initialData);
     }
   }, [currentUser]);
+
+  // Check if there are unsaved changes
+  const hasChanges = useMemo(() => {
+    if (!originalFormData) return false;
+    
+    const nameChanged = formData.firstName !== originalFormData.firstName || 
+                       formData.lastName !== originalFormData.lastName;
+    const photoChanged = formData.photoFile !== null;
+    
+    return nameChanged || photoChanged;
+  }, [formData, originalFormData]);
+
+  // Handle browser beforeunload
+  useEffect(() => {
+    if (!hasChanges || !isOpen) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasChanges, isOpen]);
 
   // Cloudinary configuration
   const cloudinaryConfig = {
@@ -124,6 +155,14 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
 
       setSuccess('Profile updated successfully!');
       
+      // Update original form data to reflect saved state
+      setOriginalFormData({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        photoFile: null,
+        photoPreview: photoURL
+      });
+      
       // Notify parent that profile is completed
       if (onProfileCompleted) {
         onProfileCompleted();
@@ -151,6 +190,46 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
     }));
   };
 
+  // Check if user can leave
+  const checkCanLeave = (action) => {
+    if (!hasChanges) {
+      if (action) action();
+      return true;
+    }
+
+    setPendingCloseAction(() => action);
+    setShowLeaveConfirm(true);
+    return false;
+  };
+
+  // Handle confirmed leave
+  const handleConfirmLeave = () => {
+    setShowLeaveConfirm(false);
+    setFormData(originalFormData || {
+      firstName: currentUser?.displayName?.split(' ')[0] || '',
+      lastName: currentUser?.displayName?.split(' ').slice(1).join(' ') || '',
+      photoFile: null,
+      photoPreview: currentUser?.photoURL || null
+    });
+    if (pendingCloseAction) {
+      pendingCloseAction();
+      setPendingCloseAction(null);
+    }
+  };
+
+  // Handle cancel leave
+  const handleCancelLeave = () => {
+    setShowLeaveConfirm(false);
+    setPendingCloseAction(null);
+  };
+
+  // Handle close button/backdrop click
+  const handleClose = () => {
+    checkCanLeave(() => {
+      onClose();
+    });
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -163,7 +242,7 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={onClose}
+            onClick={handleClose}
           />
 
           {/* Modal */}
@@ -177,7 +256,7 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <h2 className="text-2xl font-bold text-gray-900">{t('onboarding.profile.title')}</h2>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
               >
                 <X className="h-5 w-5" />
@@ -292,7 +371,7 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="flex-1 px-6 py-3 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   {t('onboarding.profile.cancel')}
@@ -319,6 +398,45 @@ const ProfileEditModal = ({ isOpen, onClose, onProfileCompleted }) => {
           </motion.div>
         </div>
       </div>
+
+      {/* Leave Confirmation Modal */}
+      {showLeaveConfirm && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-[99999] p-4" style={{backgroundColor: 'rgba(0, 0, 0, 0.5)'}}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-100"
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <AlertTriangle className="h-6 w-6 text-amber-500" />
+                <h3 className="text-xl font-bold text-gray-900">
+                  {t('unsavedChanges.title')}
+                </h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                {t('unsavedChanges.message')}
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelLeave}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                >
+                  {t('unsavedChanges.cancel')}
+                </button>
+                <button
+                  onClick={handleConfirmLeave}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  {t('unsavedChanges.leave')}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </AnimatePresence>
   );
 };

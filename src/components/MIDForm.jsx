@@ -24,7 +24,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/config';
 import { sendOrganizationCreatedNotification } from '../utils/teamsWebhookService';
 
-const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrganizationCreated, onNavigateToTab }) => {
+const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrganizationCreated, onNavigateToTab, onTryLeave }) => {
   const { t, language } = useMIDTranslation();
   const { currentUser: user } = useAuth();
   const pathname = usePathname();
@@ -38,7 +38,8 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
     return userHasNoOrganization;
   }, [currentContext?.organization?.id, user?.email]);
   
-  const [formData, setFormData] = useState({
+  // Initialize form data
+  const initialFormData = {
     // User section
     salutation: 'pleaseSelect',
     firstName: '',
@@ -92,15 +93,17 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
     phoneAreaCode: '+49', // New field for area code
     phoneNumber: '', // Split from contactPhone
     
-    // Toggle for using management contact data
-    useManagementContactData: false,
+    // MID Contact option: null (none selected), 'same' (same as managing director), 'different' (different person)
+    midContactOption: null,
     
     // MID funding history - separate for Digitisation and Digital Security
     hasReceivedMIDDigitisation: null,
     lastMIDDigitisationApprovalDate: '',
     hasReceivedMIDDigitalSecurity: null,
     lastMIDDigitalSecurityApprovalDate: ''
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingSubmission, setExistingSubmission] = useState(null);
@@ -109,6 +112,8 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
   const [isLoading, setIsLoading] = useState(!isCreationMode); // Skip loading in creation mode
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [pendingLeaveAction, setPendingLeaveAction] = useState(null);
   
   // Real-time validation state
   const [fieldErrors, setFieldErrors] = useState({});
@@ -266,7 +271,9 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
       if (isCreationMode) {
         console.log('📝 Creation mode - skipping data load');
         setIsLoading(false);
-        setHasChanges(true); // Enable submit button
+        // Set originalFormData to initial empty state for change tracking
+        setOriginalFormData({ ...initialFormData });
+        setHasChanges(false); // Start with no changes, will be set when user types
         return;
       }
       
@@ -335,7 +342,8 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
             companyCategory: orgData.companyCategory || null, // Keep null for unselected state
             industry: orgData.industry || 'pleaseSelect',
             employees: orgData.employees || '',
-            useManagementContactData: orgData.useManagementContactData || false,
+            // Handle backward compatibility: convert old boolean useManagementContactData to new midContactOption
+            midContactOption: orgData.midContactOption || (orgData.useManagementContactData === true ? 'same' : (orgData.useManagementContactData === false ? 'different' : null)),
             hasReceivedMIDDigitisation: orgData.hasReceivedMIDDigitisation === true ? 'yes' : 
                                        (orgData.hasReceivedMIDDigitisation === false ? 'no' : null),
             lastMIDDigitisationApprovalDate: orgData.lastMIDDigitisationApprovalDate || '',
@@ -442,10 +450,18 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    // Update form data and check for changes in one go
+    setFormData(prev => {
+      const updatedFormData = { ...prev, [field]: value };
+      
+      // Check for changes if we have originalFormData to compare against
+      if (originalFormData) {
+        const hasChanges = JSON.stringify(updatedFormData) !== JSON.stringify(originalFormData);
+        setHasChanges(hasChanges);
+      }
+      
+      return updatedFormData;
+    });
     
     // For IBAN, BIC, Tax ID, and postal code - validate only when exceeding expected length
     // Otherwise validate on blur (handled in handleFieldBlur) for seamless UX
@@ -463,29 +479,32 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         const validateForm = async () => {
           try {
             const { validateMIDFormData } = await import('../services/midFormService');
-            const updatedFormData = { ...formData, [field]: value };
-            const validation = validateMIDFormData(updatedFormData, !!existingSubmission);
-            if (validation.isValid) {
-              setError('');
-            } else {
-              // If there are still other errors, update the error message
-              // But only if this specific field's error was in the message
-              const errorIncludesThisField = error.includes('BIC') && field === 'bic' ||
-                                            error.includes('IBAN') && field === 'iban' ||
-                                            error.includes('Tax ID') && field === 'taxId' ||
-                                            error.includes('Postal code') && field === 'postalCode';
-              if (errorIncludesThisField) {
-                // If this was the only error, clear it; otherwise keep other errors
-                if (validation.errors.length === 0 || !validation.errors.some(err => 
-                  (field === 'bic' && err.includes('BIC')) ||
-                  (field === 'iban' && err.includes('IBAN')) ||
-                  (field === 'taxId' && err.includes('Tax ID')) ||
-                  (field === 'postalCode' && err.includes('Postal code'))
-                )) {
-                  setError('');
+            // Use functional update to get latest formData
+            setFormData(currentFormData => {
+              const validation = validateMIDFormData(currentFormData, !!existingSubmission);
+              if (validation.isValid) {
+                setError('');
+              } else {
+                // If there are still other errors, update the error message
+                // But only if this specific field's error was in the message
+                const errorIncludesThisField = error.includes('BIC') && field === 'bic' ||
+                                              error.includes('IBAN') && field === 'iban' ||
+                                              error.includes('Tax ID') && field === 'taxId' ||
+                                              error.includes('Postal code') && field === 'postalCode';
+                if (errorIncludesThisField) {
+                  // If this was the only error, clear it; otherwise keep other errors
+                  if (validation.errors.length === 0 || !validation.errors.some(err => 
+                    (field === 'bic' && err.includes('BIC')) ||
+                    (field === 'iban' && err.includes('IBAN')) ||
+                    (field === 'taxId' && err.includes('Tax ID')) ||
+                    (field === 'postalCode' && err.includes('Postal code'))
+                  )) {
+                    setError('');
+                  }
                 }
               }
-            }
+              return currentFormData; // Don't modify formData here
+            });
           } catch (err) {
             console.error('Error validating form:', err);
           }
@@ -499,13 +518,6 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         ...prev,
         [field]: fieldError
       }));
-    }
-    
-    // Check for changes
-    if (originalFormData) {
-      const newFormData = { ...formData, [field]: value };
-      const hasChanges = JSON.stringify(newFormData) !== JSON.stringify(originalFormData);
-      setHasChanges(hasChanges);
     }
   };
 
@@ -657,7 +669,9 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         hasReceivedMIDDigitisation: formData.hasReceivedMIDDigitisation === 'yes' ? true : 
                                    formData.hasReceivedMIDDigitisation === 'no' ? false : null,
         hasReceivedMIDDigitalSecurity: formData.hasReceivedMIDDigitalSecurity === 'yes' ? true : 
-                                      formData.hasReceivedMIDDigitalSecurity === 'no' ? false : null
+                                      formData.hasReceivedMIDDigitalSecurity === 'no' ? false : null,
+        // Maintain backward compatibility: also save as boolean
+        useManagementContactData: formData.midContactOption === 'same'
       };
       
       // Save directly - no confirmation modal for organization info changes
@@ -694,7 +708,9 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         hasReceivedMIDDigitisation: formData.hasReceivedMIDDigitisation === 'yes' ? true : 
                                    formData.hasReceivedMIDDigitisation === 'no' ? false : null,
         hasReceivedMIDDigitalSecurity: formData.hasReceivedMIDDigitalSecurity === 'yes' ? true : 
-                                      formData.hasReceivedMIDDigitalSecurity === 'no' ? false : null
+                                      formData.hasReceivedMIDDigitalSecurity === 'no' ? false : null,
+        // Maintain backward compatibility: also save as boolean
+        useManagementContactData: formData.midContactOption === 'same'
       };
       await updateOrganizationInfo(organization.id, formDataToSave);
       console.log('✅ Organization details saved');
@@ -848,6 +864,56 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
     }
   };
 
+  // Handle browser beforeunload event
+  useEffect(() => {
+    if (!hasChanges) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = ''; // Chrome requires returnValue to be set
+      return ''; // For other browsers
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasChanges]);
+
+  // Function to check if user can leave
+  const checkCanLeave = (action) => {
+    if (!hasChanges) {
+      // No changes, allow leaving
+      if (action) action();
+      return true;
+    }
+
+    // Has changes, show confirmation (even in creation mode)
+    setPendingLeaveAction(() => action);
+    setShowLeaveConfirm(true);
+    return false;
+  };
+
+  // Handle confirmed leave
+  const handleConfirmLeave = () => {
+    setShowLeaveConfirm(false);
+    setHasChanges(false); // Clear changes flag
+    if (pendingLeaveAction) {
+      pendingLeaveAction();
+      setPendingLeaveAction(null);
+    }
+  };
+
+  // Handle cancel leave
+  const handleCancelLeave = () => {
+    setShowLeaveConfirm(false);
+    setPendingLeaveAction(null);
+  };
+
+  // Expose checkCanLeave to parent via onTryLeave callback
+  useEffect(() => {
+    if (onTryLeave) {
+      onTryLeave(checkCanLeave);
+    }
+  }, [hasChanges, onTryLeave]);
 
   // Show loading state while fetching existing data
   if (isLoading) {
@@ -1077,12 +1143,37 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   const cursorPosition = e.target.selectionStart;
                   const oldValue = formData.taxId;
                   
+                  // Detect if this is a deletion (backspace/delete)
+                  const isDeletion = inputValue.length < oldValue.length;
+                  
+                  // Special handling: if backspace was pressed and cursor was right after a slash
+                  // We need to also remove the last digit to prevent the slash from reappearing
+                  let valueToFormat = inputValue;
+                  
+                  if (isDeletion && oldValue && cursorPosition >= 0) {
+                    // Check if cursor was right after a slash in the old value
+                    // oldValue[cursorPosition] would be the character at cursor, which is the slash
+                    if (cursorPosition < oldValue.length && oldValue[cursorPosition] === '/') {
+                      // Cursor was right after the slash, user wants to delete it
+                      // Also remove the last digit to prevent slash from reappearing
+                      const digitsInOld = oldValue.replace(/\D/g, '');
+                      const digitsInNew = inputValue.replace(/\D/g, '');
+                      
+                      // If we only deleted the slash (digit count unchanged), also remove last digit
+                      if (digitsInOld.length === digitsInNew.length && digitsInOld.length > 0) {
+                        // Remove last digit from the cleaned value
+                        const cleaned = inputValue.replace(/\D/g, '');
+                        valueToFormat = cleaned.slice(0, -1);
+                      }
+                    }
+                  }
+                  
                   // Format the value (this removes all slashes and reformats)
-                  const formatted = formatTaxId(inputValue);
+                  const formatted = formatTaxId(valueToFormat);
                   
                   // Calculate new cursor position
-                  // Count digits before cursor in original input
-                  const digitsBeforeCursor = inputValue.slice(0, cursorPosition).replace(/\D/g, '').length;
+                  // Count digits before cursor in the value we're formatting
+                  const digitsBeforeCursor = valueToFormat.slice(0, Math.min(cursorPosition, valueToFormat.length)).replace(/\D/g, '').length;
                   
                   // Find position in formatted string where we have same number of digits
                   let newCursorPosition = formatted.length;
@@ -1091,7 +1182,14 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                     if (/\d/.test(formatted[i])) {
                       digitCount++;
                       if (digitCount >= digitsBeforeCursor) {
-                        newCursorPosition = i + 1;
+                        // Check if a slash was just inserted after this digit
+                        // This happens when we complete a segment (3 digits or 7 digits)
+                        // But only if we're not deleting
+                        if (!isDeletion && i + 1 < formatted.length && formatted[i + 1] === '/') {
+                          newCursorPosition = i + 2; // Position after the slash
+                        } else {
+                          newCursorPosition = i + 1; // Position after the digit
+                        }
                         break;
                       }
                     } else {
@@ -1160,6 +1258,24 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                 <option value="professional">{t('industryOptions.professional')}</option>
                 <option value="other">{t('industryOptions.other')}</option>
               </select>
+            </div>
+
+            {/* Company Description */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <span className="flex items-center gap-2">
+                  {t('organizationDescriptionLabel')}
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">MID</span>
+                </span>
+              </label>
+              <textarea
+                value={formData.companyDescription}
+                onChange={(e) => handleInputChange('companyDescription', e.target.value)}
+                maxLength={600}
+                rows={1}
+                className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 resize-none transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('companyDescription')}`}
+                placeholder={t('descriptionPlaceholder')}
+              />
             </div>
 
             <div className="mt-10 flex items-center gap-3 mb-6">
@@ -1449,26 +1565,6 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
             )}
           </div>
 
-          {/* Brief Description Section - moved above Management Contact Details */}
-          <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <span className="flex items-center gap-2">
-                  {t('organizationDescriptionLabel')}
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">MID</span>
-                </span>
-              </label>
-              <textarea
-                value={formData.companyDescription}
-                onChange={(e) => handleInputChange('companyDescription', e.target.value)}
-                maxLength={600}
-                rows={1}
-                className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 resize-none transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('companyDescription')}`}
-                placeholder={t('descriptionPlaceholder')}
-              />
-            </div>
-          </div>
-
           {/* Business Contact Section */}
           <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50">
             <div className="flex items-center gap-3 mb-6">
@@ -1606,22 +1702,37 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               {t('midContactDescription')}
             </p>
 
-            {/* Toggle for using management contact data */}
-            <div className="mb-6">
-              <label className="flex items-center gap-3">
+            {/* MID Contact selection - radio buttons */}
+            <div className="mb-6 space-y-3">
+              <label className="flex items-start gap-3 cursor-pointer">
                 <input
-                  type="checkbox"
-                  checked={formData.useManagementContactData}
-                  onChange={(e) => handleInputChange('useManagementContactData', e.target.checked)}
-                  className="h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300 rounded"
+                  type="radio"
+                  name="midContactOption"
+                  value="same"
+                  checked={formData.midContactOption === 'same'}
+                  onChange={(e) => handleInputChange('midContactOption', e.target.value)}
+                  className="mt-1 h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  {t('managingDirectorIsMidContact')}
+                  {t('midContactOptions.same')}
+                </span>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="radio"
+                  name="midContactOption"
+                  value="different"
+                  checked={formData.midContactOption === 'different'}
+                  onChange={(e) => handleInputChange('midContactOption', e.target.value)}
+                  className="mt-1 h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  {t('midContactOptions.different')}
                 </span>
               </label>
             </div>
 
-            {!formData.useManagementContactData && (
+            {formData.midContactOption === 'different' && (
               <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -2012,6 +2123,44 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         </form>
       </div>
 
+      {/* Leave Confirmation Modal */}
+      {showLeaveConfirm && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-[99999] p-4" style={{backgroundColor: 'rgba(0, 0, 0, 0.5)'}}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-100"
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <AlertTriangle className="h-6 w-6 text-amber-500" />
+                <h3 className="text-xl font-bold text-gray-900">
+                  {t('unsavedChanges.title')}
+                </h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                {t('unsavedChanges.message')}
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCancelLeave}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                >
+                  {t('unsavedChanges.cancel')}
+                </button>
+                <button
+                  onClick={handleConfirmLeave}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  {t('unsavedChanges.leave')}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

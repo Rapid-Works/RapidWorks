@@ -105,77 +105,77 @@ export const useOnboarding = () => {
   }, [currentUser, currentUser?.emailVerified, onboardingData.emailVerified, loading]);
 
   // Check MID fields completion and submission status
-  useEffect(() => {
+  const checkMIDStatus = useCallback(async () => {
     if (!currentUser || loading) {
       setMidFieldsStatus(prev => ({ ...prev, isLoading: false }));
       return;
     }
 
-    const checkMIDStatus = async () => {
-      setMidFieldsStatus(prev => ({ ...prev, isLoading: true }));
+    setMidFieldsStatus(prev => ({ ...prev, isLoading: true }));
+    
+    try {
+      // Get user's organization context
+      const userContext = await getCurrentUserContext(currentUser.uid);
       
-      try {
-        // Get user's organization context
-        const userContext = await getCurrentUserContext(currentUser.uid);
-        
-        if (!userContext || userContext.type !== 'organization' || !userContext.organization?.id) {
-          setMidFieldsStatus({
-            allFieldsFilled: false,
-            missingFields: Object.values(checkMIDFieldsCompletion(null, currentUser.email).missingFields),
-            hasMIDSubmission: false,
-            isLoading: false
-          });
-          return;
-        }
-
-        // Load organization data
-        const orgData = await getOrganizationInfo(userContext.organization.id);
-        
-        // Auto-sync organizationCreated status for old users
-        if (userContext.organization?.id && !onboardingData.organizationCreated) {
-          console.log('🔄 Auto-syncing organizationCreated status for old user');
-          const onboardingRef = doc(db, 'userOnboarding', currentUser.uid);
-          await setDoc(onboardingRef, { organizationCreated: true }, { merge: true });
-        }
-        
-        // Check MID fields completion
-        const { allFieldsFilled, missingFields } = checkMIDFieldsCompletion(orgData, currentUser.email);
-        
-        // Check if user has MID submission (any status - submitted, pending, approved, etc.)
-        const midSubmissions = await getUserMIDFormSubmissions(currentUser.uid);
-        const hasMIDSubmission = midSubmissions.length > 0;
-        
+      if (!userContext || userContext.type !== 'organization' || !userContext.organization?.id) {
         setMidFieldsStatus({
-          allFieldsFilled,
-          missingFields,
-          hasMIDSubmission,
+          allFieldsFilled: false,
+          missingFields: Object.values(checkMIDFieldsCompletion(null, currentUser.email).missingFields),
+          hasMIDSubmission: false,
           isLoading: false
         });
-
-        // Update midApplied status if they have submitted
-        if (hasMIDSubmission && !onboardingData.midApplied) {
-          const onboardingRef = doc(db, 'userOnboarding', currentUser.uid);
-          await setDoc(onboardingRef, { 
-            midApplied: true,
-            midAppliedAt: new Date().toISOString()
-          }, { merge: true });
-        } else if (!hasMIDSubmission && onboardingData.midApplied) {
-          // Reset midApplied if they deleted all submissions
-          const onboardingRef = doc(db, 'userOnboarding', currentUser.uid);
-          await setDoc(onboardingRef, { 
-            midApplied: false,
-            midAppliedAt: null,
-            callReminderSent: false
-          }, { merge: true });
-        }
-      } catch (error) {
-        console.error('Error checking MID status:', error);
-        setMidFieldsStatus(prev => ({ ...prev, isLoading: false }));
+        return;
       }
-    };
 
-    checkMIDStatus();
+      // Load organization data
+      const orgData = await getOrganizationInfo(userContext.organization.id);
+      
+      // Auto-sync organizationCreated status for old users
+      if (userContext.organization?.id && !onboardingData.organizationCreated) {
+        console.log('🔄 Auto-syncing organizationCreated status for old user');
+        const onboardingRef = doc(db, 'userOnboarding', currentUser.uid);
+        await setDoc(onboardingRef, { organizationCreated: true }, { merge: true });
+      }
+      
+      // Check MID fields completion
+      const { allFieldsFilled, missingFields } = checkMIDFieldsCompletion(orgData, currentUser.email);
+      
+      // Check if user has MID submission (any status - submitted, pending, approved, etc.)
+      const midSubmissions = await getUserMIDFormSubmissions(currentUser.uid);
+      const hasMIDSubmission = midSubmissions.length > 0;
+      
+      setMidFieldsStatus({
+        allFieldsFilled,
+        missingFields,
+        hasMIDSubmission,
+        isLoading: false
+      });
+
+      // Update midApplied status if they have submitted
+      if (hasMIDSubmission && !onboardingData.midApplied) {
+        const onboardingRef = doc(db, 'userOnboarding', currentUser.uid);
+        await setDoc(onboardingRef, { 
+          midApplied: true,
+          midAppliedAt: new Date().toISOString()
+        }, { merge: true });
+      } else if (!hasMIDSubmission && onboardingData.midApplied) {
+        // Reset midApplied if they deleted all submissions
+        const onboardingRef = doc(db, 'userOnboarding', currentUser.uid);
+        await setDoc(onboardingRef, { 
+          midApplied: false,
+          midAppliedAt: null,
+          callReminderSent: false
+        }, { merge: true });
+      }
+    } catch (error) {
+      console.error('Error checking MID status:', error);
+      setMidFieldsStatus(prev => ({ ...prev, isLoading: false }));
+    }
   }, [currentUser, loading, onboardingData.organizationCreated, onboardingData.midApplied]);
+
+  useEffect(() => {
+    checkMIDStatus();
+  }, [checkMIDStatus]);
 
   const checkExistingInvites = useCallback(async () => {
     if (!currentUser) return false;
@@ -375,5 +375,6 @@ export const useOnboarding = () => {
     refreshOnboarding,
     checkProfileCompletion,
     markProfileCompleted,
+    refreshMIDFieldsStatus: checkMIDStatus,
   };
 };

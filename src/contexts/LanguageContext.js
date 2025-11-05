@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const LanguageContext = createContext();
 
@@ -360,11 +360,40 @@ export const languages = {
 };
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState('de');
+  // Initialize from localStorage or default to 'de'
+  const [language, setLanguageState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('language');
+      return saved || 'de';
+    }
+    return 'de';
+  });
+
+  // Persist language changes to localStorage
+  const handleSetLanguage = (newLanguage) => {
+    setLanguageState(newLanguage);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('language', newLanguage);
+    }
+  };
+
+  // Listen for storage changes (when language is changed in another tab/window)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleStorageChange = (e) => {
+      if (e.key === 'language' && e.newValue && e.newValue !== language) {
+        setLanguageState(e.newValue);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [language]);
 
   const value = {
-    language,
-    setLanguage,
+    language: language,
+    setLanguage: handleSetLanguage,
     t: (key) => {
       const keys = key.split('.');
       return keys.reduce((obj, k) => obj?.[k], languages[language]) || key;
