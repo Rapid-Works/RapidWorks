@@ -16,7 +16,8 @@ import {
   CheckCircle,
   Play,
   User,
-  AlertCircle
+  AlertCircle,
+  Edit
 } from 'lucide-react';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { useAuth } from '../../contexts/AuthContext';
@@ -31,6 +32,7 @@ import { functions } from '../../firebase/config';
 import { getOrganizationInfo } from '../../utils/organizationService';
 import { getCurrentUserContext } from '../../utils/organizationService';
 import { isPostalCodeInNRW } from '../../utils/nrwPostalCodes';
+import { getUserMIDFormSubmissions } from '../../services/midFormService';
 
 export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInviteModal, currentContext }) => {
   const { currentUser } = useAuth();
@@ -67,6 +69,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
   const [isMIDModalOpen, setIsMIDModalOpen] = useState(false);
   const [midFormLeaveCheck, setMidFormLeaveCheck] = useState(null);
   const [hasMIDSubmission, setHasMIDSubmission] = useState(false);
+  const [organizationModalKey, setOrganizationModalKey] = useState(0);
   
   // Blocking conditions for MID application
   const [midBlockingStatus, setMidBlockingStatus] = useState({
@@ -88,7 +91,6 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     const checkMIDSubmission = async () => {
       if (!currentUser) return;
       try {
-        const { getUserMIDFormSubmissions } = await import('../services/midFormService');
         const submissions = await getUserMIDFormSubmissions(currentUser.uid);
         setHasMIDSubmission(submissions.length > 0);
       } catch (error) {
@@ -407,16 +409,17 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       requiresPrevious: true,
       action: tasks.organizationCreated ? null : (
         <div className="mt-2 space-y-2">
-          <button
-            onClick={() => {
-              setMissingFieldsForModal([]); // Clear missing fields when opening normally
-              setIsOrganizationModalOpen(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3BEC] hover:bg-[#6B32D6] text-white text-sm font-medium rounded-lg transition-colors"
-          >
-            {t('onboarding.createOrganization.buttonText')}
-            <ArrowRight className="h-4 w-4" />
-          </button>
+              <button
+                onClick={() => {
+                  setMissingFieldsForModal([]); // Clear missing fields when opening normally
+                  setOrganizationModalKey(prev => prev + 1); // Force remount of MIDForm
+                  setIsOrganizationModalOpen(true);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3BEC] hover:bg-[#6B32D6] text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                {t('onboarding.createOrganization.buttonText')}
+                <ArrowRight className="h-4 w-4" />
+              </button>
           <div className="text-center">
             <p className="text-sm text-gray-500">
               {t('onboarding.createOrganization.alreadyPartOf')}
@@ -473,6 +476,19 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                       </p>
                     </div>
                   </div>
+                  <button
+                    onClick={() => {
+                      // Open organization modal for editing
+                      setMissingFieldsForModal([]); // Clear missing fields when opening for edit
+                      setOrganizationModalKey(prev => prev + 1); // Force remount of MIDForm
+                      setIsOrganizationModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    <Edit className="h-4 w-4" />
+                    {t('onboarding.applyToMID.editOrganization')}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
                   <div className="text-center">
                     <button
                       onClick={() => {
@@ -514,6 +530,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                 onClick={() => {
                   // Set missing fields and open organization modal
                   setMissingFieldsForModal(midFieldsStatus.missingFields || []);
+                  setOrganizationModalKey(prev => prev + 1); // Force remount of MIDForm
                   setIsOrganizationModalOpen(true);
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -981,10 +998,12 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                 midFormLeaveCheck(() => {
                   setIsOrganizationModalOpen(false);
                   setMissingFieldsForModal([]);
+                  setOrganizationModalKey(prev => prev + 1); // Reset key for next open
                 });
               } else {
                 setIsOrganizationModalOpen(false);
                 setMissingFieldsForModal([]);
+                setOrganizationModalKey(prev => prev + 1); // Reset key for next open
               }
             }
           }}
@@ -1006,10 +1025,12 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                     midFormLeaveCheck(() => {
                       setIsOrganizationModalOpen(false);
                       setMissingFieldsForModal([]);
+                      setOrganizationModalKey(prev => prev + 1); // Reset key for next open
                     });
                   } else {
                     setIsOrganizationModalOpen(false);
                     setMissingFieldsForModal([]);
+                    setOrganizationModalKey(prev => prev + 1); // Reset key for next open
                   }
                 }}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -1021,6 +1042,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
             </div>
             <div className="p-6">
               <MIDForm 
+                key={organizationModalKey}
                 currentContext={currentContext} 
                 missingMIDFields={missingFieldsForModal}
                 onTryLeave={(checkCanLeave) => {
@@ -1037,6 +1059,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                   setTimeout(() => {
                     setIsOrganizationModalOpen(false);
                     setMissingFieldsForModal([]); // Clear missing fields after update
+                    setOrganizationModalKey(prev => prev + 1); // Reset key for next open
                     // Refresh onboarding to ensure UI is updated
                     if (refreshOnboarding) {
                       refreshOnboarding();
@@ -1054,6 +1077,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                   setTimeout(() => {
                     setIsOrganizationModalOpen(false);
                     setMissingFieldsForModal([]); // Clear missing fields after creation
+                    setOrganizationModalKey(prev => prev + 1); // Reset key for next open
                     // Refresh onboarding to ensure UI is updated
                     if (refreshOnboarding) {
                       refreshOnboarding();
@@ -1064,6 +1088,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                   // If navigation is requested (e.g., after creation), close modal and navigate
                   setIsOrganizationModalOpen(false);
                   setMissingFieldsForModal([]); // Clear missing fields when navigating
+                  setOrganizationModalKey(prev => prev + 1); // Reset key for next open
                   if (onNavigateToTab) {
                     onNavigateToTab(tab);
                   }

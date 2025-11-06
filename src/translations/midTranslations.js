@@ -217,7 +217,8 @@ export const midTranslations = {
         midSubmitted: 'MID-Antrag eingereicht.',
         completeFields: 'Vervollständige die erforderlichen Felder, um einen MID-Antrag zu stellen.',
         alreadyApplied: 'Bereits bei MID beworben',
-        applyToMID: 'Bei MID bewerben'
+        applyToMID: 'Bei MID bewerben',
+        editOrganization: 'Organisation bearbeiten'
       },
       bookCoachingCall: {
         title: 'Kostenfreien Coaching Call vereinbaren',
@@ -496,7 +497,8 @@ export const midTranslations = {
         midSubmitted: 'MID application submitted.',
         completeFields: 'Complete required fields to apply for MID funding.',
         alreadyApplied: 'Already Applied to MID',
-        applyToMID: 'Apply to MID'
+        applyToMID: 'Apply to MID',
+        editOrganization: 'Edit Organization'
       },
       bookCoachingCall: {
         title: 'Book a Free Coaching Call',
