@@ -317,9 +317,82 @@ export const createDigitalSignatureHash = (formData) => {
  * Individual field validation functions for real-time validation
  */
 
+// Test email domains that should be denied
+const TEST_EMAIL_DOMAINS = [
+  'test.com',
+  'test.de',
+  'test.test',
+  'example.com',
+  'example.de',
+  'example.org',
+  'sample.com',
+  'demo.com',
+  'fake.com',
+  'dummy.com',
+  'testmail.com',
+  'testmail.de',
+  'tempmail.com',
+  'tempmail.de',
+  'mailinator.com',
+  '10minutemail.com',
+  'throwaway.email',
+  // Newly added common disposable/test domains
+  'mail-tester.com',
+  'yopmail.com',
+  'trashmail.com',
+  'guerrillamail.com',
+  'sharklasers.com',
+  'dispostable.com',
+  'maildrop.cc',
+  'moakt.com',
+  'getnada.com'
+];
+
+// Test email patterns (local part patterns that are commonly used for testing)
+const TEST_EMAIL_PATTERNS = [
+  /^test[\d]*@/i,
+  /^admin[\d]*@/i,
+  /^user[\d]*@/i,
+  /^demo[\d]*@/i,
+  /^sample[\d]*@/i,
+  /^fake[\d]*@/i,
+  /^dummy[\d]*@/i,
+  /^temp[\d]*@/i
+];
+
+/**
+ * Check if an email is a test email address
+ * @param {string} email - The email address to check
+ * @returns {boolean} - True if it's a test email
+ */
+export const isTestEmail = (email) => {
+  if (!email || email.trim() === '') return false;
+
+  const emailLower = email.toLowerCase().trim();
+
+  // Check if domain is in test domains list
+  const domain = emailLower.split('@')[1];
+  if (domain && TEST_EMAIL_DOMAINS.some(testDomain => domain === testDomain || domain.endsWith('.' + testDomain))) {
+    return true;
+  }
+
+  // Check if local part matches test patterns
+  if (TEST_EMAIL_PATTERNS.some(pattern => pattern.test(emailLower))) {
+    return true;
+  }
+
+  return false;
+};
+
 // Email validation
 export const validateEmail = (email) => {
   if (!email || email.trim() === '') return null;
+
+  // Check if it's a test email first
+  if (isTestEmail(email)) {
+    return 'Test email addresses are not allowed. Please use a valid business email address.';
+  }
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email) ? null : 'Invalid email format';
 };
@@ -430,18 +503,30 @@ export const validateMIDFormData = (formData, isUpdate = false) => {
   
   // Email validation (only if email is provided)
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (formData.email && formData.email.trim() !== '' && !emailRegex.test(formData.email)) {
-    errors.push('Invalid email format');
+  if (formData.email && formData.email.trim() !== '') {
+    if (isTestEmail(formData.email)) {
+      errors.push('Test email addresses are not allowed. Please use a valid business email address for email field.');
+    } else if (!emailRegex.test(formData.email)) {
+      errors.push('Invalid email format');
+    }
   }
-  
+
   // Contact email validation (only if provided)
-  if (formData.contactEmail && formData.contactEmail.trim() !== '' && !emailRegex.test(formData.contactEmail)) {
-    errors.push('Invalid contact email format');
+  if (formData.contactEmail && formData.contactEmail.trim() !== '') {
+    if (isTestEmail(formData.contactEmail)) {
+      errors.push('Test email addresses are not allowed. Please use a valid business email address for contact email field.');
+    } else if (!emailRegex.test(formData.contactEmail)) {
+      errors.push('Invalid contact email format');
+    }
   }
-  
+
   // Project contact email validation (only if provided)
-  if (formData.projectContactEmail && formData.projectContactEmail.trim() !== '' && !emailRegex.test(formData.projectContactEmail)) {
-    errors.push('Invalid project contact email format');
+  if (formData.projectContactEmail && formData.projectContactEmail.trim() !== '') {
+    if (isTestEmail(formData.projectContactEmail)) {
+      errors.push('Test email addresses are not allowed. Please use a valid business email address for project contact email field.');
+    } else if (!emailRegex.test(formData.projectContactEmail)) {
+      errors.push('Invalid project contact email format');
+    }
   }
   
   // URL validation for homepage (only if provided)

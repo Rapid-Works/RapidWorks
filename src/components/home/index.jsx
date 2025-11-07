@@ -426,17 +426,17 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       requiresPrevious: true,
       action: tasks.organizationCreated ? null : (
         <div className="mt-2 space-y-2">
-              <button
-                onClick={() => {
+          <button
+            onClick={() => {
                   setMissingFieldsForModal([]); // Clear missing fields when opening normally
                   setOrganizationModalKey(prev => prev + 1); // Force remount of MIDForm
                   setIsOrganizationModalOpen(true);
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3BEC] hover:bg-[#6B32D6] text-white text-sm font-medium rounded-lg transition-colors"
-              >
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3BEC] hover:bg-[#6B32D6] text-white text-sm font-medium rounded-lg transition-colors"
+          >
                 {t('onboarding.createOrganization.buttonText')}
-                <ArrowRight className="h-4 w-4" />
-              </button>
+            <ArrowRight className="h-4 w-4" />
+          </button>
           <div className="text-center">
             <p className="text-sm text-gray-500">
               {t('onboarding.createOrganization.alreadyPartOf')}
@@ -493,8 +493,8 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => {
+              <button
+                onClick={() => {
                       // Open organization modal for editing
                       setMissingFieldsForModal([]); // Clear missing fields when opening for edit
                       setOrganizationModalKey(prev => prev + 1); // Force remount of MIDForm
@@ -522,22 +522,22 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setIsMIDModalOpen(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm"
-                  >
-                    <Euro className="h-4 w-4" />
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm"
+              >
+                <Euro className="h-4 w-4" />
                     {t('onboarding.applyToMID.buttonText')}
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      // Open opt-out modal
-                      setShowOptOutModal(true);
-                    }}
-                    className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-                  >
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              
+              <button
+                onClick={() => {
+                  // Open opt-out modal
+                  setShowOptOutModal(true);
+                }}
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
                     {t('onboarding.applyToMID.skipText')}
-                  </button>
+              </button>
                 </div>
               )}
             </div>
@@ -611,7 +611,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
               className="text-sm text-gray-500 hover:text-gray-700 underline transition-colors"
             >
               {t('onboarding.inviteCoworkers.skipForNow')}
-            </button>
+          </button>
           </div>
         </div>
       ),
