@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   CheckCircle2, 
@@ -34,7 +34,7 @@ import { getCurrentUserContext } from '../../utils/organizationService';
 import { isPostalCodeInNRW } from '../../utils/nrwPostalCodes';
 import { getUserMIDFormSubmissions } from '../../services/midFormService';
 
-export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInviteModal, currentContext }) => {
+export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInviteModal, currentContext, onContextRefresh }) => {
   const { currentUser } = useAuth();
   const router = useRouter();
   const { language } = useLanguage();
@@ -71,6 +71,11 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
   const [hasMIDSubmission, setHasMIDSubmission] = useState(false);
   const [organizationModalKey, setOrganizationModalKey] = useState(0);
   
+  // Memoize onTryLeave callback to prevent infinite loops
+  const handleTryLeave = useCallback((checkCanLeave) => {
+    setMidFormLeaveCheck(() => checkCanLeave);
+  }, []);
+  
   // Blocking conditions for MID application
   const [midBlockingStatus, setMidBlockingStatus] = useState({
     isBlocked: false,
@@ -85,6 +90,18 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       refreshOnboarding();
     }
   }, [currentUser, refreshOnboarding]);
+
+  // Refresh context when organization modal opens if context doesn't have an organization
+  // This ensures the context is up-to-date after organization creation
+  useEffect(() => {
+    if (isOrganizationModalOpen && onContextRefresh && currentUser) {
+      // If context is missing or doesn't have an organization, refresh it
+      if (!currentContext || currentContext.type !== 'organization' || !currentContext.organization?.id) {
+        console.log('🔄 Refreshing context when organization modal opens');
+        onContextRefresh();
+      }
+    }
+  }, [isOrganizationModalOpen, onContextRefresh, currentUser, currentContext]);
 
   // Check if user has MID submission
   useEffect(() => {
@@ -1045,9 +1062,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                 key={organizationModalKey}
                 currentContext={currentContext} 
                 missingMIDFields={missingFieldsForModal}
-                onTryLeave={(checkCanLeave) => {
-                  setMidFormLeaveCheck(() => checkCanLeave);
-                }}
+                onTryLeave={handleTryLeave}
                 onFieldsUpdated={() => {
                   // Refresh MID fields status immediately to update the card
                   if (refreshMIDFieldsStatus) {
@@ -1066,10 +1081,16 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                     }
                   }, 800); // Quick close after showing success state
                 }}
-                onOrganizationCreated={(organization) => {
+                onOrganizationCreated={async (organization) => {
                   // Refresh MID fields status immediately to update the card
                   if (refreshMIDFieldsStatus) {
                     refreshMIDFieldsStatus();
+                  }
+                  // Refresh context to get the newly created organization
+                  if (onContextRefresh) {
+                    await onContextRefresh();
+                    // Small delay to ensure React state updates propagate
+                    await new Promise(resolve => setTimeout(resolve, 100));
                   }
                   // Note: MIDForm already marks organizationCreated: true in Firestore
                   // The real-time listener in useOnboarding will automatically update the UI

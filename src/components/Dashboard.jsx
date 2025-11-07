@@ -148,6 +148,22 @@ const Dashboard = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Function to refresh user context (can be called from child components)
+  const refreshContext = async () => {
+    if (!currentUser) {
+      return;
+    }
+    
+    try {
+      const context = await getCurrentUserContext(currentUser.uid);
+      setCurrentContext(context);
+      return context;
+    } catch (error) {
+      console.error('Error refreshing user context:', error);
+      return null;
+    }
+  };
+
   // Load user context (personal vs organization)
   useEffect(() => {
     const loadContext = async () => {
@@ -1325,6 +1341,7 @@ const Dashboard = () => {
                         setIsInviteModalOpen(true);
                       }}
                       currentContext={currentContext}
+                      onContextRefresh={refreshContext}
                     />
                   </motion.div>
                 )}
