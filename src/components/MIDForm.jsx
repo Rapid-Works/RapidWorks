@@ -366,7 +366,11 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
             industry: orgData.industry || 'pleaseSelect',
             employees: orgData.employees || '',
             // Handle backward compatibility: convert old boolean useManagementContactData to new midContactOption
-            midContactOption: orgData.midContactOption || (orgData.useManagementContactData === true ? 'same' : (orgData.useManagementContactData === false ? 'different' : null)),
+            // Old: true = same, false = different
+            // New: null = same (default, unchecked), 'different' = different (checked)
+            midContactOption: orgData.midContactOption === 'different' ? 'different' : 
+                             (orgData.midContactOption === 'same' ? null : // Convert old 'same' to null (unchecked)
+                             (orgData.useManagementContactData === false ? 'different' : null)), // Old false = different, old true = null (default)
             hasReceivedMIDDigitisation: orgData.hasReceivedMIDDigitisation === true ? 'yes' : 
                                        (orgData.hasReceivedMIDDigitisation === false ? 'no' : null),
             lastMIDDigitisationApprovalDate: orgData.lastMIDDigitisationApprovalDate || '',
@@ -736,7 +740,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         hasReceivedMIDDigitalSecurity: formData.hasReceivedMIDDigitalSecurity === 'yes' ? true : 
                                       formData.hasReceivedMIDDigitalSecurity === 'no' ? false : null,
         // Maintain backward compatibility: also save as boolean
-        useManagementContactData: formData.midContactOption === 'same'
+        useManagementContactData: formData.midContactOption !== 'different' // null or 'same' = true (use managing director), 'different' = false
       };
       
       // Save directly - no confirmation modal for organization info changes
@@ -775,7 +779,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
         hasReceivedMIDDigitalSecurity: formData.hasReceivedMIDDigitalSecurity === 'yes' ? true : 
                                       formData.hasReceivedMIDDigitalSecurity === 'no' ? false : null,
         // Maintain backward compatibility: also save as boolean
-        useManagementContactData: formData.midContactOption === 'same'
+        useManagementContactData: formData.midContactOption !== 'different' // null or 'same' = true (use managing director), 'different' = false
       };
       await updateOrganizationInfo(organization.id, formDataToSave);
       console.log('✅ Organization details saved');
@@ -1916,49 +1920,32 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
               </div>
             </div>
 
-          </div>
-
-          {/* Project Contact Section */}
-          <div className="border border-gray-200 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 bg-purple-50 rounded-lg border border-purple-100">
-                <User className="h-5 w-5 text-purple-600" />
+            {/* MID Contact Section - moved into Managing Director box */}
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2.5 bg-purple-50 rounded-lg border border-purple-100">
+                  <User className="h-5 w-5 text-purple-600" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">{t('midContactTitle')}</h2>
               </div>
-              <h2 className="text-xl font-bold text-gray-900">{t('midContactTitle')}</h2>
-            </div>
-            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-              {t('midContactDescription')}
-            </p>
+              <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                {t('midContactDescription')}
+              </p>
 
-            {/* MID Contact selection - radio buttons */}
-            <div className="mb-6 space-y-3">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="radio"
-                  name="midContactOption"
-                  value="same"
-                  checked={formData.midContactOption === 'same'}
-                  onChange={(e) => handleInputChange('midContactOption', e.target.value)}
-                  className="mt-1 h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  {t('midContactOptions.same')}
-                </span>
-              </label>
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="radio"
-                  name="midContactOption"
-                  value="different"
-                  checked={formData.midContactOption === 'different'}
-                  onChange={(e) => handleInputChange('midContactOption', e.target.value)}
-                  className="mt-1 h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  {t('midContactOptions.different')}
-                </span>
-              </label>
-            </div>
+              {/* MID Contact checkbox - default is unchecked (use managing director) */}
+              <div className="mb-6">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.midContactOption === 'different'}
+                    onChange={(e) => handleInputChange('midContactOption', e.target.checked ? 'different' : null)}
+                    className="mt-1 h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300 rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    {t('alternativeMidContact')}
+                  </span>
+                </label>
+              </div>
 
             {formData.midContactOption === 'different' && (
               <>
@@ -2063,6 +2050,7 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
             </div>
               </>
             )}
+            </div>
 
           </div>
 

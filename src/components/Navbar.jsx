@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link } from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, User, LogOut, Settings, Edit, Bell } from 'lucide-react'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -18,17 +19,31 @@ const Navbar = () => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
-  const { language, setLanguage } = React.useLanguage()
+  const context = useLanguage()
+  const language = context?.language || 'en'
   const { currentUser, logout } = useAuth()
   const { forceRefresh } = useSmartNotificationStatus()
+
+  // Translations for user menu
+  const translations = {
+    en: {
+      profile: 'Profile',
+      signOut: 'Sign Out'
+    },
+    de: {
+      profile: 'Profil',
+      signOut: 'Ausloggen'
+    }
+  }
+  const t = translations[language] || translations.en
 
   // Retrieve language from localStorage on component mount
   useEffect(() => {
     const storedLanguage = localStorage.getItem('language')
-    if (storedLanguage) {
-      setLanguage(storedLanguage)
+    if (storedLanguage && context?.setLanguage) {
+      context.setLanguage(storedLanguage)
     }
-  }, [setLanguage])
+  }, [context])
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -46,7 +61,9 @@ const Navbar = () => {
 
   // Function to change language and store it in localStorage
   const changeLanguage = (lang) => {
-    setLanguage(lang)
+    if (context?.setLanguage) {
+      context.setLanguage(lang)
+    }
     localStorage.setItem('language', lang)
   }
 
@@ -61,7 +78,7 @@ const Navbar = () => {
   }
 
   const handleEditProfile = () => {
-    setIsProfileModalOpen(true)
+    router.push('/dashboard?tab=profile')
     setIsUserMenuOpen(false)
   }
 
@@ -138,7 +155,7 @@ const Navbar = () => {
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         <Edit className="h-4 w-4 mr-2" />
-                        Edit Profile
+                        {t.profile}
                       </button>
                       <button
                         onClick={handleNotificationSettings}
@@ -159,7 +176,7 @@ const Navbar = () => {
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         <LogOut className="h-4 w-4 mr-2" />
-                        Sign Out
+                        {t.signOut}
                       </button>
                     </div>
                   </div>
@@ -259,7 +276,7 @@ const Navbar = () => {
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100"
                   >
                     <Edit className="h-4 w-4 mr-2" />
-                    Edit Profile
+                    {t.profile}
                   </button>
                   <button
                     onClick={() => {
@@ -286,7 +303,7 @@ const Navbar = () => {
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
+                    {t.signOut}
                   </button>
                 </div>
               ) : (

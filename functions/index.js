@@ -2337,6 +2337,9 @@ exports.sendCustomEmailVerification = onCall(async (request) => {
 
     console.log(`📧 Sending custom email verification to: ${email}`);
 
+    // Extract first name from displayName (format: "FirstName LastName")
+    const firstName = displayName ? displayName.split(' ')[0] : '';
+
     // Generate verification link using Firebase Admin
     const actionCodeSettings = {
       url: `https://rapid-works.io/dashboard`, // Redirect after verification
@@ -2376,7 +2379,7 @@ exports.sendCustomEmailVerification = onCall(async (request) => {
           <tr>
             <td style="padding: 40px;">
               <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
-                Hallo,
+                Hallo${firstName ? ` ${firstName}` : ''},
               </p>
               
               <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
@@ -2442,7 +2445,7 @@ exports.sendCustomEmailVerification = onCall(async (request) => {
     const emailText = `
 Willkommen bei RapidWorks!
 
-Hallo,
+Hallo${firstName ? ` ${firstName}` : ''},
 
 vielen Dank für deine Registrierung bei RapidWorks! Wir freuen uns, dich an Bord zu haben.
 

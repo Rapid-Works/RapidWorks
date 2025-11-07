@@ -70,6 +70,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
   // Handle openInvite prop
   useEffect(() => {
     if (openInvite) {
+      setActiveTabIndex(1); // Switch to "All Members" tab (second tab)
       setShowInviteModal(true);
     }
   }, [openInvite]);

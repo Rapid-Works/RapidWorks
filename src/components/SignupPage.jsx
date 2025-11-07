@@ -82,12 +82,9 @@ const SignupPage = () => {
         return;
       }
 
-      const { user } = await signup(formData.email, formData.password);
-      
-      // Update user profile with name
-      await updateUserProfile(user, {
-        displayName: `${formData.firstName} ${formData.lastName}`
-      });
+      // Pass displayName to signup so it's set before email verification is sent
+      const displayName = `${formData.firstName} ${formData.lastName}`;
+      const { user } = await signup(formData.email, formData.password, displayName);
 
       // TEMPORARY: Email verification disabled for Microsoft 365 SMTP fix
       const EMAIL_VERIFICATION_DISABLED = true;

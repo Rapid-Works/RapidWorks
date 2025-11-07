@@ -18,6 +18,8 @@ const LoginModal = ({
 }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +27,7 @@ const LoginModal = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showEmailNotVerified, setShowEmailNotVerified] = useState(false);
-  const { login, signup, loginWithGoogle, sendVerificationEmail } = useAuth();
+  const { login, signup, loginWithGoogle, sendVerificationEmail, updateUserProfile } = useAuth();
   const router = useRouter();
   const context = useLanguage();
   const language = context?.language || 'en';
@@ -123,7 +125,12 @@ const LoginModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (isSignup && (!email || !password || !firstName || !lastName)) {
+      setError('Please fill in all fields');
+      return;
+    }
+    
+    if (!isSignup && (!email || !password)) {
       setError('Please fill in all fields');
       return;
     }
@@ -172,7 +179,9 @@ const LoginModal = ({
           return;
         }
 
-        result = await signup(email, password);
+        // Pass displayName to signup so it's set before email verification is sent
+        const displayName = firstName && lastName ? `${firstName} ${lastName}` : null;
+        result = await signup(email, password, displayName);
         
         // Show success message instead of redirecting
         setShowSuccess(true);
@@ -305,6 +314,8 @@ const LoginModal = ({
   const resetForm = () => {
     setEmail('');
     setPassword('');
+    setFirstName('');
+    setLastName('');
     setConfirmPassword('');
     setError('');
     setShowPassword(false);
@@ -439,6 +450,38 @@ const LoginModal = ({
         ) : (
           <>
             <form onSubmit={handleSubmit} className="space-y-6">
+          {isSignup && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                  {language === 'de' ? 'Vorname' : 'First Name'}
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent text-black"
+                  placeholder={language === 'de' ? 'Vorname' : 'First name'}
+                  required={isSignup}
+                />
+              </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                  {language === 'de' ? 'Nachname' : 'Last Name'}
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent text-black"
+                  placeholder={language === 'de' ? 'Nachname' : 'Last name'}
+                  required={isSignup}
+                />
+              </div>
+            </div>
+          )}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
               {currentLabels.emailLabel}

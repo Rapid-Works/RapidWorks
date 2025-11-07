@@ -478,7 +478,8 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
 
 
         {/* Content */}
-        <div className="p-8 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="modal-content modal-scrollable max-h-[calc(90vh-200px)]">
+          <div className="p-8">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7C3BEC]"></div>
@@ -770,6 +771,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
               ) : null}
             </div>
           )}
+          </div>
         </div>
 
         {/* Footer */}

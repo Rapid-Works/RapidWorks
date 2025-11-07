@@ -47,11 +47,18 @@ export function AuthProvider({ children }) {
   }, [db]);
 
   // Sign up with email and password
-  async function signup(email, password) {
+  async function signup(email, password, displayName = null) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     await ensureUserDocument(userCredential.user);
     
-    // Send verification email automatically on signup
+    // Update displayName if provided (for firstName/lastName from registration)
+    if (displayName) {
+      await updateUserProfile(userCredential.user, { displayName });
+      // Reload user to get updated displayName
+      await userCredential.user.reload();
+    }
+    
+    // Send verification email automatically on signup (now with displayName if provided)
     try {
       
       await sendVerificationEmail(userCredential.user);

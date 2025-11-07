@@ -41,8 +41,9 @@ export const midTranslations = {
     impressumUrlPlaceholder: 'https://deinewebsite.de/impressum',
     collectDataButton: 'Daten ermitteln',
     midContactTitle: 'MID-Ansprechpartner in deiner Organisation',
-    midContactDescription: 'Die Person in deiner Organisation, welche Ansprechpartner für MID-Projekte für RapidWorks und den Fördergeber ist.',
+    midContactDescription: 'Die Person in deiner Organisation, welche Ansprechpartner für MID-Projekte für RapidWorks und den Fördergeber ist. Wenn nicht jemand anderes angegeben wird, dann ist der angegebene Geschäftsführer auch der MID-Ansprechpartner.',
     managingDirectorIsMidContact: 'Geschäftsführer ist auch MID-Ansprechpartner',
+    alternativeMidContact: 'Abweichender MID-Ansprechpartner',
     midContactOptions: {
       same: 'Geschäftsführer ist auch MID-Ansprechpartner',
       different: 'MID-Ansprechpartner weicht von Geschäftsführer ab'
@@ -216,6 +217,7 @@ export const midTranslations = {
         midSkipped: 'MID-Antrag übersprungen - du kannst zum nächsten Schritt fortfahren.',
         midSubmitted: 'MID-Antrag eingereicht.',
         completeFields: 'Vervollständige die erforderlichen Felder, um einen MID-Antrag zu stellen.',
+        requiredFieldsMessage: '{count} MID-Pflichtfelder müssen noch besetzt werden.',
         alreadyApplied: 'Bereits bei MID beworben',
         applyToMID: 'Bei MID bewerben',
         editOrganization: 'Organisation bearbeiten'
@@ -239,12 +241,21 @@ export const midTranslations = {
         teamInvited: 'Team-Mitglieder eingeladen.',
         inviteSkipped: 'Einladungsaufgabe übersprungen.',
         buttonText: 'Team-Mitglieder einladen',
-        skipForNow: 'Für jetzt überspringen'
+        skipForNow: 'Überspringen'
       },
       profile: {
         title: 'Dein Profil',
+        profileData: 'Profildaten',
+        security: 'Sicherheit',
         addProfilePicture: 'Klicke auf das Kamera-Icon, um ein Profilbild hinzuzufügen.',
         maxFileSize: 'Maximale Dateigröße 5MB',
+        changePassword: 'Passwort ändern',
+        currentPassword: 'Aktuelles Passwort',
+        newPassword: 'Neues Passwort',
+        confirmPassword: 'Passwort bestätigen',
+        deleteAccount: 'Account löschen',
+        deleteAccountWarning: 'Achtung, wenn du deinen Account löschst, werden all deine Daten unwiderruflich gelöscht!',
+        deleteAccountButton: 'Account löschen',
         firstName: 'Vorname',
         firstNamePlaceholder: 'Max',
         lastName: 'Nachname',
@@ -320,8 +331,9 @@ export const midTranslations = {
     impressumUrlPlaceholder: 'https://yourwebsite.com/imprint',
     collectDataButton: 'Collect data',
     midContactTitle: 'MID contact in your organization',
-    midContactDescription: 'The person in your organisation who is the contact person for MID projects for RapidWorks and the funding agency.',
+    midContactDescription: 'The person in your organisation who is the contact person for MID projects for RapidWorks and the funding agency. Unless someone else is specified, the managing director listed is also the MID contact person.',
     managingDirectorIsMidContact: 'Managing Director is also MID contact',
+    alternativeMidContact: 'Alternative MID contact person',
     midContactOptions: {
       same: 'Managing Director is also MID contact',
       different: 'MID contact person differs from managing director'
@@ -496,6 +508,7 @@ export const midTranslations = {
         midSkipped: 'MID application skipped - you can proceed to the next step.',
         midSubmitted: 'MID application submitted.',
         completeFields: 'Complete required fields to apply for MID funding.',
+        requiredFieldsMessage: '{count} required fields need to be filled.',
         alreadyApplied: 'Already Applied to MID',
         applyToMID: 'Apply to MID',
         editOrganization: 'Edit Organization'
@@ -523,8 +536,17 @@ export const midTranslations = {
       },
       profile: {
         title: 'Your Profile',
+        profileData: 'Profile data',
+        security: 'Security',
         addProfilePicture: 'Click on the camera icon to add a profile picture.',
         maxFileSize: 'Maximum file size 5MB',
+        changePassword: 'Change Password',
+        currentPassword: 'Current Password',
+        newPassword: 'New Password',
+        confirmPassword: 'Confirm Password',
+        deleteAccount: 'Delete Account',
+        deleteAccountWarning: 'Please note that if you delete your account, all your data will be irrevocably deleted!',
+        deleteAccountButton: 'Delete Account',
         firstName: 'First Name',
         firstNamePlaceholder: 'Max',
         lastName: 'Last Name',

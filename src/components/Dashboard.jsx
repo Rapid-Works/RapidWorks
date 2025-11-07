@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { Megaphone, Users, MessageSquare, FileCheck, Receipt, ChevronDown, ChevronRight, Building, BarChart3, Compass, Loader2, FileText, XCircle, Mail, Key, Eye, EyeOff, CheckCircle, Home } from 'lucide-react';
-import { useParams, usePathname } from 'next/navigation';
+import { Megaphone, Users, MessageSquare, FileCheck, Receipt, ChevronDown, ChevronRight, Building, Building2, BarChart3, Compass, Loader2, FileText, XCircle, Mail, Key, Eye, EyeOff, CheckCircle, Home, User } from 'lucide-react';
+import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/config';
 import RapidWorksHeader from './new_landing_page_header';
 import BrandingKits from './BrandingKits';
 import ProfileEditModal from './ProfileEditModal';
+import ProfileTab from './ProfileTab';
 import NotificationSettingsModal from './NotificationSettingsModal';
 import TaskList from './TaskList';
 import SignedAgreements from './SignedAgreements';
@@ -46,6 +47,7 @@ const Dashboard = () => {
   // const router = useRouter();
   const { kitId, taskId } = useParams();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   // Open Notification Settings if history link set the flag
   const initialOpenNotif = typeof window !== 'undefined' && localStorage.getItem('openNotificationSettings') === '1';
@@ -218,8 +220,7 @@ const Dashboard = () => {
 
   // Handle URL query parameters for tab and organization deep linking
   useEffect(() => {
-    if (!contextLoading) {
-      const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    if (!contextLoading && searchParams) {
       const tabParam = searchParams.get('tab');
       const orgIdParam = searchParams.get('orgId');
       const openInviteParam = searchParams.get('openInvite');
@@ -247,7 +248,7 @@ const Dashboard = () => {
         window.history.replaceState({}, '', newUrl);
       }
     }
-  }, [pathname, contextLoading]);
+  }, [pathname, searchParams, contextLoading]);
   
   // Check if current user is an expert or admin
   const userIsExpert = currentUser ? isExpert(currentUser.email) : false;
@@ -804,7 +805,7 @@ const Dashboard = () => {
                         }`}
                         title={isTabDisabled('members') ? 'Complete onboarding to access this tab' : ''}
                       >
-                        <Building className="h-5 w-5" />
+                        <Building2 className="h-5 w-5" />
                         <div className="flex-1">
                           <div className="font-medium">
                             {currentContext?.type === 'organization' || canAccessMembers ? 'Your organization' : 'Your organization'}
@@ -1254,6 +1255,25 @@ const Dashboard = () => {
                   </button>
                 )}
 
+                {/* Profile Tab - Always visible */}
+                <button
+                  onClick={() => {
+                    setActiveTab('profile');
+                    setSelectedTaskId(null);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                    activeTab === 'profile'
+                      ? 'bg-[#7C3BEC] text-white shadow-lg'
+                      : 'text-gray-700 hover:bg-white hover:shadow-md'
+                  }`}
+                >
+                  <User className="h-5 w-5" />
+                  <div className="flex-1">
+                    <div className="font-medium">Profile</div>
+                  </div>
+                </button>
+
                 {/* Twilio WhatsApp Test - Temporarily hidden (integrated into organization creation) */}
                       </div>
                 </div>
@@ -1309,6 +1329,7 @@ const Dashboard = () => {
                   {activeTab === 'mid-submissions' && currentUser?.email?.endsWith('@rapid-works.io') && 'MID Submissions'}
                   {/* {activeTab === 'twilio-test' && 'Twilio Test'} */}
                   {activeTab === 'members' && (currentUser?.email?.endsWith('@rapid-works.io') ? 'Members' : 'Organization')}
+                  {activeTab === 'profile' && 'Profile'}
                 </h1>
               </div>
 
@@ -1522,6 +1543,17 @@ const Dashboard = () => {
                         onNavigateToTab={setActiveTab}
                     />
                     )}
+                  </motion.div>
+                )}
+
+                {activeTab === 'profile' && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-white rounded-lg border border-gray-200 p-4 lg:p-6"
+                  >
+                    <ProfileTab />
                   </motion.div>
                 )}
               </div>
