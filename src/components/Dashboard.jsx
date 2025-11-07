@@ -765,29 +765,29 @@ const Dashboard = () => {
                 <div className="flex-1 p-4 space-y-4 overflow-y-auto min-h-0">
                   {/* Setup & Organization Section */}
                   <div className="border border-gray-200 rounded-xl p-3 bg-gradient-to-br from-white to-gray-50 space-y-2">
-                    {/* Home - Always visible */}
-                    <button
-                      onClick={() => {
-                        setActiveTab('home');
-                        setSelectedTaskId(null);
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                        activeTab === 'home'
-                          ? 'bg-[#7C3BEC] text-white shadow-lg'
-                          : 'text-gray-700 hover:bg-white hover:shadow-md'
-                      }`}
-                    >
-                      <Home className="h-5 w-5" />
-                      <div className="flex-1">
+                  {/* Home - Always visible */}
+                <button
+                  onClick={() => {
+                    setActiveTab('home');
+                    setSelectedTaskId(null);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                    activeTab === 'home'
+                      ? 'bg-[#7C3BEC] text-white shadow-lg'
+                      : 'text-gray-700 hover:bg-white hover:shadow-md'
+                  }`}
+                >
+                  <Home className="h-5 w-5" />
+                  <div className="flex-1">
                         <div className="font-medium">Setup</div>
-                      </div>
-                    </button>
-                    
+                  </div>
+                </button>
+                
                     {/* Show Organization tab for all users - allows creation if no org exists */}
                     {currentUser && !currentUser?.email?.endsWith('@rapid-works.io') && (
-                      <button
-                        onClick={() => {
+                <button
+                  onClick={() => {
                           if (!isTabDisabled('members')) {
                             setActiveTab('members');
                             setSelectedTaskId(null); // Clear when leaving tasks area
@@ -840,9 +840,9 @@ const Dashboard = () => {
                 <button
                   onClick={() => {
                     if (!isTabDisabled('branding')) {
-                      setActiveTab('branding');
-                      // Don't clear selectedTaskId - let TaskList preserve its state
-                      setIsMobileMenuOpen(false); // Close mobile menu
+                    setActiveTab('branding');
+                    // Don't clear selectedTaskId - let TaskList preserve its state
+                    setIsMobileMenuOpen(false); // Close mobile menu
                     }
                   }}
                   disabled={isTabDisabled('branding')}
@@ -867,13 +867,13 @@ const Dashboard = () => {
                     <button
                       onClick={() => {
                         if (!isTabDisabled('tasks')) {
-                          setExpertTasksExpanded(!expertTasksExpanded);
-                          if (!expertTasksExpanded) {
-                            setActiveTab('tasks');
-                            setSelectedExpert(null);
-                            // Don't clear selectedTaskId when expanding - preserve user selection
-                          }
-                          setIsMobileMenuOpen(false); // Close mobile menu
+                        setExpertTasksExpanded(!expertTasksExpanded);
+                        if (!expertTasksExpanded) {
+                          setActiveTab('tasks');
+                          setSelectedExpert(null);
+                          // Don't clear selectedTaskId when expanding - preserve user selection
+                        }
+                        setIsMobileMenuOpen(false); // Close mobile menu
                         }
                       }}
                       disabled={isTabDisabled('tasks')}
@@ -909,10 +909,10 @@ const Dashboard = () => {
                         <button
                           onClick={() => {
                             if (!isTabDisabled('tasks')) {
-                              setActiveTab('tasks');
-                              setSelectedExpert(null);
-                              // Don't clear selectedTaskId - preserve user selection
-                              setIsMobileMenuOpen(false); // Close mobile menu
+                            setActiveTab('tasks');
+                            setSelectedExpert(null);
+                            // Don't clear selectedTaskId - preserve user selection
+                            setIsMobileMenuOpen(false); // Close mobile menu
                             }
                           }}
                           disabled={isTabDisabled('tasks')}
@@ -937,11 +937,11 @@ const Dashboard = () => {
                             key={expert.email}
                             onClick={() => {
                               if (!isTabDisabled('tasks')) {
-                                setActiveTab('tasks');
-                                setSelectedExpert(expert);
-                                // Clear selectedTaskId when switching experts since tasks will be different
-                                setSelectedTaskId(null);
-                                setIsMobileMenuOpen(false); // Close mobile menu
+                              setActiveTab('tasks');
+                              setSelectedExpert(expert);
+                              // Clear selectedTaskId when switching experts since tasks will be different
+                              setSelectedTaskId(null);
+                              setIsMobileMenuOpen(false); // Close mobile menu
                               }
                             }}
                             disabled={isTabDisabled('tasks')}
@@ -979,9 +979,9 @@ const Dashboard = () => {
                     <button
                       onClick={() => {
                         if (!isTabDisabled('tasks')) {
-                          setActiveTab('tasks');
-                          // Don't clear selectedTaskId - preserve user selection
-                          setIsMobileMenuOpen(false); // Close mobile menu
+                        setActiveTab('tasks');
+                        // Don't clear selectedTaskId - preserve user selection
+                        setIsMobileMenuOpen(false); // Close mobile menu
                         }
                       }}
                       disabled={isTabDisabled('tasks')}
@@ -1013,9 +1013,9 @@ const Dashboard = () => {
                   <button
                     onClick={() => {
                       if (!isTabDisabled('agreements')) {
-                        setActiveTab('agreements');
-                        setSelectedTaskId(null); // Clear when leaving tasks area
-                        setIsMobileMenuOpen(false); // Close mobile menu
+                      setActiveTab('agreements');
+                      setSelectedTaskId(null); // Clear when leaving tasks area
+                      setIsMobileMenuOpen(false); // Close mobile menu
                       }
                     }}
                     disabled={isTabDisabled('agreements')}
@@ -1048,9 +1048,9 @@ const Dashboard = () => {
                   <button
                     onClick={() => {
                       if (!isTabDisabled('invoicing')) {
-                        setActiveTab('invoicing');
-                        setSelectedTaskId(null); // Clear when leaving tasks area
-                        setIsMobileMenuOpen(false); // Close mobile menu
+                      setActiveTab('invoicing');
+                      setSelectedTaskId(null); // Clear when leaving tasks area
+                      setIsMobileMenuOpen(false); // Close mobile menu
                       }
                     }}
                     disabled={isTabDisabled('invoicing')}
@@ -1082,9 +1082,9 @@ const Dashboard = () => {
                     <button
                       onClick={() => {
                         if (!isTabDisabled('organizations')) {
-                          setActiveTab('organizations');
-                          setSelectedTaskId(null); // Clear when leaving tasks area
-                          setIsMobileMenuOpen(false); // Close mobile menu
+                        setActiveTab('organizations');
+                        setSelectedTaskId(null); // Clear when leaving tasks area
+                        setIsMobileMenuOpen(false); // Close mobile menu
                         }
                       }}
                       disabled={isTabDisabled('organizations')}
@@ -1116,9 +1116,9 @@ const Dashboard = () => {
                   <button
                     onClick={() => {
                       if (!isTabDisabled('users')) {
-                        setActiveTab('users');
-                        setSelectedTaskId(null); // Clear when leaving tasks area
-                        setIsMobileMenuOpen(false); // Close mobile menu
+                      setActiveTab('users');
+                      setSelectedTaskId(null); // Clear when leaving tasks area
+                      setIsMobileMenuOpen(false); // Close mobile menu
                       }
                     }}
                     disabled={isTabDisabled('users')}
@@ -1170,9 +1170,9 @@ const Dashboard = () => {
                   <button
                     onClick={() => {
                       if (!isTabDisabled('coachings')) {
-                        setActiveTab('coachings');
-                        setSelectedTaskId(null); // Clear when leaving tasks area
-                        setIsMobileMenuOpen(false); // Close mobile menu
+                      setActiveTab('coachings');
+                      setSelectedTaskId(null); // Clear when leaving tasks area
+                      setIsMobileMenuOpen(false); // Close mobile menu
                       }
                     }}
                     disabled={isTabDisabled('coachings')}
@@ -1197,9 +1197,9 @@ const Dashboard = () => {
                   <button
                     onClick={() => {
                       if (!isTabDisabled('financing')) {
-                        setActiveTab('financing');
-                        setSelectedTaskId(null); // Clear when leaving tasks area
-                        setIsMobileMenuOpen(false); // Close mobile menu
+                      setActiveTab('financing');
+                      setSelectedTaskId(null); // Clear when leaving tasks area
+                      setIsMobileMenuOpen(false); // Close mobile menu
                       }
                     }}
                     disabled={isTabDisabled('financing')}
@@ -1225,9 +1225,9 @@ const Dashboard = () => {
                   <button
                     onClick={() => {
                       if (!isTabDisabled('mid-submissions')) {
-                        setActiveTab('mid-submissions');
-                        setSelectedTaskId(null); // Clear when leaving tasks area
-                        setIsMobileMenuOpen(false); // Close mobile menu
+                      setActiveTab('mid-submissions');
+                      setSelectedTaskId(null); // Clear when leaving tasks area
+                      setIsMobileMenuOpen(false); // Close mobile menu
                       }
                     }}
                     disabled={isTabDisabled('mid-submissions')}
@@ -1255,7 +1255,7 @@ const Dashboard = () => {
                 )}
 
                 {/* Twilio WhatsApp Test - Temporarily hidden (integrated into organization creation) */}
-                  </div>
+                      </div>
                 </div>
 
                 {/* Sticky Help Section */}
@@ -1501,11 +1501,11 @@ const Dashboard = () => {
                   >
                     {/* Show OrganizationUsers if user has organization or is rapid-works.io staff */}
                     {canAccessMembers ? (
-                      <OrganizationUsers 
-                        organization={currentContext.organization || {}}
-                        currentUserPermissions={currentContext.permissions}
-                        openInvite={isInviteModalOpen}
-                        onInviteModalClose={() => setIsInviteModalOpen(false)}
+                    <OrganizationUsers 
+                      organization={currentContext.organization || {}}
+                      currentUserPermissions={currentContext.permissions}
+                      openInvite={isInviteModalOpen}
+                      onInviteModalClose={() => setIsInviteModalOpen(false)}
                         currentContext={currentContext}
                         missingMIDFields={missingMIDFields}
                         onFieldsUpdated={() => setMissingMIDFields([])}
@@ -1520,7 +1520,7 @@ const Dashboard = () => {
                         onFieldsUpdated={() => setMissingMIDFields([])}
                         onOrganizationCreated={handleOrganizationCreated}
                         onNavigateToTab={setActiveTab}
-                      />
+                    />
                     )}
                   </motion.div>
                 )}

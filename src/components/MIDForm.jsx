@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Building, User, FileText, Briefcase, Check, AlertTriangle, Globe, Loader2, PersonStanding, Users, Wand, Wand2Icon, LucideWand2, WandSparklesIcon, WandSparkles, Info } from 'lucide-react';
 import { useMIDTranslation } from '../hooks/useMIDTranslation';
@@ -123,6 +123,12 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
   const [impressumUrl, setImpressumUrl] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionError, setExtractionError] = useState('');
+  const [suggestedIndustry, setSuggestedIndustry] = useState(null);
+
+  // Google Places Autocomplete
+  const streetInputRef = useRef(null);
+  const autocompleteRef = useRef(null);
+  const [placesApiLoaded, setPlacesApiLoaded] = useState(false);
 
   // Map field labels to form field names for highlighting
   const fieldLabelToName = {
@@ -151,6 +157,23 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
 
   // Get field names that need highlighting
   const fieldsToHighlight = missingMIDFields.map(label => fieldLabelToName[label]).filter(Boolean);
+
+  // Check if any extractable fields are already filled (for smart extraction button)
+  const hasExistingData = useMemo(() => {
+    return !!(
+      formData.legalName?.trim() ||
+      formData.street?.trim() ||
+      formData.city?.trim() ||
+      formData.postalCode?.trim() ||
+      formData.companyDescription?.trim() ||
+      formData.contactEmail?.trim() ||
+      formData.contactPhone?.trim() ||
+      formData.foundingDate?.trim() ||
+      formData.taxId?.trim() ||
+      (formData.industry && formData.industry !== 'pleaseSelect') ||
+      (formData.companyType && formData.companyType !== 'pleaseSelect')
+    );
+  }, [formData]);
 
   // Helper function to get input styling for highlighted fields and validation errors
   const getInputStyling = (fieldName) => {
@@ -546,72 +569,114 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
     }));
   };
 
-  // Handle Impressum data extraction
-  const handleExtractCompanyData = async () => {
-    if (!impressumUrl.trim()) {
-        setExtractionError('Please enter a valid Impressum URL.');
+  // Handle Impressum data extraction (AI-powered - auto-finds Impressum page)
+  const handleExtractCompanyData = async (e) => {
+    e.preventDefault(); // Prevent form submission
+    if (!formData.homepage.trim()) {
+      setExtractionError(t('impressumExtraction.errorEnterUrl'));
       return;
     }
 
     // Basic URL validation
+    let websiteUrl = formData.homepage.trim();
+    if (!websiteUrl.startsWith('http://') && !websiteUrl.startsWith('https://')) {
+      websiteUrl = 'https://' + websiteUrl;
+    }
+
     try {
-      new URL(impressumUrl);
+      new URL(websiteUrl);
     } catch {
-      setExtractionError('Please enter a valid URL (e.g., https://example.com/impressum).');
+      setExtractionError(t('impressumExtraction.errorInvalidUrl'));
       return;
     }
 
     setIsExtracting(true);
     setExtractionError('');
+    setSuggestedIndustry(null); // Clear previous suggestion
 
     try {
-      // Production: call Firebase function to extract company data
-      console.log('🔎 Calling extractImpressumData with URL:', impressumUrl);
+      // Call Firebase function to extract company data (AI will auto-find Impressum)
+      console.log('🔎 Calling extractImpressumData with website URL:', websiteUrl);
       const extractImpressumData = httpsCallable(functions, 'extractImpressumData');
-      const result = await extractImpressumData({ url: impressumUrl });
+      const result = await extractImpressumData({ url: websiteUrl });
       console.log('✅ extractImpressumData response:', result?.data);
 
       const extractedData = result.data || {};
 
       if (extractedData.success) {
-        const updates = {};
+        // Start with a clean slate for extracted fields
+        const updates = {
+          legalName: '',
+          street: '',
+          streetNumber: '',
+          city: '',
+          postalCode: '',
+          country: 'germany', // Default
+          homepage: websiteUrl,
+          industry: 'pleaseSelect',
+          companyType: 'pleaseSelect',
+          companyDescription: '',
+          contactEmail: '',
+          contactPhone: '',
+          foundingDate: '',
+          taxId: ''
+        };
 
         if (extractedData.companyName) {
           updates.legalName = extractedData.companyName;
         }
         if (extractedData.address) {
           if (extractedData.address.street) updates.street = extractedData.address.street;
+          if (extractedData.address.streetNumber) updates.streetNumber = extractedData.address.streetNumber;
           if (extractedData.address.city) updates.city = extractedData.address.city;
           if (extractedData.address.postalCode) updates.postalCode = extractedData.address.postalCode;
-          if (extractedData.address.country) {
-            const countryMap = {
-              'germany': 'germany',
-              'deutschland': 'germany',
-              'german': 'germany',
-              'austria': 'austria',
-              'österreich': 'austria',
-              'switzerland': 'switzerland',
-              'schweiz': 'switzerland'
-            };
-            const countryKey = countryMap[String(extractedData.address.country).toLowerCase()];
-            if (countryKey) updates.country = countryKey;
-          }
+          // Country detection removed - let user select manually or keep default
         }
         if (extractedData.homepage) {
           updates.homepage = extractedData.homepage;
         }
+        if (extractedData.suggestedIndustry) {
+          console.log('🤖 AI suggested industry:', extractedData.suggestedIndustry);
+          updates.industry = extractedData.suggestedIndustry;
+          setSuggestedIndustry(extractedData.suggestedIndustry);
+        }
+        if (extractedData.companyType) {
+          console.log('🏢 Detected company type:', extractedData.companyType);
+          updates.companyType = extractedData.companyType;
+        }
+        if (extractedData.companyDescription) {
+          console.log('📝 Extracted company description');
+          updates.companyDescription = extractedData.companyDescription;
+        }
+        if (extractedData.email) {
+          console.log('📧 Extracted email:', extractedData.email);
+          updates.contactEmail = extractedData.email;
+        }
+        if (extractedData.phone) {
+          console.log('📞 Extracted phone:', extractedData.phone);
+          updates.contactPhone = extractedData.phone;
+        }
+        if (extractedData.foundingDate) {
+          console.log('📅 Extracted founding date:', extractedData.foundingDate);
+          updates.foundingDate = extractedData.foundingDate;
+        }
+        if (extractedData.taxId) {
+          console.log('🆔 Extracted tax ID:', extractedData.taxId);
+          updates.taxId = extractedData.taxId;
+        }
 
+        console.log('📝 Updates to apply:', updates);
         setFormData(prev => ({ ...prev, ...updates }));
         setHasChanges(true);
         setExtractionError('');
         console.log('✅ Company data extracted and autofilled:', extractedData);
       } else {
         console.warn('⚠️ Extraction reported failure:', extractedData);
-        setExtractionError(extractedData.error || 'Failed to extract company data from the provided URL.');
+        setExtractionError(extractedData.error || 'Failed to extract company data from the provided URL');
       }
     } catch (error) {
       console.error('❌ Error extracting company data:', error);
-      setExtractionError(error?.message || 'Failed to extract company data. Please check the URL and try again.');
+      setExtractionError(error?.message || t('impressumExtraction.errorExtraction'));
     } finally {
       setIsExtracting(false);
     }
@@ -908,6 +973,165 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
     setPendingLeaveAction(null);
   };
 
+  // Initialize Google Places Autocomplete
+  const initializeAutocomplete = useMemo(() => {
+    return () => {
+      if (!streetInputRef.current || !window.google?.maps?.places) {
+        return;
+      }
+
+      // Clean up existing autocomplete
+      if (autocompleteRef.current) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+
+      // Determine country restriction based on form data
+      let componentRestrictions = {};
+      if (formData.country === 'germany') {
+        componentRestrictions = { country: 'de' };
+      } else if (formData.country === 'austria') {
+        componentRestrictions = { country: 'at' };
+      } else if (formData.country === 'switzerland') {
+        componentRestrictions = { country: 'ch' };
+      }
+
+      // Create autocomplete instance
+      const autocomplete = new window.google.maps.places.Autocomplete(
+        streetInputRef.current,
+        {
+          types: ['address'],
+          componentRestrictions: componentRestrictions,
+          fields: ['address_components', 'formatted_address']
+        }
+      );
+
+      autocompleteRef.current = autocomplete;
+
+      // Listen for place selection
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+
+        if (!place || !place.address_components) {
+          return;
+        }
+
+        // Parse address components
+        let streetName = '';
+        let streetNumber = '';
+        let postalCode = '';
+        let city = '';
+
+        for (const component of place.address_components) {
+          const componentType = component.types[0];
+
+          switch (componentType) {
+            case 'street_number':
+              streetNumber = component.long_name;
+              break;
+            case 'route':
+              streetName = component.long_name;
+              break;
+            case 'postal_code':
+              postalCode = component.long_name;
+              break;
+            case 'locality':
+            case 'administrative_area_level_3':
+              if (!city) city = component.long_name;
+              break;
+            case 'administrative_area_level_1':
+              // If no city found, use administrative area (for smaller towns)
+              if (!city) city = component.long_name;
+              break;
+          }
+        }
+
+        // Update form fields
+        const updates = {};
+
+        if (streetName || streetNumber) {
+          updates.street = streetName || '';
+          if (streetNumber) {
+            updates.streetNumber = streetNumber;
+          }
+        }
+
+        if (postalCode) {
+          updates.postalCode = postalCode;
+        }
+
+        if (city) {
+          updates.city = city;
+        }
+
+        // Apply updates
+        if (Object.keys(updates).length > 0) {
+          setFormData(prev => ({ ...prev, ...updates }));
+          setHasChanges(true);
+        }
+      });
+    };
+  }, [formData.country]);
+
+  // Load Google Places API and initialize autocomplete
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+
+    if (!apiKey) {
+      console.warn('⚠️ Google Places API key not found. Address autocomplete will not work.');
+      return;
+    }
+
+    // Check if Google Maps API is already loaded
+    if (window.google && window.google.maps && window.google.maps.places) {
+      setPlacesApiLoaded(true);
+      return;
+    }
+
+    // Check if script is already being loaded
+    if (document.querySelector(`script[src*="maps.googleapis.com/maps/api/js"]`)) {
+      // Wait for script to load
+      const checkLoaded = setInterval(() => {
+        if (window.google && window.google.maps && window.google.maps.places) {
+          clearInterval(checkLoaded);
+          setPlacesApiLoaded(true);
+        }
+      }, 100);
+
+      return () => clearInterval(checkLoaded);
+    }
+
+    // Load Google Places API script
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=de`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      setPlacesApiLoaded(true);
+    };
+    script.onerror = () => {
+      console.error('❌ Failed to load Google Places API');
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup autocomplete on unmount
+      if (autocompleteRef.current) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
+  }, []);
+
+  // Initialize autocomplete when API is loaded or country changes
+  useEffect(() => {
+    if (placesApiLoaded && streetInputRef.current) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        initializeAutocomplete();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [placesApiLoaded, formData.country, initializeAutocomplete]);
+
   // Expose checkCanLeave to parent via onTryLeave callback
   useEffect(() => {
     if (onTryLeave) {
@@ -1000,53 +1224,51 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
             </div>
 
             <div className="space-y-4">
-              {/* Homepage field - moved above Impressum URL */}
+              {/* Homepage field with AI-powered extraction button */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('homepage')}
-                </label>
-                <input
-                  type="url"
-                  value={formData.homepage}
-                  onChange={(e) => handleInputChange('homepage', e.target.value)}
-                  maxLength={150}
-                  className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('homepage')}`}
-                />
-                {renderFieldError('homepage')}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Impressum URL
+                  {t('homepage')} <span className="text-xs text-gray-500">{t('maxCharacters')}</span>
                 </label>
                 <div className="flex gap-3">
                   <input
                     type="url"
-                    value={impressumUrl}
-                    onChange={(e) => setImpressumUrl(e.target.value)}
-                    placeholder={t('impressumUrlPlaceholder')}
-                    className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 bg-white placeholder-gray-200"
+                    value={formData.homepage}
+                    onChange={(e) => handleInputChange('homepage', e.target.value)}
+                    maxLength={150}
+                    placeholder="https://example.com"
+                    className={`flex-1 px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('homepage')}`}
                     disabled={isExtracting}
                   />
-                  <button
-                    type="button"
-                    onClick={handleExtractCompanyData}
-                    disabled={isExtracting || !impressumUrl.trim()}
-                    className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200 flex items-center gap-2"
-                  >
-                    {isExtracting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Extracting...
-                      </>
-                    ) : (
-                      <>
-                        <WandSparkles className="h-4 w-4" />
-                        {t('collectDataButton')}
-                      </>
+                  <div className="relative group">
+                    <button
+                      type="button"
+                      onClick={handleExtractCompanyData}
+                      disabled={isExtracting || !formData.homepage.trim() || hasExistingData}
+                      className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap"
+                    >
+                      {isExtracting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {t('impressumExtraction.extracting')}
+                        </>
+                      ) : (
+                        <>
+                          <Globe className="h-4 w-4" />
+                          {t('collectDataButton')}
+                        </>
+                      )}
+                    </button>
+
+                    {/* Tooltip when button is disabled due to existing data */}
+                    {hasExistingData && (
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                        {t('impressumExtraction.disabledExistingData')}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                      </div>
                     )}
-                  </button>
+                  </div>
                 </div>
+                {renderFieldError('homepage')}
                 {extractionError && (
                   <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                     <div className="flex items-center gap-2">
@@ -1437,14 +1659,20 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   </span>
                 </label>
                 <input
+                  ref={streetInputRef}
                   type="text"
                   value={formData.street}
                   onChange={(e) => handleInputChange('street', e.target.value)}
                   maxLength={150}
                   required={isCreationMode}
-                  placeholder={isCreationMode ? "Mustermannstraße" : "Musterstraße"}
+                  placeholder={isCreationMode ? "Start typing street address..." : "Musterstraße"}
                   className={`w-full px-4 py-2.5 rounded-lg focus:ring-2 transition-all duration-200 hover:border-gray-300 bg-white ${getInputStyling('street')}`}
                 />
+                {placesApiLoaded && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    💡 Start typing to see address suggestions with autocomplete
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

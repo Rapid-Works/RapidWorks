@@ -5,6 +5,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
+import { isTestEmail } from '../services/midFormService';
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -51,7 +52,11 @@ const SignupPage = () => {
       return;
     }
 
-    // Email format validation
+    // Email format validation - check for test emails first
+    if (isTestEmail(formData.email)) {
+      setError('Test email addresses are not allowed. Please use a valid business email address.');
+      return;
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError('Please enter a valid email address');
@@ -61,6 +66,22 @@ const SignupPage = () => {
     try {
       setError('');
       setLoading(true);
+
+      // Server-side validation for disposable/MX
+      try {
+        const { httpsCallable } = await import('firebase/functions');
+        const { functions } = await import('../firebase/config');
+        const validateEmailDomain = httpsCallable(functions, 'validateEmailDomain');
+        const resp = await validateEmailDomain({ email: formData.email });
+        if (!resp?.data?.valid) {
+          throw new Error(resp?.data?.reason || 'Email not allowed');
+        }
+      } catch (serverCheckErr) {
+        setLoading(false);
+        setError(serverCheckErr.message || 'Email validation failed');
+        return;
+      }
+
       const { user } = await signup(formData.email, formData.password);
       
       // Update user profile with name

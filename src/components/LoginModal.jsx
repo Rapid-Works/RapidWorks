@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, X } from 'lucide-react';
+import { isTestEmail } from '../services/midFormService';
 
 const LoginModal = ({ 
   isOpen, 
@@ -138,7 +139,11 @@ const LoginModal = ({
       return;
     }
 
-    // Email format validation
+    // Email format validation - check for test emails first
+    if (isTestEmail(email)) {
+      setError('Test email addresses are not allowed. Please use a valid business email address.');
+      return;
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError('Please enter a valid email address');
@@ -148,10 +153,25 @@ const LoginModal = ({
     try {
       setError('');
       setLoading(true);
-      
+
       let result;
 
       if (isSignup) {
+        // Server-side validation for disposable/MX
+        try {
+          const { httpsCallable } = await import('firebase/functions');
+          const { functions } = await import('../firebase/config');
+          const validateEmailDomain = httpsCallable(functions, 'validateEmailDomain');
+          const resp = await validateEmailDomain({ email });
+          if (!resp?.data?.valid) {
+            throw new Error(resp?.data?.reason || 'Email not allowed');
+          }
+        } catch (serverCheckErr) {
+          setLoading(false);
+          setError(serverCheckErr.message || 'Email validation failed');
+          return;
+        }
+
         result = await signup(email, password);
         
         // Show success message instead of redirecting
