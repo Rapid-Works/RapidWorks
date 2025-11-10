@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Building, User, FileText, Briefcase, Check, AlertTriangle, Globe, Loader2, PersonStanding, Users, Wand, Wand2Icon, LucideWand2, WandSparklesIcon, WandSparkles, Info } from 'lucide-react';
-import { useMIDTranslation } from '../hooks/useMIDTranslation';
+import { useTolgeeMID } from '../tolgee/useTolgeeMID';
 import { 
   validateMIDFormData, 
   getUserMIDFormSubmissions,
@@ -19,13 +19,15 @@ import {
 } from '../services/midFormService';
 import { updateOrganizationInfo, getOrganizationInfo, createOrganization } from '../utils/organizationService';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/config';
 import { sendOrganizationCreatedNotification } from '../utils/teamsWebhookService';
 
 const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrganizationCreated, onNavigateToTab, onTryLeave }) => {
-  const { t, language } = useMIDTranslation();
+  const { t } = useTolgeeMID();
+  const { language } = useLanguage();
   const { currentUser: user } = useAuth();
   const pathname = usePathname();
   const searchParams = useSearchParams();

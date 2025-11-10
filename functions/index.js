@@ -17,32 +17,32 @@ admin.initializeApp();
 // Callable: Validate email against disposable providers and MX records
 exports.validateEmailDomain = onCall(async (request) => {
   try {
-    const { email } = request.data || {};
-    if (!email || typeof email !== 'string') {
-      return { 
-        valid: false, 
-        reason: 'Please enter a valid email address. The email field cannot be empty.',
-        code: 'MISSING_EMAIL'
+    const {email} = request.data || {};
+    if (!email || typeof email !== "string") {
+      return {
+        valid: false,
+        reason: "Please enter a valid email address. The email field cannot be empty.",
+        code: "MISSING_EMAIL",
       };
     }
     const emailLower = email.toLowerCase().trim();
-    const parts = emailLower.split('@');
+    const parts = emailLower.split("@");
     if (parts.length !== 2) {
-      return { 
-        valid: false, 
-        reason: 'Invalid email format. Please enter a valid email address (e.g., name@company.com).',
-        code: 'INVALID_FORMAT'
+      return {
+        valid: false,
+        reason: "Invalid email format. Please enter a valid email address (e.g., name@company.com).",
+        code: "INVALID_FORMAT",
       };
     }
     const domain = parts[1];
 
     // 1) Disposable domain detection (maintained list)
     if (isDisposable(domain)) {
-      return { 
-        valid: false, 
-        reason: 'Please use a valid business email address from your company domain.',
-        code: 'DISPOSABLE_EMAIL',
-        domain: domain
+      return {
+        valid: false,
+        reason: "Please use a valid business email address from your company domain.",
+        code: "DISPOSABLE_EMAIL",
+        domain: domain,
       };
     }
 
@@ -50,38 +50,38 @@ exports.validateEmailDomain = onCall(async (request) => {
     try {
       const mx = await dns.resolveMx(domain);
       if (!mx || mx.length === 0) {
-        return { 
-          valid: false, 
-          reason: 'This domain cannot receive emails. Use a valid email address.',
-          code: 'NO_MX_RECORDS',
-          domain: domain
+        return {
+          valid: false,
+          reason: "This domain cannot receive emails. Use a valid email address.",
+          code: "NO_MX_RECORDS",
+          domain: domain,
         };
       }
     } catch (dnsError) {
       // Check if it's a domain resolution error
-      if (dnsError.code === 'ENOTFOUND' || dnsError.code === 'ENODATA') {
-        return { 
-          valid: false, 
-          reason: 'This domain cannot receive emails. Use a valid email address.',
-          code: 'DOMAIN_NOT_FOUND',
-          domain: domain
+      if (dnsError.code === "ENOTFOUND" || dnsError.code === "ENODATA") {
+        return {
+          valid: false,
+          reason: "This domain cannot receive emails. Use a valid email address.",
+          code: "DOMAIN_NOT_FOUND",
+          domain: domain,
         };
       }
-      return { 
-        valid: false, 
-        reason: 'This domain cannot receive emails. Use a valid email address.',
-        code: 'DNS_LOOKUP_FAILED',
-        domain: domain
+      return {
+        valid: false,
+        reason: "This domain cannot receive emails. Use a valid email address.",
+        code: "DNS_LOOKUP_FAILED",
+        domain: domain,
       };
     }
 
-    return { valid: true };
+    return {valid: true};
   } catch (err) {
-    console.error('validateEmailDomain error:', err);
-    return { 
-      valid: false, 
-      reason: 'An unexpected error occurred while validating your email address. Please try again or contact support if the problem persists.',
-      code: 'VALIDATION_ERROR'
+    console.error("validateEmailDomain error:", err);
+    return {
+      valid: false,
+      reason: "An unexpected error occurred while validating your email address. Please try again or contact support if the problem persists.",
+      code: "VALIDATION_ERROR",
     };
   }
 });
@@ -90,11 +90,11 @@ exports.validateEmailDomain = onCall(async (request) => {
 async function extractWithAI(websiteContent, existingData) {
   const aiProviders = [
     {
-      name: 'Google Gemini',
+      name: "Google Gemini",
       enabled: !!process.env.GEMINI_API_KEY,
       extract: async () => {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
 
         const prompt = `Extract company information from this website content and return ONLY a JSON object:
 
@@ -109,110 +109,110 @@ IMPORTANT for industry classification:
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const content = response.text().trim();
-        
+
         // Try to extract JSON from the response
         const jsonMatch = content.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           return JSON.parse(jsonMatch[0]);
         }
-        throw new Error('No valid JSON found in response');
-      }
+        throw new Error("No valid JSON found in response");
+      },
     },
     {
-      name: 'Keyword-based Industry Detection',
+      name: "Keyword-based Industry Detection",
       enabled: true, // Always available as fallback
       extract: async () => {
-        console.log('🔍 Using keyword-based industry detection...');
+        console.log("🔍 Using keyword-based industry detection...");
         const content = websiteContent.toLowerCase();
-        
+
         // Industry keyword mapping
         const industryKeywords = {
-          'health': ['health', 'medical', 'hospital', 'clinic', 'doctor', 'pharmaceutical', 'healthcare'],
-          'media': ['advertising', 'marketing', 'publishing', 'journalism', 'broadcast'],
-          'tourism': ['hotel', 'restaurant', 'hospitality', 'vacation', 'booking', 'accommodation'],
-          'machinery': ['machinery', 'manufacturing equipment', 'industrial machine', 'automation line'],
-          'manufacturing': ['manufacturing', 'production line', 'factory'],
+          "health": ["health", "medical", "hospital", "clinic", "doctor", "pharmaceutical", "healthcare"],
+          "media": ["advertising", "marketing", "publishing", "journalism", "broadcast"],
+          "tourism": ["hotel", "restaurant", "hospitality", "vacation", "booking", "accommodation"],
+          "machinery": ["machinery", "manufacturing equipment", "industrial machine", "automation line"],
+          "manufacturing": ["manufacturing", "production line", "factory"],
           // ICT keywords - widened scope to catch IT companies
-          'ict': [
+          "ict": [
             // Full phrases
-            'software development', 'it services', 'saas', 'software company', 'it consulting', 
-            'web development', 'application development', 'system integration', 'cloud services', 
-            'data analytics', 'telecom', 'telecommunications', 'information technology', 
-            'tech company', 'technology solutions', 'digital solutions', 'software solutions',
-            'it solutions', 'software platform', 'technology platform', 'digital platform',
-            'software engineering', 'tech consulting', 'it consulting', 'digital agency',
+            "software development", "it services", "saas", "software company", "it consulting",
+            "web development", "application development", "system integration", "cloud services",
+            "data analytics", "telecom", "telecommunications", "information technology",
+            "tech company", "technology solutions", "digital solutions", "software solutions",
+            "it solutions", "software platform", "technology platform", "digital platform",
+            "software engineering", "tech consulting", "it consulting", "digital agency",
             // Single words (common IT terms)
-            'software', 'technology', 'tech', 'it', 'digital', 'saas', 'platform', 
-            'analytics', 'cloud', 'api', 'app', 'application', 'development', 'engineering',
-            'automation', 'integration', 'solution', 'system', 'website', 'web'
+            "software", "technology", "tech", "it", "digital", "saas", "platform",
+            "analytics", "cloud", "api", "app", "application", "development", "engineering",
+            "automation", "integration", "solution", "system", "website", "web",
           ],
-          'energy': ['renewable energy', 'solar', 'wind farm', 'grid', 'utility'],
-          'wholesale': ['wholesale', 'distribution center', 'b2b distribution'],
-          'retail': ['retail store', 'e-commerce', 'online shop'],
-          'biotechnology': ['biotechnology', 'pharma lab', 'life sciences'],
-          'mobility': ['logistics', 'fleet', 'automotive supplier'],
-          'craft': ['handwerk', 'handwerksbetrieb', 'meisterbetrieb'],
-          'sports': ['fitness club', 'sports club', 'training center'],
-          'utilities': ['utility provider', 'infrastructure operator'],
-          'agriculture': ['agriculture', 'farm', 'dairy', 'crop'],
-          'realEstate': ['real estate developer', 'property management'],
-          'professional': ['consulting firm', 'law firm', 'accounting firm', 'architects']
+          "energy": ["renewable energy", "solar", "wind farm", "grid", "utility"],
+          "wholesale": ["wholesale", "distribution center", "b2b distribution"],
+          "retail": ["retail store", "e-commerce", "online shop"],
+          "biotechnology": ["biotechnology", "pharma lab", "life sciences"],
+          "mobility": ["logistics", "fleet", "automotive supplier"],
+          "craft": ["handwerk", "handwerksbetrieb", "meisterbetrieb"],
+          "sports": ["fitness club", "sports club", "training center"],
+          "utilities": ["utility provider", "infrastructure operator"],
+          "agriculture": ["agriculture", "farm", "dairy", "crop"],
+          "realEstate": ["real estate developer", "property management"],
+          "professional": ["consulting firm", "law firm", "accounting firm", "architects"],
         };
-        
+
         // Find the industry with the most keyword matches (case-insensitive)
-        let bestMatch = 'other';
+        let bestMatch = "other";
         let maxMatches = 0;
         const contentLower = content.toLowerCase();
-        
+
         for (const [industry, keywords] of Object.entries(industryKeywords)) {
           // Case-insensitive matching
-          const matches = keywords.filter(keyword => contentLower.includes(keyword.toLowerCase())).length;
+          const matches = keywords.filter((keyword) => contentLower.includes(keyword.toLowerCase())).length;
           const threshold = 1; // Use same threshold for all industries
           if (matches >= threshold && matches > maxMatches) {
             maxMatches = matches;
             bestMatch = industry;
           }
         }
-        
+
         console.log(`🎯 Keyword-based industry suggestion: ${bestMatch} (${maxMatches} matches)`);
-        
+
         // Always suggest an industry, even if it's 'other'
         const suggestedIndustry = bestMatch;
-        
+
         // Company Type detection based on keywords
         const companyTypeKeywords = {
-          'GmbH': ['gmbh', 'gesellschaft mit beschränkter haftung', 'limited liability'],
-          'AG': ['ag', 'aktien gesellschaft', 'stock corporation', 'public company'],
-          'UG': ['ug', 'unternehmergesellschaft', 'entrepreneurial company'],
-          'e.K.': ['e.k.', 'eingetragener kaufmann', 'registered merchant'],
-          'GbR': ['gbr', 'gesellschaft bürgerlichen rechts', 'partnership'],
-          'OHG': ['ohg', 'offene handelsgesellschaft', 'general partnership'],
-          'KG': ['kg', 'kommanditgesellschaft', 'limited partnership'],
-          'Verein': ['verein', 'association', 'club', 'non-profit'],
-          'Stiftung': ['stiftung', 'foundation', 'charity'],
-          'Genossenschaft': ['genossenschaft', 'cooperative', 'co-op']
+          "GmbH": ["gmbh", "gesellschaft mit beschränkter haftung", "limited liability"],
+          "AG": ["ag", "aktien gesellschaft", "stock corporation", "public company"],
+          "UG": ["ug", "unternehmergesellschaft", "entrepreneurial company"],
+          "e.K.": ["e.k.", "eingetragener kaufmann", "registered merchant"],
+          "GbR": ["gbr", "gesellschaft bürgerlichen rechts", "partnership"],
+          "OHG": ["ohg", "offene handelsgesellschaft", "general partnership"],
+          "KG": ["kg", "kommanditgesellschaft", "limited partnership"],
+          "Verein": ["verein", "association", "club", "non-profit"],
+          "Stiftung": ["stiftung", "foundation", "charity"],
+          "Genossenschaft": ["genossenschaft", "cooperative", "co-op"],
         };
-        
+
         // Find company type with most keyword matches (case-insensitive)
         let bestCompanyType = null;
         let maxCompanyMatches = 0;
-        
+
         for (const [companyType, keywords] of Object.entries(companyTypeKeywords)) {
-          const matches = keywords.filter(keyword => contentLower.includes(keyword.toLowerCase())).length;
+          const matches = keywords.filter((keyword) => contentLower.includes(keyword.toLowerCase())).length;
           if (matches > maxCompanyMatches) {
             maxCompanyMatches = matches;
             bestCompanyType = companyType;
           }
         }
-        
+
         console.log(`🏢 Keyword-based company type suggestion: ${bestCompanyType} (${maxCompanyMatches} matches)`);
-        
+
         return {
           suggestedIndustry: suggestedIndustry, // Always returns a value, even if 'other'
-          companyType: maxCompanyMatches > 0 ? bestCompanyType : null
+          companyType: maxCompanyMatches > 0 ? bestCompanyType : null,
         };
-      }
-    }
+      },
+    },
   ];
 
   // Try each AI provider in order
@@ -233,7 +233,7 @@ IMPORTANT for industry classification:
     }
   }
 
-  console.log('⚠️ All AI providers failed or unavailable');
+  console.log("⚠️ All AI providers failed or unavailable");
   return null;
 }
 
@@ -243,22 +243,22 @@ async function fetchSPAContent(url) {
   try {
     browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
     const page = await browser.newPage();
-    
+
     // Set a reasonable timeout
     await page.setDefaultTimeout(10000);
-    
+
     // Navigate to the page
-    await page.goto(url, { waitUntil: 'networkidle2' });
-    
+    await page.goto(url, {waitUntil: "networkidle2"});
+
     // Wait a bit more for any dynamic content
     await page.waitForTimeout(2000);
-    
+
     // Get the HTML content
     const content = await page.content();
-    
+
     return content;
   } catch (error) {
     console.log(`⚠️ Puppeteer failed for ${url}:`, error.message);
@@ -2338,7 +2338,7 @@ exports.sendCustomEmailVerification = onCall(async (request) => {
     console.log(`📧 Sending custom email verification to: ${email}`);
 
     // Extract first name from displayName (format: "FirstName LastName")
-    const firstName = displayName ? displayName.split(' ')[0] : '';
+    const firstName = displayName ? displayName.split(" ")[0] : "";
 
     // Generate verification link using Firebase Admin
     const actionCodeSettings = {
@@ -2379,7 +2379,7 @@ exports.sendCustomEmailVerification = onCall(async (request) => {
           <tr>
             <td style="padding: 40px;">
               <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
-                Hallo${firstName ? ` ${firstName}` : ''},
+                Hallo${firstName ? ` ${firstName}` : ""},
               </p>
               
               <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
@@ -2445,7 +2445,7 @@ exports.sendCustomEmailVerification = onCall(async (request) => {
     const emailText = `
 Willkommen bei RapidWorks!
 
-Hallo${firstName ? ` ${firstName}` : ''},
+Hallo${firstName ? ` ${firstName}` : ""},
 
 vielen Dank für deine Registrierung bei RapidWorks! Wir freuen uns, dich an Bord zu haben.
 
@@ -2639,7 +2639,7 @@ If you have any questions or need assistance, our team is here to help at suppor
  */
 exports.sendOptOutNotification = onCall(async (request) => {
   try {
-    const { userId, userEmail, reason, timestamp } = request.data;
+    const {userId, userEmail, reason, timestamp} = request.data;
 
     if (!userId || !userEmail || !reason) {
       throw new Error("Missing required fields: userId, userEmail, and reason are required");
@@ -2731,9 +2731,8 @@ This notification was automatically generated by the RapidWorks system.
     return {
       success: true,
       message: "Opt-out notification sent successfully",
-      emailResult: emailResult.messageId
+      emailResult: emailResult.messageId,
     };
-
   } catch (error) {
     console.error("❌ Error sending opt-out notification:", error);
     throw new Error(`Failed to send opt-out notification: ${error.message}`);
@@ -3312,94 +3311,94 @@ This is a TEST reminder from RapidWorks
 // Extract company data from website by auto-finding Impressum page
 exports.extractImpressumData = onCall(async (request) => {
   try {
-    console.log('🚀 Starting extractImpressumData function');
-    
-    const { url } = request.data;
-    
+    console.log("🚀 Starting extractImpressumData function");
+
+    const {url} = request.data;
+
     if (!url) {
-      console.error('No URL provided');
+      console.error("No URL provided");
       throw new Error("URL is required");
     }
 
     console.log(`🔍 Extracting company data from website: ${url}`);
 
     // Normalize URL with comprehensive error handling
-    let baseUrl, homepage;
+    let baseUrl; let homepage;
     try {
       baseUrl = url.trim();
-      if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-        baseUrl = 'https://' + baseUrl;
+      if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
+        baseUrl = "https://" + baseUrl;
       }
-      
+
       // Validate URL format
       const urlObj = new URL(baseUrl);
       homepage = `${urlObj.protocol}//${urlObj.hostname}`;
       console.log(`✅ Valid URL: ${homepage}`);
     } catch (urlError) {
-      console.error(' Invalid URL format:', url, urlError.message);
+      console.error(" Invalid URL format:", url, urlError.message);
       throw new Error(`URL is not valid: ${url}`);
     }
 
     // Common Impressum/Imprint page paths to try
     const impressumPaths = [
-      '/impressum',
-      '/imprint',
-      '/de/impressum',
-      '/en/imprint',
-      '/kontakt',
-      '/contact',
-      '/about',
-      '/ueber-uns',
-      '/legal',
-      '/legal-notice',
-      '/company',
-      '/unternehmen'
+      "/impressum",
+      "/imprint",
+      "/de/impressum",
+      "/en/imprint",
+      "/kontakt",
+      "/contact",
+      "/about",
+      "/ueber-uns",
+      "/legal",
+      "/legal-notice",
+      "/company",
+      "/unternehmen",
     ];
 
     let impressumHtml = null;
     let impressumUrl = null;
 
     // Try to find the Impressum page with comprehensive error handling
-    console.log('🔎 Searching for Impressum page...');
+    console.log("🔎 Searching for Impressum page...");
     for (const path of impressumPaths) {
       try {
         const testUrl = homepage + path;
         console.log(`  Trying: ${testUrl}`);
-        
+
         const response = await axios.get(testUrl, {
           timeout: 15000, // Increased timeout
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36'
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
           },
           maxRedirects: 5,
-          validateStatus: function (status) {
+          validateStatus: function(status) {
             return status >= 200 && status < 400; // Accept redirects
-          }
+          },
         });
-        
+
         // Check if page likely contains Impressum info
         const testHtml = response.data.toLowerCase();
-        const bodyText = cheerio.load(response.data)('body').text().replace(/\s+/g, ' ').trim();
-        
-        console.log(`🔍 Checking ${testUrl}: bodyText length=${bodyText.length}, contains JS=${bodyText.includes('enable JavaScript')}`);
-        
-        if (testHtml.includes('impressum') || testHtml.includes('imprint') || 
-            testHtml.includes('geschäftsführ') || testHtml.includes('handelsregister')) {
+        const bodyText = cheerio.load(response.data)("body").text().replace(/\s+/g, " ").trim();
+
+        console.log(`🔍 Checking ${testUrl}: bodyText length=${bodyText.length}, contains JS=${bodyText.includes("enable JavaScript")}`);
+
+        if (testHtml.includes("impressum") || testHtml.includes("imprint") ||
+            testHtml.includes("geschäftsführ") || testHtml.includes("handelsregister")) {
           impressumHtml = response.data;
           impressumUrl = testUrl;
           console.log(`✅ Found Impressum at: ${testUrl}`);
           break;
         }
-        
+
         // If we got a SPA shell (contains "enable JavaScript"), try Puppeteer
-        if (bodyText.includes('enable JavaScript') || bodyText.includes('You need to enable JavaScript')) {
+        if (bodyText.includes("enable JavaScript") || bodyText.includes("You need to enable JavaScript")) {
           console.log(`🤖 Detected SPA, trying Puppeteer for: ${testUrl}`);
           try {
             const spaContent = await fetchSPAContent(testUrl);
             if (spaContent) {
               const spaHtml = spaContent.toLowerCase();
-              if (spaHtml.includes('impressum') || spaHtml.includes('imprint') || 
-                  spaHtml.includes('geschäftsführ') || spaHtml.includes('handelsregister')) {
+              if (spaHtml.includes("impressum") || spaHtml.includes("imprint") ||
+                  spaHtml.includes("geschäftsführ") || spaHtml.includes("handelsregister")) {
                 impressumHtml = spaContent;
                 impressumUrl = testUrl;
                 console.log(`✅ Found Impressum with Puppeteer at: ${testUrl}`);
@@ -3420,23 +3419,23 @@ exports.extractImpressumData = onCall(async (request) => {
 
     // If no Impressum page found, try the homepage itself with error handling
     if (!impressumHtml) {
-      console.log('⚠️ No dedicated Impressum page found, using homepage');
+      console.log("⚠️ No dedicated Impressum page found, using homepage");
       try {
         const response = await axios.get(homepage, {
           timeout: 15000, // Increased timeout
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36'
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
           },
           maxRedirects: 5,
-          validateStatus: function (status) {
+          validateStatus: function(status) {
             return status >= 200 && status < 400;
-          }
+          },
         });
-        
-        const bodyText = cheerio.load(response.data)('body').text().replace(/\s+/g, ' ').trim();
-        
+
+        const bodyText = cheerio.load(response.data)("body").text().replace(/\s+/g, " ").trim();
+
         // If homepage is also a SPA, try Puppeteer
-        if (bodyText.includes('enable JavaScript') || bodyText.includes('You need to enable JavaScript')) {
+        if (bodyText.includes("enable JavaScript") || bodyText.includes("You need to enable JavaScript")) {
           console.log(`🤖 Homepage is SPA, trying Puppeteer`);
           try {
             const spaContent = await fetchSPAContent(homepage);
@@ -3457,41 +3456,41 @@ exports.extractImpressumData = onCall(async (request) => {
           impressumUrl = homepage;
         }
       } catch (error) {
-        console.error('❌ Could not access website:', error.message);
+        console.error("❌ Could not access website:", error.message);
         throw new Error(`Could not access website: ${error.message}`);
       }
     }
 
     // Parse HTML with error handling
-    let html, $;
+    let html; let $;
     try {
       html = impressumHtml;
       $ = cheerio.load(html);
-      console.log('✅ HTML parsed successfully');
+      console.log("✅ HTML parsed successfully");
     } catch (parseError) {
-      console.error('❌ Failed to parse HTML:', parseError.message);
+      console.error("❌ Failed to parse HTML:", parseError.message);
       throw new Error(`Failed to parse website content: ${parseError.message}`);
     }
 
     // Also fetch the homepage for industry detection if we haven't already
-    let homepageHtml = '';
+    let homepageHtml = "";
     if (impressumUrl !== homepage) {
       try {
-        console.log('🔍 Fetching homepage for industry detection...');
+        console.log("🔍 Fetching homepage for industry detection...");
         const homepageResponse = await axios.get(homepage, {
           timeout: 15000,
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36'
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
           },
           maxRedirects: 5,
-          validateStatus: function (status) {
+          validateStatus: function(status) {
             return status >= 200 && status < 400;
-          }
+          },
         });
         homepageHtml = homepageResponse.data;
-        console.log('✅ Homepage fetched for industry detection');
+        console.log("✅ Homepage fetched for industry detection");
       } catch (error) {
-        console.warn('⚠️ Could not fetch homepage for industry detection:', error.message);
+        console.warn("⚠️ Could not fetch homepage for industry detection:", error.message);
         homepageHtml = html; // Fallback to impressum page
       }
     } else {
@@ -3505,7 +3504,7 @@ exports.extractImpressumData = onCall(async (request) => {
         street: null,
         city: null,
         postalCode: null,
-        country: null
+        country: null,
       },
       homepage: homepage || null, // Store homepage early for domain-based IT detection
       suggestedIndustry: null,
@@ -3514,40 +3513,44 @@ exports.extractImpressumData = onCall(async (request) => {
       email: null,
       phone: null,
       foundingDate: null,
-      taxId: null
+      taxId: null,
     };
 
     // Helper: safe JSON parse
     const tryParseJson = (text) => {
-      try { return JSON.parse(text); } catch { return null; }
+      try {
+        return JSON.parse(text);
+      } catch {
+        return null;
+      }
     };
 
     // 1) Try JSON-LD (Organization / LocalBusiness)
-    $('script[type="application/ld+json"]').each((_, el) => {
+    $("script[type=\"application/ld+json\"]").each((_, el) => {
       if (extractedData.companyName && extractedData.address.street && extractedData.address.city && extractedData.address.postalCode) return; // already good
       const json = tryParseJson($(el).contents().text());
       if (!json) return;
       const items = Array.isArray(json) ? json : [json];
       for (const item of items) {
-        const isOrg = typeof item === 'object' && item && (
-          item['@type'] === 'Organization' ||
-          item['@type'] === 'LocalBusiness' ||
-          (Array.isArray(item['@type']) && item['@type'].some(t => ['Organization','LocalBusiness'].includes(t)))
+        const isOrg = typeof item === "object" && item && (
+          item["@type"] === "Organization" ||
+          item["@type"] === "LocalBusiness" ||
+          (Array.isArray(item["@type"]) && item["@type"].some((t) => ["Organization", "LocalBusiness"].includes(t)))
         );
         if (!isOrg) continue;
         if (!extractedData.companyName && (item.legalName || item.name)) {
           const name = (item.legalName || item.name).toString().trim();
           // Filter out common legal page terms
-          if (!name.toLowerCase().includes('impressum') && 
-              !name.toLowerCase().includes('imprint') && 
-              !name.toLowerCase().includes('legal') &&
-              !name.toLowerCase().includes('datenschutz') &&
-              !name.toLowerCase().includes('privacy') &&
+          if (!name.toLowerCase().includes("impressum") &&
+              !name.toLowerCase().includes("imprint") &&
+              !name.toLowerCase().includes("legal") &&
+              !name.toLowerCase().includes("datenschutz") &&
+              !name.toLowerCase().includes("privacy") &&
               name.length > 2) {
             extractedData.companyName = name;
           }
         }
-        const addr = item.address || item['@graph']?.find(x => x['@type'] === 'PostalAddress');
+        const addr = item.address || item["@graph"]?.find((x) => x["@type"] === "PostalAddress");
         if (addr) {
           if (!extractedData.address.street && (addr.streetAddress)) extractedData.address.street = String(addr.streetAddress).trim();
           if (!extractedData.address.city && (addr.addressLocality)) extractedData.address.city = String(addr.addressLocality).trim();
@@ -3564,41 +3567,41 @@ exports.extractImpressumData = onCall(async (request) => {
 
     // 2) Meta tags fallback
     if (!extractedData.companyName) {
-      const metaSiteName = $('meta[property="og:site_name"]').attr('content') || $('meta[name="application-name"]').attr('content');
+      const metaSiteName = $("meta[property=\"og:site_name\"]").attr("content") || $("meta[name=\"application-name\"]").attr("content");
       if (metaSiteName) {
         const name = metaSiteName.trim();
         // Filter out common legal page terms
-        if (!name.toLowerCase().includes('impressum') && 
-            !name.toLowerCase().includes('imprint') && 
-            !name.toLowerCase().includes('legal') &&
-            !name.toLowerCase().includes('datenschutz') &&
-            !name.toLowerCase().includes('privacy') &&
+        if (!name.toLowerCase().includes("impressum") &&
+            !name.toLowerCase().includes("imprint") &&
+            !name.toLowerCase().includes("legal") &&
+            !name.toLowerCase().includes("datenschutz") &&
+            !name.toLowerCase().includes("privacy") &&
             name.length > 2) {
           extractedData.companyName = name;
         }
       }
     }
     if (!extractedData.homepage) {
-      const canonical = $('link[rel="canonical"]').attr('href');
+      const canonical = $("link[rel=\"canonical\"]").attr("href");
       if (canonical) extractedData.homepage = canonical;
     }
 
     // 3) Enhanced address extraction from visible text
-    const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
-    console.log('🔍 Body text preview:', bodyText.substring(0, 500));
+    const bodyText = $("body").text().replace(/\s+/g, " ").trim();
+    console.log("🔍 Body text preview:", bodyText.substring(0, 500));
 
     // Try to find address sections first
     const addressSelectors = [
-      '.address', '.contact', '.impressum', '.imprint', 
-      '[class*="address"]', '[class*="contact"]', '[class*="impressum"]',
-      'address', 'footer', '.footer'
+      ".address", ".contact", ".impressum", ".imprint",
+      "[class*=\"address\"]", "[class*=\"contact\"]", "[class*=\"impressum\"]",
+      "address", "footer", ".footer",
     ];
-    
+
     let addressText = bodyText;
     for (const selector of addressSelectors) {
       const element = $(selector);
       if (element.length && element.text().trim()) {
-        addressText = element.text().replace(/\s+/g, ' ').trim();
+        addressText = element.text().replace(/\s+/g, " ").trim();
         console.log(`📍 Found address section with selector "${selector}":`, addressText.substring(0, 200));
         break;
       }
@@ -3612,7 +3615,7 @@ exports.extractImpressumData = onCall(async (request) => {
         if (!extractedData.address.postalCode) extractedData.address.postalCode = pcCityDE[1];
         if (!extractedData.address.city) extractedData.address.city = pcCityDE[2].trim();
       }
-      
+
       // Austrian 4-digit pattern
       if (!extractedData.address.postalCode) {
         const pcCityAT = addressText.match(/\b(\d{4})\b\s+([A-Za-zÄÖÜäöüß\-\s]{2,40})/);
@@ -3621,7 +3624,7 @@ exports.extractImpressumData = onCall(async (request) => {
           if (!extractedData.address.city) extractedData.address.city = pcCityAT[2].trim();
         }
       }
-      
+
       // Swiss 4-digit pattern
       if (!extractedData.address.postalCode) {
         const pcCityCH = addressText.match(/\b(\d{4})\b\s+([A-Za-zÄÖÜäöüß\-\s]{2,40})/);
@@ -3645,7 +3648,7 @@ exports.extractImpressumData = onCall(async (request) => {
         // Generic patterns
         /([A-Za-zÄÖÜäöüß\-\s]+(?:street|avenue|road|boulevard))\s*\d+[a-zA-Z]?/i,
         // More specific pattern: word + number (avoid common false matches)
-        /([A-Za-zÄÖÜäöüß\-\s]{3,}(?:straße|str|weg|platz|allee|ring|damm|street|avenue|road|boulevard|gasse|gasse|hof|hof))\s*(\d+[a-zA-Z]?)/i
+        /([A-Za-zÄÖÜäöüß\-\s]{3,}(?:straße|str|weg|platz|allee|ring|damm|street|avenue|road|boulevard|gasse|gasse|hof|hof))\s*(\d+[a-zA-Z]?)/i,
       ];
 
       for (const pattern of streetPatterns) {
@@ -3653,9 +3656,9 @@ exports.extractImpressumData = onCall(async (request) => {
         if (match) {
           const streetCandidate = match[0].trim();
           // Filter out common false matches
-          const falseMatches = ['get 10', 'become a', 'register now', 'experience a', 'engage and', 'all rights', 'copyright', 'privacy policy', 'terms of', 'cookie policy'];
-          const isFalseMatch = falseMatches.some(fm => streetCandidate.toLowerCase().includes(fm));
-          
+          const falseMatches = ["get 10", "become a", "register now", "experience a", "engage and", "all rights", "copyright", "privacy policy", "terms of", "cookie policy"];
+          const isFalseMatch = falseMatches.some((fm) => streetCandidate.toLowerCase().includes(fm));
+
           if (!isFalseMatch && streetCandidate.length > 5) {
             console.log(`🏠 Found street with pattern:`, streetCandidate);
             extractedData.address.street = streetCandidate;
@@ -3663,11 +3666,11 @@ exports.extractImpressumData = onCall(async (request) => {
           }
         }
       }
-      
+
       // If still no street found, try a more aggressive approach
       if (!extractedData.address.street) {
         // Look for any word followed by a number in address context
-        const lines = addressText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+        const lines = addressText.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
         for (const line of lines) {
           const streetMatch = line.match(/^([A-Za-zÄÖÜäöüß\-\s]{2,})\s+(\d+[a-zA-Z]?)$/);
           if (streetMatch && !line.match(/\d{4,5}/)) { // Exclude lines that look like postal codes
@@ -3695,7 +3698,7 @@ exports.extractImpressumData = onCall(async (request) => {
         /Ulm/i, /Heilbronn/i, /Pforzheim/i, /Göttingen/i, /Bottrop/i, /Trier/i,
         /Recklinghausen/i, /Reutlingen/i, /Bremerhaven/i, /Koblenz/i, /Bergisch Gladbach/i,
         /Jena/i, /Remscheid/i, /Erlangen/i, /Moers/i, /Siegen/i, /Hildesheim/i,
-        /Salzgitter/i, /Cottbus/i, /Stolberg/i
+        /Salzgitter/i, /Cottbus/i, /Stolberg/i,
       ];
 
       for (const pattern of cityPatterns) {
@@ -3711,16 +3714,16 @@ exports.extractImpressumData = onCall(async (request) => {
 
     // 5) Try to infer company name if still missing (title that looks like a company)
     if (!extractedData.companyName) {
-      const title = $('title').first().text().trim();
+      const title = $("title").first().text().trim();
       if (title) {
         const m = title.match(/([\wÄÖÜäöüß\-\s&.,]+\b(?:GmbH|UG|AG|e\.K\.|GbR|OHG|KG)\b)/);
         const name = (m ? m[1] : title).trim();
         // Filter out common legal page terms
-        if (!name.toLowerCase().includes('impressum') && 
-            !name.toLowerCase().includes('imprint') && 
-            !name.toLowerCase().includes('legal') &&
-            !name.toLowerCase().includes('datenschutz') &&
-            !name.toLowerCase().includes('privacy') &&
+        if (!name.toLowerCase().includes("impressum") &&
+            !name.toLowerCase().includes("imprint") &&
+            !name.toLowerCase().includes("legal") &&
+            !name.toLowerCase().includes("datenschutz") &&
+            !name.toLowerCase().includes("privacy") &&
             name.length > 2) {
           extractedData.companyName = name;
         }
@@ -3729,14 +3732,14 @@ exports.extractImpressumData = onCall(async (request) => {
 
     // 5b) Try to extract company name from h1 tags
     if (!extractedData.companyName) {
-      const h1 = $('h1').first().text().trim();
+      const h1 = $("h1").first().text().trim();
       if (h1 && h1.length > 2 && h1.length < 100) {
         // Filter out common legal page terms
-        if (!h1.toLowerCase().includes('impressum') && 
-            !h1.toLowerCase().includes('imprint') && 
-            !h1.toLowerCase().includes('legal') &&
-            !h1.toLowerCase().includes('datenschutz') &&
-            !h1.toLowerCase().includes('privacy')) {
+        if (!h1.toLowerCase().includes("impressum") &&
+            !h1.toLowerCase().includes("imprint") &&
+            !h1.toLowerCase().includes("legal") &&
+            !h1.toLowerCase().includes("datenschutz") &&
+            !h1.toLowerCase().includes("privacy")) {
           extractedData.companyName = h1;
         }
       }
@@ -3746,7 +3749,7 @@ exports.extractImpressumData = onCall(async (request) => {
     if (!extractedData.companyName) {
       try {
         const u = new URL(url);
-        const domain = u.hostname.replace('www.', '').split('.')[0];
+        const domain = u.hostname.replace("www.", "").split(".")[0];
         if (domain && domain.length > 2) {
           // Capitalize first letter
           extractedData.companyName = domain.charAt(0).toUpperCase() + domain.slice(1);
@@ -3761,14 +3764,16 @@ exports.extractImpressumData = onCall(async (request) => {
       try {
         const u = new URL(url);
         extractedData.homepage = `${u.protocol}//${u.hostname}`;
-      } catch {}
+      } catch {
+        // Invalid URL, ignore
+      }
     }
 
     // 6.5) Extract additional fields from page content
     // Email extraction
     if (!extractedData.email) {
       const emailMatch = bodyText.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
-      if (emailMatch && !emailMatch[0].includes('example') && !emailMatch[0].includes('mail.com')) {
+      if (emailMatch && !emailMatch[0].includes("example") && !emailMatch[0].includes("mail.com")) {
         extractedData.email = emailMatch[0];
       }
     }
@@ -3776,16 +3781,16 @@ exports.extractImpressumData = onCall(async (request) => {
     // Phone extraction (German format)
     if (!extractedData.phone) {
       const phonePatterns = [
-        /\+49\s*\d{2,5}\s*\d{6,}/,  // +49 xxx xxxxxx
-        /\(\+49\)\s*\d{2,5}\s*\d{6,}/,  // (+49) xxx xxxxxx
-        /0\d{2,5}\s*\/?\s*\d{6,}/,  // 0xxx / xxxxxx or 0xxx xxxxxx
-        /Tel\.?:?\s*\+?49?\s*\d{2,5}\s*\d{6,}/i  // Tel: +49 xxx xxxxxx
+        /\+49\s*\d{2,5}\s*\d{6,}/, // +49 xxx xxxxxx
+        /\(\+49\)\s*\d{2,5}\s*\d{6,}/, // (+49) xxx xxxxxx
+        /0\d{2,5}\s*\/?\s*\d{6,}/, // 0xxx / xxxxxx or 0xxx xxxxxx
+        /Tel\.?:?\s*\+?49?\s*\d{2,5}\s*\d{6,}/i, // Tel: +49 xxx xxxxxx
       ];
-      
+
       for (const pattern of phonePatterns) {
         const match = bodyText.match(pattern);
         if (match) {
-          extractedData.phone = match[0].replace(/Tel\.?:?\s*/i, '').trim();
+          extractedData.phone = match[0].replace(/Tel\.?:?\s*/i, "").trim();
           break;
         }
       }
@@ -3793,7 +3798,7 @@ exports.extractImpressumData = onCall(async (request) => {
 
     // Company description from meta description
     if (!extractedData.companyDescription) {
-      const metaDesc = $('meta[name="description"]').attr('content');
+      const metaDesc = $("meta[name=\"description\"]").attr("content");
       if (metaDesc && metaDesc.length >= 50 && metaDesc.length <= 600) {
         extractedData.companyDescription = metaDesc.trim();
       }
@@ -3802,26 +3807,26 @@ exports.extractImpressumData = onCall(async (request) => {
     // Detect company type from legal form in company name
     if (!extractedData.companyType && extractedData.companyName) {
       const name = extractedData.companyName.toLowerCase();
-      if (name.includes('gmbh')) {
-        extractedData.companyType = 'GmbH';
-      } else if (name.includes('ag') && !name.includes('tag') && !name.includes('wagen')) {
-        extractedData.companyType = 'AG';
-      } else if (name.includes(' ug ') || name.includes('ug (haftungsbeschränkt)')) {
-        extractedData.companyType = 'UG';
-      } else if (name.includes('e.k.') || name.includes('e.k') || name.includes('ek')) {
-        extractedData.companyType = 'e.K.';
-      } else if (name.includes('gbr')) {
-        extractedData.companyType = 'GbR';
-      } else if (name.includes('ohg')) {
-        extractedData.companyType = 'OHG';
-      } else if (name.includes(' kg ') || (name.includes('kommanditgesellschaft'))) {
-        extractedData.companyType = 'KG';
-      } else if (name.includes('verein') || name.includes('e.v.')) {
-        extractedData.companyType = 'Verein';
-      } else if (name.includes('stiftung')) {
-        extractedData.companyType = 'Stiftung';
-      } else if (name.includes('genossenschaft')) {
-        extractedData.companyType = 'Genossenschaft';
+      if (name.includes("gmbh")) {
+        extractedData.companyType = "GmbH";
+      } else if (name.includes("ag") && !name.includes("tag") && !name.includes("wagen")) {
+        extractedData.companyType = "AG";
+      } else if (name.includes(" ug ") || name.includes("ug (haftungsbeschränkt)")) {
+        extractedData.companyType = "UG";
+      } else if (name.includes("e.k.") || name.includes("e.k") || name.includes("ek")) {
+        extractedData.companyType = "e.K.";
+      } else if (name.includes("gbr")) {
+        extractedData.companyType = "GbR";
+      } else if (name.includes("ohg")) {
+        extractedData.companyType = "OHG";
+      } else if (name.includes(" kg ") || (name.includes("kommanditgesellschaft"))) {
+        extractedData.companyType = "KG";
+      } else if (name.includes("verein") || name.includes("e.v.")) {
+        extractedData.companyType = "Verein";
+      } else if (name.includes("stiftung")) {
+        extractedData.companyType = "Stiftung";
+      } else if (name.includes("genossenschaft")) {
+        extractedData.companyType = "Genossenschaft";
       }
     }
 
@@ -3834,34 +3839,34 @@ exports.extractImpressumData = onCall(async (request) => {
     }
 
     // 7) AI-powered data extraction using multiple AI providers
-    try {
-      console.log('🤖 Starting AI-powered data extraction...');
-      
-      // Extract text content from homepage for AI analysis
-      const $homepage = cheerio.load(homepageHtml);
-      const pageTitle = $homepage('title').text().trim();
-      const metaDescription = $homepage('meta[name="description"]').attr('content') || '';
-      const h1s = $homepage('h1').map((_, el) => $homepage(el).text()).get().join(' ');
-      const bodyText = $homepage('body').text().replace(/\s+/g, ' ').trim().substring(0, 4000); // Increased limit for better AI analysis
+    // Extract text content from homepage for AI analysis
+    const $homepage = cheerio.load(homepageHtml);
+    const pageTitle = $homepage("title").text().trim();
+    const metaDescription = $homepage("meta[name=\"description\"]").attr("content") || "";
+    const h1s = $homepage("h1").map((_, el) => $homepage(el).text()).get().join(" ");
+    const homepageBodyText = $homepage("body").text().replace(/\s+/g, " ").trim().substring(0, 4000); // Increased limit for better AI analysis
 
-      const websiteContent = `
+    const websiteContent = `
 Title: ${pageTitle}
 Description: ${metaDescription}
 Headings: ${h1s}
-Content: ${bodyText}
-      `.trim();
+Content: ${homepageBodyText}
+    `.trim();
+
+    try {
+      console.log("🤖 Starting AI-powered data extraction...");
 
       // Try AI extraction with multiple providers
       const aiResult = await extractWithAI(websiteContent, extractedData);
-      
-      console.log('🤖 AI extraction result:', aiResult);
-      
+
+      console.log("🤖 AI extraction result:", aiResult);
+
       if (aiResult) {
-        console.log('✅ AI extraction successful, merging results...');
+        console.log("✅ AI extraction successful, merging results...");
         // Merge AI results with existing extracted data
         if (aiResult.companyName && !extractedData.companyName) {
           extractedData.companyName = aiResult.companyName;
-          console.log('📝 AI provided company name:', aiResult.companyName);
+          console.log("📝 AI provided company name:", aiResult.companyName);
         }
         if (aiResult.address && !extractedData.address.street) {
           extractedData.address.street = aiResult.address.street;
@@ -3883,7 +3888,7 @@ Content: ${bodyText}
         }
         if (aiResult.companyType && !extractedData.companyType) {
           extractedData.companyType = aiResult.companyType;
-          console.log('🏢 AI provided company type:', aiResult.companyType);
+          console.log("🏢 AI provided company type:", aiResult.companyType);
         }
         if (aiResult.foundingDate && !extractedData.foundingDate) {
           extractedData.foundingDate = aiResult.foundingDate;
@@ -3893,13 +3898,13 @@ Content: ${bodyText}
         }
         if (aiResult.suggestedIndustry) {
           extractedData.suggestedIndustry = aiResult.suggestedIndustry;
-          console.log('🎯 AI suggested industry:', aiResult.suggestedIndustry);
+          console.log("🎯 AI suggested industry:", aiResult.suggestedIndustry);
         }
       } else {
-        console.log('⚠️ AI extraction returned null or failed');
+        console.log("⚠️ AI extraction returned null or failed");
       }
     } catch (aiError) {
-      console.warn('⚠️ AI data extraction failed (non-critical):', aiError.message);
+      console.warn("⚠️ AI data extraction failed (non-critical):", aiError.message);
       // Continue without AI enhancement
     }
 
@@ -3908,107 +3913,105 @@ Content: ${bodyText}
     try {
       const contentLower = websiteContent.toLowerCase();
       const industryKeywords = {
-        'health': ['health', 'medical', 'hospital', 'clinic', 'doctor', 'pharmaceutical', 'healthcare'],
-        'media': ['advertising', 'marketing', 'publishing', 'journalism', 'broadcast'],
-        'tourism': ['hotel', 'restaurant', 'hospitality', 'vacation', 'booking', 'accommodation'],
-        'machinery': ['machinery', 'manufacturing equipment', 'industrial machine', 'automation line'],
-        'manufacturing': ['manufacturing', 'production line', 'factory'],
-        'ict': [
-          'software development', 'it services', 'saas', 'software company', 'it consulting', 
-          'web development', 'application development', 'system integration', 'cloud services', 
-          'data analytics', 'telecom', 'telecommunications', 'information technology', 
-          'tech company', 'technology solutions', 'digital solutions', 'software solutions',
-          'it solutions', 'software platform', 'technology platform', 'digital platform',
-          'software engineering', 'tech consulting', 'it consulting', 'digital agency',
-          'software', 'technology', 'tech', 'it', 'digital', 'saas', 'platform', 
-          'analytics', 'cloud', 'api', 'app', 'application', 'development', 'engineering',
-          'automation', 'integration', 'solution', 'system', 'website', 'web'
+        "health": ["health", "medical", "hospital", "clinic", "doctor", "pharmaceutical", "healthcare"],
+        "media": ["advertising", "marketing", "publishing", "journalism", "broadcast"],
+        "tourism": ["hotel", "restaurant", "hospitality", "vacation", "booking", "accommodation"],
+        "machinery": ["machinery", "manufacturing equipment", "industrial machine", "automation line"],
+        "manufacturing": ["manufacturing", "production line", "factory"],
+        "ict": [
+          "software development", "it services", "saas", "software company", "it consulting",
+          "web development", "application development", "system integration", "cloud services",
+          "data analytics", "telecom", "telecommunications", "information technology",
+          "tech company", "technology solutions", "digital solutions", "software solutions",
+          "it solutions", "software platform", "technology platform", "digital platform",
+          "software engineering", "tech consulting", "it consulting", "digital agency",
+          "software", "technology", "tech", "it", "digital", "saas", "platform",
+          "analytics", "cloud", "api", "app", "application", "development", "engineering",
+          "automation", "integration", "solution", "system", "website", "web",
         ],
-        'energy': ['renewable energy', 'solar', 'wind farm', 'grid', 'utility'],
-        'wholesale': ['wholesale', 'distribution center', 'b2b distribution'],
-        'retail': ['retail store', 'e-commerce', 'online shop'],
-        'biotechnology': ['biotechnology', 'pharma lab', 'life sciences'],
-        'mobility': ['logistics', 'fleet', 'automotive supplier'],
-        'craft': ['handwerk', 'handwerksbetrieb', 'meisterbetrieb'],
-        'sports': ['fitness club', 'sports club', 'training center'],
-        'utilities': ['utility provider', 'infrastructure operator'],
-        'agriculture': ['agriculture', 'farm', 'dairy', 'crop'],
-        'realEstate': ['real estate developer', 'property management'],
-        'professional': ['consulting firm', 'law firm', 'accounting firm', 'architects']
+        "energy": ["renewable energy", "solar", "wind farm", "grid", "utility"],
+        "wholesale": ["wholesale", "distribution center", "b2b distribution"],
+        "retail": ["retail store", "e-commerce", "online shop"],
+        "biotechnology": ["biotechnology", "pharma lab", "life sciences"],
+        "mobility": ["logistics", "fleet", "automotive supplier"],
+        "craft": ["handwerk", "handwerksbetrieb", "meisterbetrieb"],
+        "sports": ["fitness club", "sports club", "training center"],
+        "utilities": ["utility provider", "infrastructure operator"],
+        "agriculture": ["agriculture", "farm", "dairy", "crop"],
+        "realEstate": ["real estate developer", "property management"],
+        "professional": ["consulting firm", "law firm", "accounting firm", "architects"],
       };
-      
-      let bestMatch = 'other';
+
+      let bestMatch = "other";
       let maxMatches = 0;
-      
+
       for (const [industry, keywords] of Object.entries(industryKeywords)) {
-        const matches = keywords.filter(keyword => contentLower.includes(keyword.toLowerCase())).length;
+        const matches = keywords.filter((keyword) => contentLower.includes(keyword.toLowerCase())).length;
         if (matches > 0 && matches > maxMatches) {
           maxMatches = matches;
           bestMatch = industry;
         }
       }
-      
+
       // Additional heuristic: Check domain for IT indicators (.io, .tech, etc.)
-      const itDomainIndicators = ['.io', '.tech', '.dev', '.cloud', '.app', '.ai', '.software'];
-      let urlToCheck = '';
-      
+      const itDomainIndicators = [".io", ".tech", ".dev", ".cloud", ".app", ".ai", ".software"];
+      let urlToCheck = "";
+
       // Try to get URL from websiteContent or extractData
       try {
         // First, try to extract from extractedData if homepage was stored
-        urlToCheck = extractedData.homepage || '';
-        
+        urlToCheck = extractedData.homepage || "";
+
         // If not found, try extracting from websiteContent
         if (!urlToCheck) {
-          const urlMatch = websiteContent.match(/https?:\/\/[^\s,\.]+/i);
+          const urlMatch = websiteContent.match(/https?:\/\/[^\s,.]+/i);
           if (urlMatch && urlMatch[0]) {
             urlToCheck = urlMatch[0];
           }
         }
       } catch (e) {
-        console.warn('Could not extract URL for domain check:', e.message);
+        console.warn("Could not extract URL for domain check:", e.message);
       }
-      
-      const hasItDomain = urlToCheck && itDomainIndicators.some(domain => urlToCheck.toLowerCase().includes(domain));
-      
-      if (hasItDomain && bestMatch === 'other') {
-        bestMatch = 'ict';
+
+      const hasItDomain = urlToCheck && itDomainIndicators.some((domain) => urlToCheck.toLowerCase().includes(domain));
+
+      if (hasItDomain && bestMatch === "other") {
+        bestMatch = "ict";
         maxMatches = 1; // Artificial boost for domain match
-        console.log('🌐 Domain-based IT indicator detected, suggesting ICT');
+        console.log("🌐 Domain-based IT indicator detected, suggesting ICT");
       }
-      
+
       // Override AI result if:
       // 1. AI didn't provide an industry, OR
       // 2. AI returned "other" but keywords/domain suggest something more specific, OR
       // 3. We have a .io/.tech domain (strong IT indicator), OR
       // 4. Keywords suggest ICT with at least 2 matches (strong signal)
-      const hasStrongItSignal = hasItDomain || (bestMatch === 'ict' && maxMatches >= 2);
-      const shouldOverride = 
-        !extractedData.suggestedIndustry || 
-        (extractedData.suggestedIndustry === 'other' && bestMatch !== 'other') ||
+      const shouldOverride =
+        !extractedData.suggestedIndustry ||
+        (extractedData.suggestedIndustry === "other" && bestMatch !== "other") ||
         (hasItDomain) || // Always override if domain suggests IT
-        (bestMatch === 'ict' && maxMatches >= 2);
-      
-      if (shouldOverride && bestMatch !== 'other') {
+        (bestMatch === "ict" && maxMatches >= 2);
+
+      if (shouldOverride && bestMatch !== "other") {
         extractedData.suggestedIndustry = bestMatch;
-        console.log(`🎯 Keyword-based override: using "${bestMatch}" (${maxMatches} keyword matches${hasItDomain ? ' + domain indicator' : ''})`);
+        console.log(`🎯 Keyword-based override: using "${bestMatch}" (${maxMatches} keyword matches${hasItDomain ? " + domain indicator" : ""})`);
       } else if (hasItDomain) {
         // Strongest signal: .io/.tech domain always means ICT
-        extractedData.suggestedIndustry = 'ict';
+        extractedData.suggestedIndustry = "ict";
         console.log(`🎯 Strong IT domain detected (.io/.tech): forcing "ict"`);
       }
     } catch (keywordError) {
-      console.warn('⚠️ Keyword-based industry detection failed:', keywordError.message);
+      console.warn("⚠️ Keyword-based industry detection failed:", keywordError.message);
     }
 
     console.log(`✅ Extraction result:`, extractedData);
     return extractedData;
-
   } catch (error) {
     console.error("❌ Error extracting Impressum data:", error);
-    
+
     return {
       success: false,
-      error: error.message || "Failed to extract company data from the provided URL"
+      error: error.message || "Failed to extract company data from the provided URL",
     };
   }
 });
@@ -4027,16 +4030,6 @@ exports.checkOnboardingStepReminders = onSchedule("*/5 * * * *", async (event) =
     const thirtyMinutesAgoISO = thirtyMinutesAgo.toISOString();
 
     console.log(`⏰ Checking for users stuck before: ${thirtyMinutesAgoISO}`);
-
-    // Step names mapping
-    const STEP_NAMES = {
-      emailVerified: 'Email Verification',
-      organizationCreated: 'Organization Creation',
-      midApplied: 'MID Application',
-      bookingCallCompleted: 'Coaching Call Booking',
-      coworkersInvited: 'Coworkers Invitation',
-      walkthroughCompleted: 'Platform Walkthrough'
-    };
 
     // Get all users with onboarding data
     const onboardingSnapshot = await db.collection("userOnboarding").get();
@@ -4062,68 +4055,68 @@ exports.checkOnboardingStepReminders = onSchedule("*/5 * * * *", async (event) =
       // Check each onboarding step
       const steps = [
         {
-          key: 'emailVerified',
-          name: 'Email Verification',
-          reminderField: 'emailVerificationReminderSent',
+          key: "emailVerified",
+          name: "Email Verification",
+          reminderField: "emailVerificationReminderSent",
           checkTimestamp: () => {
             // Use account creation time or onboarding creation time
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
+          },
         },
         {
-          key: 'organizationCreated',
-          name: 'Organization Creation',
-          reminderField: 'organizationReminderSent',
+          key: "organizationCreated",
+          name: "Organization Creation",
+          reminderField: "organizationReminderSent",
           checkTimestamp: () => {
             // Check from email verification or account creation
             if (data.emailVerifiedAt) return new Date(data.emailVerifiedAt);
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
+          },
         },
         {
-          key: 'midApplied',
-          name: 'MID Application',
-          reminderField: 'midApplicationReminderSent',
+          key: "midApplied",
+          name: "MID Application",
+          reminderField: "midApplicationReminderSent",
           checkTimestamp: () => {
             // Check from organization creation
             if (data.organizationCreatedAt) return new Date(data.organizationCreatedAt);
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
+          },
         },
         {
-          key: 'bookingCallCompleted',
-          name: 'Coaching Call Booking',
-          reminderField: 'coachingCallReminderSent',
+          key: "bookingCallCompleted",
+          name: "Coaching Call Booking",
+          reminderField: "coachingCallReminderSent",
           checkTimestamp: () => {
             // Check from MID application
             if (data.midAppliedAt) return new Date(data.midAppliedAt);
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
+          },
         },
         {
-          key: 'coworkersInvited',
-          name: 'Coworkers Invitation',
-          reminderField: 'coworkersInviteReminderSent',
+          key: "coworkersInvited",
+          name: "Coworkers Invitation",
+          reminderField: "coworkersInviteReminderSent",
           checkTimestamp: () => {
             // Check from organization creation
             if (data.organizationCreatedAt) return new Date(data.organizationCreatedAt);
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
+          },
         },
         {
-          key: 'walkthroughCompleted',
-          name: 'Platform Walkthrough',
-          reminderField: 'walkthroughReminderSent',
+          key: "walkthroughCompleted",
+          name: "Platform Walkthrough",
+          reminderField: "walkthroughReminderSent",
           checkTimestamp: () => {
             // Check from account creation
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
-        }
+          },
+        },
       ];
 
       for (const step of steps) {
         // Skip if step is completed or skipped
-        if (data[step.key] === true || data[step.key] === 'skipped') {
+        if (data[step.key] === true || data[step.key] === "skipped") {
           continue;
         }
 
@@ -4152,12 +4145,12 @@ exports.checkOnboardingStepReminders = onSchedule("*/5 * * * *", async (event) =
           console.log(`📧 Sending reminder for user: ${userName} (${userEmail}) - stuck at ${step.name} for ${timeStuck} minutes`);
 
           // Create step status overview
-          const stepStatus = steps.map(s => {
+          const stepStatus = steps.map((s) => {
             const status = data[s.key];
             if (status === true) return `✅ ${s.name}`;
-            if (status === 'skipped') return `⏭️ ${s.name} (skipped)`;
+            if (status === "skipped") return `⏭️ ${s.name} (skipped)`;
             return `❌ ${s.name}`;
-          }).join('\n');
+          }).join("\n");
 
           // Send email to Yannick
           const emailHtml = `
@@ -4191,7 +4184,7 @@ exports.checkOnboardingStepReminders = onSchedule("*/5 * * * *", async (event) =
               </p>
               
               <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
-                The following user has been stuck at the <strong>${step.name}</strong> step for ${hoursStuck > 0 ? hoursStuck + ' hour' + (hoursStuck > 1 ? 's' : '') + ' and ' : ''}${minutesStuck} minute${minutesStuck !== 1 ? 's' : ''}:
+                The following user has been stuck at the <strong>${step.name}</strong> step for ${hoursStuck > 0 ? hoursStuck + " hour" + (hoursStuck > 1 ? "s" : "") + " and " : ""}${minutesStuck} minute${minutesStuck !== 1 ? "s" : ""}:
               </p>
               
               <!-- User Info Card -->
@@ -4203,7 +4196,7 @@ exports.checkOnboardingStepReminders = onSchedule("*/5 * * * *", async (event) =
                   <strong>📧 Email:</strong> ${userEmail}
                 </p>
                 <p style="margin: 0 0 10px; color: #333333; font-size: 16px;">
-                  <strong>⏰ Stuck for:</strong> ${hoursStuck > 0 ? hoursStuck + ' hour' + (hoursStuck > 1 ? 's' : '') + ' and ' : ''}${minutesStuck} minute${minutesStuck !== 1 ? 's' : ''}
+                  <strong>⏰ Stuck for:</strong> ${hoursStuck > 0 ? hoursStuck + " hour" + (hoursStuck > 1 ? "s" : "") + " and " : ""}${minutesStuck} minute${minutesStuck !== 1 ? "s" : ""}
                 </p>
                 <p style="margin: 0; color: #333333; font-size: 16px;">
                   <strong>📅 Since:</strong> ${stepTimestamp.toLocaleDateString("en-US", {month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit"})}
@@ -4255,11 +4248,11 @@ exports.checkOnboardingStepReminders = onSchedule("*/5 * * * *", async (event) =
 
 Hi Yannick,
 
-The following user has been stuck at the ${step.name} step for ${hoursStuck > 0 ? hoursStuck + ' hour' + (hoursStuck > 1 ? 's' : '') + ' and ' : ''}${minutesStuck} minute${minutesStuck !== 1 ? 's' : ''}:
+The following user has been stuck at the ${step.name} step for ${hoursStuck > 0 ? hoursStuck + " hour" + (hoursStuck > 1 ? "s" : "") + " and " : ""}${minutesStuck} minute${minutesStuck !== 1 ? "s" : ""}:
 
 👤 Name: ${userName}
 📧 Email: ${userEmail}
-⏰ Stuck for: ${hoursStuck > 0 ? hoursStuck + ' hour' + (hoursStuck > 1 ? 's' : '') + ' and ' : ''}${minutesStuck} minute${minutesStuck !== 1 ? 's' : ''}
+⏰ Stuck for: ${hoursStuck > 0 ? hoursStuck + " hour" + (hoursStuck > 1 ? "s" : "") + " and " : ""}${minutesStuck} minute${minutesStuck !== 1 ? "s" : ""}
 📅 Since: ${stepTimestamp.toLocaleDateString("en-US", {month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit"})}
 
 📋 Onboarding Progress:
@@ -4321,16 +4314,6 @@ exports.testOnboardingStepReminders = onCall(async (request) => {
 
     console.log(`⏰ Checking for users stuck before: ${thirtyMinutesAgoISO}`);
 
-    // Step names mapping
-    const STEP_NAMES = {
-      emailVerified: 'Email Verification',
-      organizationCreated: 'Organization Creation',
-      midApplied: 'MID Application',
-      bookingCallCompleted: 'Coaching Call Booking',
-      coworkersInvited: 'Coworkers Invitation',
-      walkthroughCompleted: 'Platform Walkthrough'
-    };
-
     // Get all users with onboarding data
     const onboardingSnapshot = await db.collection("userOnboarding").get();
     console.log(`📊 Found ${onboardingSnapshot.size} users to check`);
@@ -4355,62 +4338,62 @@ exports.testOnboardingStepReminders = onCall(async (request) => {
       // Check each onboarding step
       const steps = [
         {
-          key: 'emailVerified',
-          name: 'Email Verification',
-          reminderField: 'emailVerificationReminderSent',
+          key: "emailVerified",
+          name: "Email Verification",
+          reminderField: "emailVerificationReminderSent",
           checkTimestamp: () => {
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
+          },
         },
         {
-          key: 'organizationCreated',
-          name: 'Organization Creation',
-          reminderField: 'organizationReminderSent',
+          key: "organizationCreated",
+          name: "Organization Creation",
+          reminderField: "organizationReminderSent",
           checkTimestamp: () => {
             if (data.emailVerifiedAt) return new Date(data.emailVerifiedAt);
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
+          },
         },
         {
-          key: 'midApplied',
-          name: 'MID Application',
-          reminderField: 'midApplicationReminderSent',
+          key: "midApplied",
+          name: "MID Application",
+          reminderField: "midApplicationReminderSent",
           checkTimestamp: () => {
             if (data.organizationCreatedAt) return new Date(data.organizationCreatedAt);
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
+          },
         },
         {
-          key: 'bookingCallCompleted',
-          name: 'Coaching Call Booking',
-          reminderField: 'coachingCallReminderSent',
+          key: "bookingCallCompleted",
+          name: "Coaching Call Booking",
+          reminderField: "coachingCallReminderSent",
           checkTimestamp: () => {
             if (data.midAppliedAt) return new Date(data.midAppliedAt);
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
+          },
         },
         {
-          key: 'coworkersInvited',
-          name: 'Coworkers Invitation',
-          reminderField: 'coworkersInviteReminderSent',
+          key: "coworkersInvited",
+          name: "Coworkers Invitation",
+          reminderField: "coworkersInviteReminderSent",
           checkTimestamp: () => {
             if (data.organizationCreatedAt) return new Date(data.organizationCreatedAt);
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
+          },
         },
         {
-          key: 'walkthroughCompleted',
-          name: 'Platform Walkthrough',
-          reminderField: 'walkthroughReminderSent',
+          key: "walkthroughCompleted",
+          name: "Platform Walkthrough",
+          reminderField: "walkthroughReminderSent",
           checkTimestamp: () => {
             return data.createdAt ? new Date(data.createdAt) : new Date(userData.createdAt || userData.metadata?.creationTime);
-          }
-        }
+          },
+        },
       ];
 
       for (const step of steps) {
         // Skip if step is completed or skipped
-        if (data[step.key] === true || data[step.key] === 'skipped') {
+        if (data[step.key] === true || data[step.key] === "skipped") {
           continue;
         }
 
@@ -4439,12 +4422,12 @@ exports.testOnboardingStepReminders = onCall(async (request) => {
           console.log(`📧 Sending reminder for user: ${userName} (${userEmail}) - stuck at ${step.name} for ${timeStuck} minutes`);
 
           // Create step status overview
-          const stepStatus = steps.map(s => {
+          const stepStatus = steps.map((s) => {
             const status = data[s.key];
             if (status === true) return `✅ ${s.name}`;
-            if (status === 'skipped') return `⏭️ ${s.name} (skipped)`;
+            if (status === "skipped") return `⏭️ ${s.name} (skipped)`;
             return `❌ ${s.name}`;
-          }).join('\n');
+          }).join("\n");
 
           // Send email to Yannick
           const emailHtml = `
@@ -4478,7 +4461,7 @@ exports.testOnboardingStepReminders = onCall(async (request) => {
               </p>
               
               <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
-                The following user has been stuck at the <strong>${step.name}</strong> step for ${hoursStuck > 0 ? hoursStuck + ' hour' + (hoursStuck > 1 ? 's' : '') + ' and ' : ''}${minutesStuck} minute${minutesStuck !== 1 ? 's' : ''}:
+                The following user has been stuck at the <strong>${step.name}</strong> step for ${hoursStuck > 0 ? hoursStuck + " hour" + (hoursStuck > 1 ? "s" : "") + " and " : ""}${minutesStuck} minute${minutesStuck !== 1 ? "s" : ""}:
               </p>
               
               <!-- User Info Card -->
@@ -4490,7 +4473,7 @@ exports.testOnboardingStepReminders = onCall(async (request) => {
                   <strong>📧 Email:</strong> ${userEmail}
                 </p>
                 <p style="margin: 0 0 10px; color: #333333; font-size: 16px;">
-                  <strong>⏰ Stuck for:</strong> ${hoursStuck > 0 ? hoursStuck + ' hour' + (hoursStuck > 1 ? 's' : '') + ' and ' : ''}${minutesStuck} minute${minutesStuck !== 1 ? 's' : ''}
+                  <strong>⏰ Stuck for:</strong> ${hoursStuck > 0 ? hoursStuck + " hour" + (hoursStuck > 1 ? "s" : "") + " and " : ""}${minutesStuck} minute${minutesStuck !== 1 ? "s" : ""}
                 </p>
                 <p style="margin: 0; color: #333333; font-size: 16px;">
                   <strong>📅 Since:</strong> ${stepTimestamp.toLocaleDateString("en-US", {month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit"})}
@@ -4542,11 +4525,11 @@ exports.testOnboardingStepReminders = onCall(async (request) => {
 
 Hi Yannick,
 
-The following user has been stuck at the ${step.name} step for ${hoursStuck > 0 ? hoursStuck + ' hour' + (hoursStuck > 1 ? 's' : '') + ' and ' : ''}${minutesStuck} minute${minutesStuck !== 1 ? 's' : ''}:
+The following user has been stuck at the ${step.name} step for ${hoursStuck > 0 ? hoursStuck + " hour" + (hoursStuck > 1 ? "s" : "") + " and " : ""}${minutesStuck} minute${minutesStuck !== 1 ? "s" : ""}:
 
 👤 Name: ${userName}
 📧 Email: ${userEmail}
-⏰ Stuck for: ${hoursStuck > 0 ? hoursStuck + ' hour' + (hoursStuck > 1 ? 's' : '') + ' and ' : ''}${minutesStuck} minute${minutesStuck !== 1 ? 's' : ''}
+⏰ Stuck for: ${hoursStuck > 0 ? hoursStuck + " hour" + (hoursStuck > 1 ? "s" : "") + " and " : ""}${minutesStuck} minute${minutesStuck !== 1 ? "s" : ""}
 📅 Since: ${stepTimestamp.toLocaleDateString("en-US", {month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit"})}
 
 📋 Onboarding Progress:
