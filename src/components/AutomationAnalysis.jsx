@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Calculator, ClipboardList, LineChart, Sparkles, BriefcaseBusiness, CheckCircle2, Cog, LifeBuoy } from 'lucide-react';
+import { Calculator, ClipboardList, LineChart, Sparkles, BriefcaseBusiness, CheckCircle2, Cog, LifeBuoy, ArrowRightCircle, Wallet, Users as UsersIcon, BarChart3 as BarChartIcon, Shield } from 'lucide-react';
 
 const automationLevels = [
   {
@@ -270,19 +270,450 @@ const customerUpdateLevels = [
   }
 ];
 
-const sections = [
+const supportIntakeLevels = [
   {
-    id: 'marketing',
-    name: 'Sektion 1 · Marketing & Leads'
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Sie rufen mich auf dem Handy an oder ich bekomme Anfragen per Zuruf. Es gibt keinen zentralen Ort, an dem diese Anfragen gesammelt werden.'
   },
   {
-    id: 'sales',
-    name: 'Sektion 2 · Vertrieb'
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Kunden schreiben E-Mails an eine zentrale Support-Adresse (z.B. support@...). Wir verwalten die Anfragen manuell im Posteingang.'
   },
   {
-    id: 'operations',
-    name: 'Sektion 3 · Auftragsabwicklung'
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Wir nutzen ein professionelles Ticket-System (z.B. Zendesk, HelpScout), in dem alle Anfragen zentral erfasst, nummeriert und einem Bearbeiter zugewiesen werden.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Unser System erstellt automatisch Tickets aus E-Mails und weist sie (basierend auf Schlagwörtern) automatisch dem richtigen Fachexperten zu.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Unser System erkennt (per KI) automatisch die Dringlichkeit und Stimmung des Kunden in einer E-Mail und eskaliert potenziell kritische Anfragen sofort.'
   }
+];
+
+const supportEfficiencyLevels = [
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Jeder Mitarbeiter muss das Rad neu erfinden und bei Kollegen nachfragen oder in alten E-Mails nach einer Lösung suchen.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Wir haben irgendwo (z.B. in einem Word-Dokument oder OneNote) eine Liste mit Standard-Antworten abgelegt, die man manuell durchsuchen kann.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Wir haben eine interne, durchsuchbare Wissensdatenbank (ein „Wiki“), in der alle Lösungen und Prozesse zentral gepflegt werden.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Unser Ticket-System schlägt dem Support-Mitarbeiter (basierend auf der Anfrage) automatisch passende Artikel aus der Wissensdatenbank als Antwort vor.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Ein KI-Chatbot auf unserer Webseite beantwortet die 50 häufigsten Kundenfragen rund um die Uhr selbstständig, ohne dass ein Mensch eingreifen muss.'
+  }
+];
+
+const supportSatisfactionLevels = [
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Ich habe ein gutes Bauchgefühl und frage im persönlichen Gespräch, ob alles in Ordnung war.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Wir versenden gelegentlich manuell eine E-Mail mit der Bitte um Feedback oder eine Google-Bewertung.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Wir nutzen ein Tool, um nach jedem Projekt oder Ticket eine standardisierte Umfrage (z.B. 1-5 Sterne oder NPS) zu versenden.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Der Versand der Feedback-Umfrage ist fester Bestandteil des Projekt-Workflows und geschieht vollautomatisch, sobald ein Ticket geschlossen wird.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Unser System analysiert das Feedback (auch Freitexte per KI) automatisch, erstellt Live-Dashboards zur Zufriedenheit und alarmiert das Management bei negativen Trends.'
+  }
+];
+
+const invoicingLevels = [
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Ich schreibe Rechnungen von Hand in Word oder Excel, speichere sie als PDF und versende sie manuell per E-Mail.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Ich nutze ein professionelles Online-Tool (z.B. Lexoffice, SevDesk), tippe die Positionen aber manuell aus meinen Notizen oder dem Projekt-Tool ab.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Mein Rechnungstool ist mit meiner Zeiterfassung oder dem Projektmanagement verbunden und zieht sich die abrechenbaren Positionen.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Sobald ein Projekt als „abgeschlossen“ markiert wird, erstellt das Rechnungstool automatisch einen fertigen Rechnungsentwurf zur Freigabe.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Das System erstellt und versendet wiederkehrende Rechnungen vollautomatisch und passt verbrauchsabhängige Beträge selbstständig an.'
+  }
+];
+
+const paymentReconciliationLevels = [
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Ich logge mich ins Online-Banking ein und gleiche Kontoauszüge von Hand mit offenen Rechnungen ab.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Ich nutze ein Rechnungstool, markiere Zahlungseingänge dort aber manuell als „bezahlt“.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Mein Rechnungstool ist mit dem Bankkonto verbunden und gleicht Zahlungseingänge automatisch mit offenen Rechnungen ab.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Bei Zahlungsverzug versendet das System automatisch und mehrstufig Zahlungserinnerungen und Mahnungen.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Ein KI-System analysiert das Zahlungsverhalten und schlägt proaktiv Maßnahmen wie Risikosperren oder individuelle Mahnstrategien vor.'
+  }
+];
+
+const expenseProcessingLevels = [
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Ich sammle alle Papier- und PDF-Belege in einem Ordner und gebe sie am Monatsende an den Steuerberater.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Ich nutze ein Tool (z.B. DATEV Unternehmen Online), um alle Belege manuell zu scannen oder hochzuladen.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Mein System holt Rechnungen automatisch aus E-Mail-Postfächern und Online-Portalen ab.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Das System liest Belege per OCR/KI aus, kategorisiert sie und bereitet Überweisungen automatisch vor.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Das System analysiert Ausgaben, erstellt eine Live-Liquiditätsplanung und warnt proaktiv bei Budgetüberschreitungen.'
+  }
+];
+
+const recruitingLevels = [
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Bewerbungen landen im Posteingang, und ich verwalte alles manuell.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Wir pflegen Bewerberstatus in einem zentralen Tool (z.B. Trello, Excel) manuell.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Wir nutzen ein Bewerbermanagement-System (ATS), das Bewerbungen automatisch erfasst und automatische Eingangsbestätigungen versendet.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Unser System versendet automatisierte Absagen oder Einladungen und plant Termine selbstständig.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Eine KI analysiert Bewerbungen, führt CV-Parsing durch und erstellt ein Ranking der vielversprechendsten Kandidaten.'
+  }
+];
+
+const onboardingLevels = [
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Ich kümmere mich persönlich darum, dass am ersten Tag alles bereitsteht, und erkläre alles mündlich.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Wir haben eine digitale Checkliste oder Vorlage, die wir manuell abhaken.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Wir nutzen ein HR-Tool mit hinterlegtem Onboarding-Prozess und digitalen Dokumenten für neue Mitarbeitende.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Das Anlegen im HR-System stößt automatisch Workflows an – IT-Tickets, Schulungsunterlagen, Zugänge usw.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Das System begleitet neue Mitarbeitende über Wochen, weist Aufgaben zeitversetzt zu und holt Feedback ein.'
+  }
+];
+
+const timeTrackingLevels = [
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Wir nutzen Stundenzettel auf Papier oder formlosen E-Mail-Verkehr für Urlaub/Krankmeldungen.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Zeiten werden in einer separaten Excel oder einem einfachen Tool erfasst.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Ein zentrales HR-Tool erfasst Zeiten digital, und Urlaubsanträge werden dort gestellt; alles ist live einsehbar.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Überstunden, Krankheitstage und Urlaub werden automatisch berechnet und an die Lohnbuchhaltung übergeben.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'KI analysiert Trends bei Überstunden oder Krankmeldungen und warnt proaktiv vor Überlastung.'
+  }
+];
+
+const backupLevels = [
+  {
+    value: 'level0',
+    label: 'Akutes Risiko',
+    description: 'Wir machen gar keine Backups und hoffen, dass nichts passiert.'
+  },
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Wir erstellen gelegentlich manuelle Backups auf externe Datenträger.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Wir arbeiten überwiegend in einem Cloud-Speicher, der als Live-Backup dient.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Ein dediziertes Backup-System erstellt täglich automatisierte Snapshots.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Backups werden automatisch auf Wiederherstellbarkeit geprüft und off-site gesichert.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'System-Abbilder werden in Echtzeit gesichert und können im Notfall in Minuten wiederhergestellt werden.'
+  }
+];
+
+const passwordLevels = [
+  {
+    value: 'level0',
+    label: 'Akutes Risiko',
+    description: 'Passwörter sind einfach, werden wiederverwendet oder sogar geteilt.'
+  },
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Mitarbeitende verwalten Passwörter individuell und ohne Richtlinien.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Einzelne nutzen Passwort-Manager privat, es gibt aber keine Teamstrategie.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Ein zentraler Passwort-Manager wird im gesamten Team eingesetzt.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Es gelten technische Passwort-Richtlinien und 2FA für alle kritischen Dienste.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Ein Single-Sign-On-System steuert Zugriffe zentral und sicher.'
+  }
+];
+
+const cyberDefenseLevels = [
+  {
+    value: 'level0',
+    label: 'Akutes Risiko',
+    description: 'Nur Standard-Virenschutz und Hoffnung, dass Mitarbeitende Phishing erkennen.'
+  },
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Wir haben einen Virenscanner und ermahnen Mitarbeitende, vorsichtig zu sein.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Professionelle Firewall und gemanagte Endpoint-Security sind im Einsatz.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Regelmäßige Security-Awareness-Schulungen und Phishing-Tests finden statt.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'E-Mail-Filter und Patch-Management blockieren Bedrohungen und schließen Lücken automatisch.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Adaptive Sicherheitssysteme überwachen den Verkehr in Echtzeit und blockieren verdächtige Aktivitäten automatisch.'
+  }
+];
+
+const kpiLevels = [
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Ich verlasse mich auf Bauchgefühl und Kontoauszüge; feste KPIs verfolge ich nicht.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Ich oder mein Team erstellen manuell Excel-Berichte, wenn Zahlen benötigt werden.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Ein zentrales Dashboard (z.B. im CRM) zeigt mir live Kennzahlen aus einem Bereich.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Ein Cockpit zieht sich Daten automatisch aus mehreren Systemen und zeigt einen Gesamtüberblick.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Das System überwacht KPIs selbstständig und schlägt KI-basierte Gegenmaßnahmen bei Abweichungen vor.'
+  }
+];
+
+const dataIntegrationLevels = [
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Daten sind isoliert; Verknüpfungen sind extrem aufwendig oder unmöglich.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Wir exportieren Daten aus verschiedenen Tools und führen sie manuell in Excel zusammen.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Eine zentrale Datenbank/Data Warehouse sammelt alle relevanten Unternehmensdaten.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Dashboards greifen automatisch auf die zentrale Datenbank zu und zeigen bereichsübergreifende Analysen.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'Eine KI analysiert Datenströme proaktiv und entdeckt verborgene Zusammenhänge oder Ineffizienzen.'
+  }
+];
+
+const strategicPlanningLevels = [
+  {
+    value: 'manual',
+    label: 'Manuell',
+    description: 'Entscheidungen basieren auf Bauchgefühl; keine feste Strategie oder Datenbasis.'
+  },
+  {
+    value: 'digitalized',
+    label: 'Digitalisiert',
+    description: 'Vergangenheitsdaten werden betrachtet, Entscheidungen basieren auf historischen Berichten.'
+  },
+  {
+    value: 'connected',
+    label: 'Vernetzt',
+    description: 'Live-Daten aus Dashboards fließen in operative Entscheidungen ein.'
+  },
+  {
+    value: 'automated',
+    label: 'Automatisiert',
+    description: 'Daten werden genutzt, um Was-wäre-wenn-Szenarien zu simulieren.'
+  },
+  {
+    value: 'adaptive',
+    label: 'Adaptiv',
+    description: 'KI-basierte Prognosen unterstützen strategische Entscheidungen durch Trend- und Nachfragevorhersagen.'
+  }
+];
+
+const sections = [
+  { id: 'marketing', label: 'Sektion 1 · Marketing & Leads', icon: Sparkles },
+  { id: 'sales', label: 'Sektion 2 · Vertrieb', icon: BriefcaseBusiness },
+  { id: 'operations', label: 'Sektion 3 · Auftragsabwicklung', icon: Cog },
+  { id: 'support', label: 'Sektion 4 · Kundenservice', icon: LifeBuoy },
+  { id: 'finance', label: 'Sektion 5 · Finanzen & Buchhaltung', icon: Wallet },
+  { id: 'hr', label: 'Sektion 6 · Personal', icon: UsersIcon },
+  { id: 'management', label: 'Sektion 7 · Management & Datenanalyse', icon: BarChartIcon },
+  { id: 'itSecurity', label: 'Sektion 8 · IT & Sicherheit', icon: Shield }
 ];
 
 const numericFields = [
@@ -374,7 +805,31 @@ const AutomationAnalysis = () => {
     customerUpdates: '',
     usesProjectTool: '',
     hasHandoverProcess: '',
-    operationsPainPoint: ''
+    operationsPainPoint: '',
+    supportTicketIntake: '',
+    supportEfficiency: '',
+    supportSatisfaction: '',
+    hasCentralSupportAccess: '',
+    hasKnowledgeBase: '',
+    supportPainPoint: '',
+    invoicingProcess: '',
+    paymentTracking: '',
+    expenseProcessing: '',
+    usesFinanceTool: '',
+    hasBankIntegration: '',
+    financePainPoint: '',
+    hrRecruiting: '',
+    hrOnboarding: '',
+    hrTimeTracking: '',
+    hasLeaveManagementTool: '',
+    hasStandardOnboarding: '',
+    hrPainPoint: '',
+    kpiTracking: '',
+    dataIntegration: '',
+    strategicPlanning: '',
+    hasDashboard: '',
+    hasDataLink: '',
+    managementPainPoint: ''
   });
 
   const [activeSection, setActiveSection] = useState('marketing');
@@ -553,43 +1008,78 @@ const AutomationAnalysis = () => {
         <header className="rounded-3xl bg-white/70 p-8 shadow-sm backdrop-blur">
           <div className="flex flex-col gap-4">
             <span className="inline-flex items-center gap-2 self-start rounded-full bg-purple-100 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-purple-700">
-              Automation Analysis
+            Automation Analysis
             </span>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
               {activeSection === 'marketing'
                 ? 'Marketing & Lead-Generierung analysieren'
                 : activeSection === 'sales'
                 ? 'Vertrieb analysieren'
-                : 'Auftragsabwicklung analysieren'}
-            </h1>
+                : activeSection === 'operations'
+                ? 'Auftragsabwicklung analysieren'
+                : activeSection === 'support'
+                ? 'Kundenservice analysieren'
+                : activeSection === 'finance'
+                ? 'Finanzen & Buchhaltung analysieren'
+                : activeSection === 'hr'
+                ? 'Personal analysieren'
+                : activeSection === 'management'
+                ? 'Management & Datenanalyse analysieren'
+                : 'IT & Sicherheit analysieren'}
+          </h1>
             <p className="text-base leading-relaxed text-gray-600">
               {activeSection === 'marketing'
                 ? '“Super, lass uns starten. Im ersten Schritt schauen wir uns an, wie dein Unternehmen planbar neue Kunden gewinnt. Beantworte die folgenden Fragen einfach aus dem Bauch heraus – es geht darum, Potenziale zu entdecken.”'
                 : activeSection === 'sales'
                 ? '“Stark! Jetzt, wo wir wissen, wie du Leads generierst, schauen wir uns an, wie du diese Interessenten in zahlende Kunden verwandelst.”'
-                : '“Top, der Kunde ist gewonnen. Jetzt geht es an die eigentliche Arbeit: die Umsetzung des Auftrags. Wie effizient ist dein Maschinenraum?”'}
-            </p>
-          </div>
+                : activeSection === 'operations'
+                ? '“Top, der Kunde ist gewonnen. Jetzt geht es an die eigentliche Arbeit: die Umsetzung des Auftrags. Wie effizient ist dein Maschinenraum?”'
+                : activeSection === 'support'
+                ? '“Großartig. Das Projekt ist abgeschlossen. Aber was passiert danach? Schauen wir uns an, wie du deine Bestandskunden betreust und Anfragen bearbeitest.”'
+                : activeSection === 'finance'
+                ? '“Fast geschafft! Jetzt wird es existenziell: das Geld. Ein digitalisierter Finanzprozess spart Zeit und schafft Transparenz über deine Liquidität.”'
+                : activeSection === 'hr'
+                ? '“Gute Finanzen sind die eine Hälfte, gute Mitarbeitende die andere. Lass uns ansehen, wie du dein Team findest, verwaltest und entwickelst.”'
+                : activeSection === 'management'
+                ? '“Du bist der Kapitän. Aber steuerst du dein Schiff mit Bauchgefühl oder mit einem Live-Radar? Lass uns ansehen, wie du Entscheidungen triffst.”'
+                : '“Letzter Schritt, aber der wichtigste: das Fundament. Eine unsichere IT ist wie ein Haus ohne Schloss. Lass uns prüfen, wie sicher deine digitalen Werte sind.”'}
+          </p>
+        </div>
         </header>
 
-        <nav className="flex flex-wrap gap-3 rounded-3xl bg-white/80 p-2 shadow-sm backdrop-blur">
-          {sections.map((section) => {
-            const isActive = activeSection === section.id;
-            return (
-              <button
-                key={section.id}
-                type="button"
-                onClick={() => setActiveSection(section.id)}
-                className={`flex-1 min-w-[200px] rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${
-                  isActive
-                    ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg'
-                    : 'bg-transparent text-gray-600 hover:text-gray-900 hover:bg-purple-50'
-                }`}
-              >
-                {section.name}
-              </button>
-            );
-          })}
+        <nav className="relative w-full overflow-x-auto">
+          <div className="flex min-w-full gap-3 rounded-3xl bg-white/80 p-3 shadow-sm backdrop-blur">
+            {sections.map((section) => {
+              const isActive = activeSection === section.id;
+              const Icon = section.icon;
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => setActiveSection(section.id)}
+                  className={`group relative flex items-center gap-3 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all duration-200 ${
+                    isActive
+                      ? 'border-purple-500 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg'
+                      : 'border-transparent bg-gradient-to-r from-white to-white/60 text-gray-600 hover:border-purple-200 hover:bg-white'
+                  }`}
+                >
+                  <span
+                    className={`flex h-8 w-8 items-center justify-center rounded-xl border transition-colors ${
+                      isActive
+                        ? 'border-white/30 bg-white/20 text-white'
+                        : 'border-purple-100 bg-purple-50 text-purple-500 group-hover:border-purple-200 group-hover:bg-purple-100'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="whitespace-nowrap">{section.label}</span>
+                  {isActive && (
+                    <span className="absolute inset-x-4 bottom-2 h-[3px] rounded-full bg-white/70" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </nav>
 
         {activeSection === 'marketing' && (
@@ -626,7 +1116,7 @@ const AutomationAnalysis = () => {
               className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm leading-relaxed text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
               placeholder="Teile hier deinen größten Wunsch oder Engpass..."
             />
-          </div>
+            </div>
           </section>
         )}
 
@@ -635,18 +1125,18 @@ const AutomationAnalysis = () => {
           <div className="flex items-start gap-4">
             <div className="rounded-full bg-purple-100 p-3 text-purple-600">
               <Calculator className="h-6 w-6" />
-            </div>
+                </div>
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">Wirtschaftlicher Impact (Sektion 1)</h2>
               <p className="mt-2 text-sm text-gray-600 leading-relaxed">
                 Trage ein, wie viel Aufwand aktuell in manuelle Datenerfassung fließt. Das System berechnet automatisch dein Zeit- und Umsatzpotenzial.
               </p>
-            </div>
-          </div>
+                </div>
+              </div>
 
           <div className="grid gap-6">
             {numericFields.map((field) => renderNumericQuestion(field))}
-          </div>
+            </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="rounded-2xl border border-gray-200 bg-purple-50 p-6 shadow-inner">
@@ -655,15 +1145,15 @@ const AutomationAnalysis = () => {
                 (Q1.1 × Q1.2 × 48 Wochen)
               </p>
               <p className="mt-4 text-3xl font-bold text-purple-900">{formatCurrency(potentialTimeSavings)} / Jahr</p>
-            </div>
+          </div>
             <div className="rounded-2xl border border-gray-200 bg-purple-50 p-6 shadow-inner">
               <h3 className="text-lg font-semibold text-purple-800">Potenzial 2 (Verlust)</h3>
               <p className="mt-1 text-sm text-purple-700">
                 (Q1.3 × Q1.4 × 12 Monate)
               </p>
               <p className="mt-4 text-3xl font-bold text-purple-900">{formatCurrency(potentialLossSavings)} / Jahr</p>
-            </div>
-          </div>
+                </div>
+              </div>
           </section>
         )}
 
@@ -679,16 +1169,16 @@ const AutomationAnalysis = () => {
                 Fasse zusammen, wie viel Zeit in wiederkehrende Follow-up- und Content-Aufgaben fließt.
               </p>
             </div>
-          </div>
+            </div>
 
           <div className="space-y-5">
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 leading-relaxed">
                 Frage 2.1: “Du hast angegeben, dass Follow-ups (das 'Warmhalten' von Leads) manuell passieren.
                 Wie viele Stunden pro Woche verbringt dein Vertriebsteam damit, Interessenten manuell E-Mails zu schreiben, an die sie sich 'mal wieder erinnern' wollen?”
-              </label>
+                  </label>
               <div className="flex items-center gap-3">
-                <input
+                    <input
                   type="text"
                   inputMode="decimal"
                   value={formState.followUpHours}
@@ -706,9 +1196,9 @@ const AutomationAnalysis = () => {
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 leading-relaxed">
                 Frage 2.2: “Und wie viele Stunden pro Woche fließen in die Erstellung von wiederkehrenden Inhalten (z.B. Blogartikel, Social Media Posts, Newsletter), die man auch durch KI-Tools (Level 4/5) stark beschleunigen könnte?”
-              </label>
+                  </label>
               <div className="flex items-center gap-3">
-                <input
+                    <input
                   type="text"
                   inputMode="decimal"
                   value={formState.contentCreationHours}
@@ -717,12 +1207,12 @@ const AutomationAnalysis = () => {
                   className="flex-1 rounded-xl border border-gray-200 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-500 whitespace-nowrap">Stunden / Woche</span>
-              </div>
+                    </div>
               <p className="text-xs text-blue-600">
                 System rechnet: (Q2.2 × Q1.2 × 48 Wochen) = {formatCurrency(contentSavings)} / Jahr
               </p>
-            </div>
-          </div>
+                  </div>
+                </div>
           </section>
         )}
 
@@ -738,7 +1228,7 @@ const AutomationAnalysis = () => {
                 Erfasse den monatlichen Aufwand, um Marketingkanäle manuell auszuwerten.
               </p>
             </div>
-          </div>
+            </div>
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700 leading-relaxed">
@@ -746,7 +1236,7 @@ const AutomationAnalysis = () => {
               Wie viele Stunden pro Monat verbringt jemand damit, manuell Berichte zu erstellen (Daten aus verschiedenen Quellen in Excel zusammenzukopieren), um das herauszufinden?”
             </label>
             <div className="flex items-center gap-3">
-              <input
+                    <input
                 type="text"
                 inputMode="decimal"
                 value={formState.reportingHours}
@@ -755,11 +1245,11 @@ const AutomationAnalysis = () => {
                 className="flex-1 rounded-xl border border-gray-200 px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
               />
               <span className="text-sm text-gray-500 whitespace-nowrap">Stunden / Monat</span>
-            </div>
+                    </div>
             <p className="text-xs text-emerald-600">
               System rechnet: (Q3.1 × Q1.2 × 12 Monate) = {formatCurrency(reportingSavings)} / Jahr
-            </p>
-          </div>
+                  </p>
+                </div>
           </section>
         )}
 
@@ -851,10 +1341,10 @@ const AutomationAnalysis = () => {
                   <h2 className="text-2xl font-semibold text-gray-900">Sektion 3: Auftragsabwicklung</h2>
                   <p className="mt-2 text-sm text-gray-600 leading-relaxed">
                     “Top, der Kunde ist gewonnen. Jetzt geht es an die eigentliche Arbeit: die Umsetzung des Auftrags. Wie effizient ist dein Maschinenraum?”
-                  </p>
-                </div>
-              </div>
+              </p>
             </div>
+          </div>
+        </div>
 
             {renderRadioQuestion(
               'Frage 3.1: Projekt-Kickoff & Setup',
@@ -913,10 +1403,430 @@ const AutomationAnalysis = () => {
               <div className="flex justify-end">
                 <button
                   type="button"
+                  onClick={() => setActiveSection('support')}
                   className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:translate-y-[-1px] hover:shadow-xl"
                 >
                   <LifeBuoy className="h-4 w-4" />
                   Sektion 3 speichern & weiter zu Kundenservice (Support)
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeSection === 'support' && (
+          <section className="space-y-8">
+            <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="rounded-full bg-rose-100 p-3 text-rose-600">
+                  <LifeBuoy className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">Sektion 4: Kundenservice (Support)</h2>
+                  <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                    “Großartig. Das Projekt ist abgeschlossen. Aber was passiert danach? Schauen wir uns an, wie du deine Bestandskunden betreust und Anfragen bearbeitest.”
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {renderRadioQuestion(
+              'Frage 4.1: Erfassung von Support-Anfragen',
+              'Wie erreichen dich deine Kunden, wenn sie nach dem Kauf ein Problem oder eine Frage haben?',
+              'supportTicketIntake',
+              supportIntakeLevels
+            )}
+
+            {renderRadioQuestion(
+              'Frage 4.2: Effizienz der Problemlösung',
+              'Wie schnell und effizient findet dein Team Lösungen für wiederkehrende Kundenfragen?',
+              'supportEfficiency',
+              supportEfficiencyLevels
+            )}
+
+            {renderRadioQuestion(
+              'Frage 4.3: Messung der Kundenzufriedenheit',
+              'Wie systematisch misst du die Zufriedenheit deiner Kunden nach einem abgeschlossenen Projekt oder einer Support-Anfrage?',
+              'supportSatisfaction',
+              supportSatisfactionLevels
+            )}
+
+            <div className="space-y-6 rounded-3xl border border-gray-200 bg-white p-6 lg:p-8 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-rose-100 p-2.5 text-rose-600">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Support-Prozesse & Kundenzufriedenheit</h3>
+              </div>
+
+              {renderYesNoQuestion({
+                id: 'hasCentralSupportAccess',
+                label: 'Frage 4.4: Gibt es bei euch eine zentrale E-Mail-Adresse oder ein Tool für Support-Anfragen, auf das mehrere Mitarbeiter Zugriff haben?',
+                helper: 'Wenn nein, maximal Level 1 für diese Sektion.'
+              })}
+
+              {renderYesNoQuestion({
+                id: 'hasKnowledgeBase',
+                label: 'Frage 4.5: Habt ihr eine digitale Wissensdatenbank (internes Wiki o.ä.), in der Lösungen für Standardprobleme gespeichert sind?',
+                helper: 'Wenn nein, maximal Level 2 für diese Sektion.'
+              })}
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 leading-relaxed">
+                  Frage 4.6: „Welche Art von Kundenanfragen raubt dir oder deinem Team regelmäßig den letzten Nerv, weil sie immer wieder kommt und Zeit bindet?”
+                </label>
+                <textarea
+                  rows={4}
+                  value={formState.supportPainPoint}
+                  onChange={(event) => handleInputChange('supportPainPoint', event.target.value)}
+                  placeholder="Beschreibe hier die Support-Anfragen, die besonders oft auftreten oder viel Zeit kosten..."
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm leading-relaxed text-gray-900 shadow-sm focus:border-rose-500 focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('finance')}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:translate-y-[-1px] hover:shadow-xl"
+                >
+                  <ArrowRightCircle className="h-4 w-4" />
+                  Sektion 4 speichern & weiter zu Finanzen & Buchhaltung
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeSection === 'finance' && (
+          <section className="space-y-8">
+            <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="rounded-full bg-emerald-100 p-3 text-emerald-600">
+                  <Wallet className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">Sektion 5: Finanzen & Buchhaltung</h2>
+                  <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                    “Fast geschafft! Jetzt wird es existenziell: das Geld. Ein digitalisierter Finanzprozess spart nicht nur Zeit, sondern gibt dir Kontrolle über deine Liquidität.”
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {renderRadioQuestion(
+              'Frage 5.1: Rechnungsstellung (Ausgangsrechnungen)',
+              'Wie erstellst und versendest du deine Rechnungen an Kunden?',
+              'invoicingProcess',
+              invoicingLevels
+            )}
+
+            {renderRadioQuestion(
+              'Frage 5.2: Zahlungsabgleich & Mahnwesen',
+              'Wie behältst du den Überblick über offene Rechnungen und Zahlungseingänge?',
+              'paymentTracking',
+              paymentReconciliationLevels
+            )}
+
+            {renderRadioQuestion(
+              'Frage 5.3: Belegverarbeitung (Eingangsrechnungen)',
+              'Wie verarbeitest du Rechnungen, die du selbst erhältst (z.B. von Lieferanten oder für Software-Lizenzen)?',
+              'expenseProcessing',
+              expenseProcessingLevels
+            )}
+
+            <div className="space-y-6 rounded-3xl border border-gray-200 bg-white p-6 lg:p-8 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-emerald-100 p-2.5 text-emerald-600">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Finanz-Prozesse & Liquidität</h3>
+              </div>
+
+              {renderYesNoQuestion({
+                id: 'usesFinanceTool',
+                label: 'Frage 5.4: Nutzt du ein dediziertes digitales Tool (mehr als Excel/Word) für deine Rechnungsstellung UND deine Belegsammlung?',
+                helper: 'Wenn nein, maximal Level 1 für diese Sektion.'
+              })}
+
+              {renderYesNoQuestion({
+                id: 'hasBankIntegration',
+                label: 'Frage 5.5: Ist dein Geschäftskonto digital mit deiner Buchhaltungssoftware verbunden, sodass ein automatischer Abgleich der Zahlungen möglich ist?',
+                helper: 'Wenn nein, maximal Level 2 für diese Sektion.'
+              })}
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 leading-relaxed">
+                  Frage 5.6: „Was ist der größte Zeitfresser oder die größte Sorge in deiner Buchhaltung (z.B. Belege jagen, offene Posten, Liquiditätsplanung...)?“
+                </label>
+                <textarea
+                  rows={4}
+                  value={formState.financePainPoint}
+                  onChange={(event) => handleInputChange('financePainPoint', event.target.value)}
+                  placeholder="Beschreibe hier deine größten Herausforderungen in Finanzen & Buchhaltung..."
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm leading-relaxed text-gray-900 shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('hr')}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:translate-y-[-1px] hover:shadow-xl"
+                >
+                  <ArrowRightCircle className="h-4 w-4" />
+                  Sektion 5 speichern & weiter zu Personal (HR)
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeSection === 'hr' && (
+          <section className="space-y-8">
+            <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="rounded-full bg-orange-100 p-3 text-orange-600">
+                  <UsersIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">Sektion 6: Personal (HR)</h2>
+                  <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                    “Gute Finanzen sind die eine Hälfte, gute Mitarbeitende die andere. Lass uns ansehen, wie du dein Team findest, verwaltest und entwickelst.”
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {renderRadioQuestion(
+              'Frage 6.1: Recruiting & Bewerbermanagement',
+              'Wie verwaltest du den Prozess, wenn sich jemand bei dir bewirbt?',
+              'hrRecruiting',
+              recruitingLevels
+            )}
+
+            {renderRadioQuestion(
+              'Frage 6.2: Mitarbeiter-Onboarding',
+              'Was passiert, wenn ein neuer Mitarbeiter seinen ersten Arbeitstag hat?',
+              'hrOnboarding',
+              onboardingLevels
+            )}
+
+            {renderRadioQuestion(
+              'Frage 6.3: Verwaltung (Zeiterfassung & Abwesenheit)',
+              'Wie verwaltest du Arbeitszeiten, Urlaubstage oder Krankmeldungen deiner Mitarbeitenden?',
+              'hrTimeTracking',
+              timeTrackingLevels
+            )}
+
+            <div className="space-y-6 rounded-3xl border border-gray-200 bg-white p-6 lg:p-8 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-orange-100 p-2.5 text-orange-600">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">HR-Prozesse & Teamverwaltung</h3>
+              </div>
+
+              {renderYesNoQuestion({
+                id: 'hasLeaveManagementTool',
+                label: 'Frage 6.4: Nutzt du ein zentrales, digitales System (mehr als nur E-Mail/Kalender) für die Verwaltung von Urlaubsanträgen und Krankheitstagen?',
+                helper: 'Wenn nein, maximal Level 1 für diese Sektion.'
+              })}
+
+              {renderYesNoQuestion({
+                id: 'hasStandardOnboarding',
+                label: 'Frage 6.5: Gibt es einen standardisierten, digitalen Onboarding-Prozess (mehr als eine Checkliste), den jeder neue Mitarbeiter durchläuft?',
+                helper: 'Wenn nein, maximal Level 2 für diese Sektion.'
+              })}
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 leading-relaxed">
+                  Frage 6.6: „Was ist der größte administrative Zeitfresser im Umgang mit deinem Team (z.B. Bewerber-Management, Stundenzettel, Urlaubsplanung...)?“
+                </label>
+                <textarea
+                  rows={4}
+                  value={formState.hrPainPoint}
+                  onChange={(event) => handleInputChange('hrPainPoint', event.target.value)}
+                  placeholder="Beschreibe hier die größten HR-Zeitfresser oder Sorgen..."
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm leading-relaxed text-gray-900 shadow-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('management')}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:translate-y-[-1px] hover:shadow-xl"
+                >
+                  <ArrowRightCircle className="h-4 w-4" />
+                  Sektion 6 speichern & weiter zu Management & Datenanalyse
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeSection === 'management' && (
+          <section className="space-y-8">
+            <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="rounded-full bg-blue-100 p-3 text-blue-600">
+                  <BarChartIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">Sektion 7: Management & Datenanalyse</h2>
+                  <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                    “Du bist der Kapitän. Aber steuerst du dein Schiff mit Bauchgefühl oder mit einem Live-Radar? Lass uns ansehen, wie du Entscheidungen triffst.”
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {renderRadioQuestion(
+              'Frage 7.1: Performance-Messung (KPIs)',
+              'Wie misst du den Erfolg und die „Gesundheit“ deines Unternehmens?',
+              'kpiTracking',
+              kpiLevels
+            )}
+
+            {renderRadioQuestion(
+              'Frage 7.2: Datenintegration',
+              'Wie einfach ist es für dich, Daten aus verschiedenen Abteilungen zu verknüpfen?',
+              'dataIntegration',
+              dataIntegrationLevels
+            )}
+
+            {renderRadioQuestion(
+              'Frage 7.3: Strategische Planung',
+              'Wie triffst du Entscheidungen über die Zukunft deines Unternehmens (z.B. neue Produkte, neue Märkte)?',
+              'strategicPlanning',
+              strategicPlanningLevels
+            )}
+
+            <div className="space-y-6 rounded-3xl border border-gray-200 bg-white p-6 lg:p-8 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-blue-100 p-2.5 text-blue-600">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Management-Cockpit & Datenfluss</h3>
+              </div>
+
+              {renderYesNoQuestion({
+                id: 'hasDashboard',
+                label: 'Frage 7.4: Nutzt du irgendeine Form von digitalem Dashboard, um deine wichtigsten Unternehmenskennzahlen (KPIs) zu verfolgen?',
+                helper: 'Wenn nein, maximal Level 1 für diese Sektion.'
+              })}
+
+              {renderYesNoQuestion({
+                id: 'hasDataLink',
+                label: 'Frage 7.5: Sind deine wichtigsten Daten (z.B. Vertriebspipeline und Finanzdaten) an einem zentralen Ort verknüpft?',
+                helper: 'Wenn nein, maximal Level 2 für diese Sektion.'
+              })}
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 leading-relaxed">
+                  Frage 7.6: „Welche wichtige Geschäfts-Frage könntest du aktuell nicht beantworten, weil die Daten oder Auswertung fehlen?“
+                </label>
+                <textarea
+                  rows={4}
+                  value={formState.managementPainPoint}
+                  onChange={(event) => handleInputChange('managementPainPoint', event.target.value)}
+                  placeholder="Beschreibe hier die Frage, die du gerne beantworten würdest, aber aktuell nicht kannst..."
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm leading-relaxed text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('itSecurity')}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:translate-y-[-1px] hover:shadow-xl"
+                >
+                  <ArrowRightCircle className="h-4 w-4" />
+                  Sektion 7 speichern & weiter zu IT & Sicherheit
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeSection === 'itSecurity' && (
+          <section className="space-y-8">
+            <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="rounded-full bg-purple-100 p-3 text-purple-600">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">Sektion 8: IT & Sicherheit</h2>
+                  <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                    “Letzter Schritt, aber der wichtigste: das Fundament. Eine unsichere IT ist wie ein Haus ohne Schloss. Lass uns prüfen, wie sicher deine digitalen Werte sind.”
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {renderRadioQuestion(
+              'Frage 8.1: Datensicherung (Backup-Strategie)',
+              'Wie sicher sind deine kritischen Firmendaten vor Totalverlust geschützt?',
+              'itBackup',
+              backupLevels
+            )}
+
+            {renderRadioQuestion(
+              'Frage 8.2: Zugriff & Passwort-Management',
+              'Wie verwaltet dein Team die Zugänge zu verschiedenen Online-Diensten und Tools?',
+              'itAccess',
+              passwordLevels
+            )}
+
+            {renderRadioQuestion(
+              'Frage 8.3: Schutz vor Cyberangriffen',
+              'Wie schützt du dein Unternehmen aktiv vor Viren, Phishing-E-Mails und Hackerangriffen?',
+              'itSecurity',
+              cyberDefenseLevels
+            )}
+
+            <div className="space-y-6 rounded-3xl border border-gray-200 bg-white p-6 lg:p-8 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-purple-100 p-2.5 text-purple-600">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Sicherheitsrichtlinien & Notfallpläne</h3>
+              </div>
+
+              {renderYesNoQuestion({
+                id: 'hasTwoFactor',
+                label: 'Frage 8.4: Nutzt ihr für alle kritischen Online-Dienste (E-Mail, Finanzen, Cloud-Speicher) eine Zwei-Faktor-Authentifizierung (2FA)?',
+                helper: 'Wenn nein, maximal Level 2 für diese Sektion.'
+              })}
+
+              {renderYesNoQuestion({
+                id: 'hasIncidentPlan',
+                label: 'Frage 8.5: Gibt es einen dokumentierten Notfallplan für den Fall eines Cyberangriffs (z.B. Ransomware)?',
+                helper: 'Wenn nein, maximal Level 3 für diese Sektion.'
+              })}
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 leading-relaxed">
+                  Frage 8.6: „Was ist deine größte Sorge im Bereich IT oder Datensicherheit?“
+                </label>
+                <textarea
+                  rows={4}
+                  value={formState.itPainPoint}
+                  onChange={(event) => handleInputChange('itPainPoint', event.target.value)}
+                  placeholder="Beschreibe hier deine größten Sorgen oder Risiken rund um IT und Datensicherheit..."
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm leading-relaxed text-gray-900 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:translate-y-[-1px] hover:shadow-xl"
+                >
+                  <ArrowRightCircle className="h-4 w-4" />
+                  Sektion 8 speichern & Analyse abschließen
                 </button>
               </div>
             </div>
@@ -949,8 +1859,8 @@ const AutomationAnalysis = () => {
             <div className="rounded-2xl border border-gray-100 bg-gray-50 p-6 shadow-inner">
               <p className="text-sm font-medium text-gray-600">Umsatzpotenziale Leads & Content</p>
               <p className="mt-3 text-2xl font-semibold text-gray-900">{formatCurrency(potentialLossSavings + followUpSavings + contentSavings)}</p>
-            </div>
           </div>
+        </div>
         </section>
       </div>
     </div>
