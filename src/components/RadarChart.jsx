@@ -6,13 +6,32 @@ const RadarChart = ({ data, size = 400 }) => {
   const center = size / 2;
   const maxRadius = size * 0.35;
   const levels = 3;
-  const angleStep = (2 * Math.PI) / data.length;
+  const rotationOffset = Math.PI / 8; // 22.5 degrees rotation
+  
+  // Calculate angle for each section: 4 on left, 4 on right
+  const getAngle = (index) => {
+    const totalSections = data.length;
+    const sectionsPerSide = totalSections / 2;
+    
+    if (index < sectionsPerSide) {
+      // Left side: distribute across 180 degrees (π/2 to 3π/2)
+      const leftAngleStep = Math.PI / sectionsPerSide;
+      const leftStartAngle = Math.PI / 2; // Start at top-left
+      return leftStartAngle + index * leftAngleStep + rotationOffset;
+    } else {
+      // Right side: distribute across 180 degrees (-π/2 to π/2)
+      const rightAngleStep = Math.PI / sectionsPerSide;
+      const rightStartAngle = -Math.PI / 2; // Start at top-right
+      const rightIndex = index - sectionsPerSide;
+      return rightStartAngle + rightIndex * rightAngleStep + rotationOffset;
+    }
+  };
 
   // Generate points for a polygon at a given level (0-1)
   const getPolygonPoints = (levelValue) => {
     return data
       .map((item, i) => {
-        const angle = i * angleStep - Math.PI / 2;
+        const angle = getAngle(i);
         const value = levelValue;
         const x = center + Math.cos(angle) * maxRadius * value;
         const y = center + Math.sin(angle) * maxRadius * value;
@@ -25,7 +44,7 @@ const RadarChart = ({ data, size = 400 }) => {
   const getDataPoints = () => {
     return data
       .map((item, i) => {
-        const angle = i * angleStep - Math.PI / 2;
+        const angle = getAngle(i);
         const value = item.value / item.max;
         const x = center + Math.cos(angle) * maxRadius * value;
         const y = center + Math.sin(angle) * maxRadius * value;
@@ -36,7 +55,7 @@ const RadarChart = ({ data, size = 400 }) => {
 
   // Generate label positions
   const getLabelPosition = (index) => {
-    const angle = index * angleStep - Math.PI / 2;
+    const angle = getAngle(index);
     const labelRadius = maxRadius + 40;
     const x = center + Math.cos(angle) * labelRadius;
     const y = center + Math.sin(angle) * labelRadius;
@@ -45,7 +64,7 @@ const RadarChart = ({ data, size = 400 }) => {
 
   // Generate value label positions (the numbers on the chart)
   const getValueLabelPosition = (index) => {
-    const angle = index * angleStep - Math.PI / 2;
+    const angle = getAngle(index);
     const item = data[index];
     const value = item.value / item.max;
     const labelRadius = maxRadius * value + 15;
@@ -72,7 +91,7 @@ const RadarChart = ({ data, size = 400 }) => {
 
       {/* Grid lines from center to each axis */}
       {data.map((item, i) => {
-        const angle = i * angleStep - Math.PI / 2;
+        const angle = getAngle(i);
         const x = center + Math.cos(angle) * maxRadius;
         const y = center + Math.sin(angle) * maxRadius;
         return (
@@ -98,7 +117,7 @@ const RadarChart = ({ data, size = 400 }) => {
 
       {/* Data points */}
       {data.map((item, i) => {
-        const angle = i * angleStep - Math.PI / 2;
+        const angle = getAngle(i);
         const value = item.value / item.max;
         const x = center + Math.cos(angle) * maxRadius * value;
         const y = center + Math.sin(angle) * maxRadius * value;
@@ -133,7 +152,7 @@ const RadarChart = ({ data, size = 400 }) => {
             y={y}
             textAnchor={textAnchor}
             dominantBaseline="middle"
-            className="text-sm font-medium fill-gray-700"
+            className={`text-sm font-medium ${item.muted ? 'fill-gray-300' : 'fill-gray-700'}`}
           >
             {item.label}
           </text>
