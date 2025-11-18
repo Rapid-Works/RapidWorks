@@ -83,7 +83,7 @@ const RadarChart = ({ data, size = 400 }) => {
             key={`grid-${i}`}
             points={getPolygonPoints(level)}
             fill="none"
-            stroke="#e5e7eb"
+            stroke="#6b7280"
             strokeWidth="1"
           />
         );
@@ -101,7 +101,7 @@ const RadarChart = ({ data, size = 400 }) => {
             y1={center}
             x2={x}
             y2={y}
-            stroke="#e5e7eb"
+            stroke="#6b7280"
             strokeWidth="1"
           />
         );
@@ -172,7 +172,7 @@ const RadarChart = ({ data, size = 400 }) => {
             dominantBaseline="middle"
             className="text-xs font-bold fill-blue-600"
           >
-            {item.value}
+            {item.value.toFixed(1)}
           </text>
         );
       })}
