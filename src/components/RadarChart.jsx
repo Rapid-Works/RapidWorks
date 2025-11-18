@@ -56,7 +56,7 @@ const RadarChart = ({ data, size = 400 }) => {
   // Generate label positions
   const getLabelPosition = (index) => {
     const angle = getAngle(index);
-    const labelRadius = maxRadius + 40;
+    const labelRadius = maxRadius + 60; // Increased from 40 to 60 for more space
     const x = center + Math.cos(angle) * labelRadius;
     const y = center + Math.sin(angle) * labelRadius;
     return { x, y, angle };
@@ -74,7 +74,7 @@ const RadarChart = ({ data, size = 400 }) => {
   };
 
   return (
-    <svg width={size} height={size} className="radar-chart">
+    <svg width={size} height={size} className="radar-chart" viewBox={`0 0 ${size} ${size}`} style={{ overflow: 'visible' }}>
       {/* Background grid circles */}
       {[...Array(levels)].map((_, i) => {
         const level = (i + 1) / levels;
@@ -153,6 +153,7 @@ const RadarChart = ({ data, size = 400 }) => {
             textAnchor={textAnchor}
             dominantBaseline="middle"
             className={`text-sm font-medium ${item.muted ? 'fill-gray-300' : 'fill-gray-700'}`}
+            style={{ textOverflow: 'visible', overflow: 'visible' }}
           >
             {item.label}
           </text>
