@@ -4,9 +4,16 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import RadarChart from '@/components/RadarChart';
 
+interface RadarDataItem {
+  label: string;
+  value: number;
+  max: number;
+  muted?: boolean;
+}
+
 export default function AutomationPreviewPage() {
   const router = useRouter();
-  const [radarData, setRadarData] = useState<any[]>([]);
+  const [radarData, setRadarData] = useState<RadarDataItem[]>([]);
 
   useEffect(() => {
     // Load radar data from localStorage

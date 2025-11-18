@@ -774,14 +774,14 @@ const AutomationAnalysis = () => {
                 <RadarChart data={radarPreviewData} />
               </div>
               <div className="mt-8 flex items-center justify-between">
-                <button
+              <button
                   type="button"
                   onClick={handlePreviousSection}
                   className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 hover:shadow-md"
-                >
+              >
                   <ArrowLeftCircle className="h-4 w-4" />
                   Zurück zu Sektion 4
-                </button>
+              </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -801,7 +801,7 @@ const AutomationAnalysis = () => {
                   Weiter zu Sektion 5
                   <ArrowRightCircle className="h-4 w-4" />
                 </button>
-              </div>
+                </div>
             </div>
           </section>
         )}
@@ -815,7 +815,7 @@ const AutomationAnalysis = () => {
               </p>
               <div className="mt-8 flex justify-center overflow-visible">
                 <RadarChart data={radarData} />
-              </div>
+                </div>
               <div className="mt-8 flex justify-start">
                 <button
                   type="button"
