@@ -770,7 +770,7 @@ const AutomationAnalysis = () => {
               <p className="mt-2 text-sm text-gray-600">
                 Die ersten vier Bereiche sind nun bewertet. Die übrigen Segmente bleiben ausgegraut, bis du sie ebenfalls ausfüllst.
               </p>
-              <div className="mt-8 flex justify-center">
+              <div className="mt-8 flex justify-center overflow-visible">
                 <RadarChart data={radarPreviewData} />
               </div>
               <div className="mt-8 flex items-center justify-between">
@@ -813,7 +813,7 @@ const AutomationAnalysis = () => {
               <p className="mt-2 text-sm text-gray-600">
                 Hier siehst du deinen aktuellen Automatisierungs-Status über alle Bereiche hinweg.
               </p>
-              <div className="mt-8 flex justify-center">
+              <div className="mt-8 flex justify-center overflow-visible">
                 <RadarChart data={radarData} />
               </div>
               <div className="mt-8 flex justify-start">
