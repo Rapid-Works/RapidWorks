@@ -5,7 +5,7 @@ import React from 'react';
 const RadarChart = ({ data, size = 400 }) => {
   const center = size / 2;
   const maxRadius = size * 0.35;
-  const levels = 3;
+  const levels = 5;
   const rotationOffset = Math.PI / 8; // 22.5 degrees rotation
   
   // Calculate angle for each section: 4 on left, 4 on right
