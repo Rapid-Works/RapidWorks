@@ -740,14 +740,14 @@ const AutomationAnalysis = () => {
                   key={tab.id}
                   type="button"
                   onClick={() => handleSelectSection(tab.id)}
-                  className={`group relative flex min-w-[190px] items-center gap-3 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all duration-200 ${
+                  className={`group relative flex flex-shrink-0 items-center gap-3 rounded-2xl border px-5 py-3 text-sm font-semibold transition-all duration-200 ${
                     isActive
                       ? 'z-10 border-purple-500 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg'
                       : 'z-0 border-transparent bg-white text-gray-600 hover:z-20 hover:border-purple-200 hover:bg-purple-50 hover:shadow-md'
                   }`}
                 >
                   <span
-                    className={`flex h-8 w-8 items-center justify-center rounded-xl border transition ${
+                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border transition ${
                       isActive
                         ? 'border-white/30 bg-white/20 text-white'
                         : 'border-purple-100 bg-purple-50 text-purple-500 group-hover:border-purple-200 group-hover:bg-purple-100'
