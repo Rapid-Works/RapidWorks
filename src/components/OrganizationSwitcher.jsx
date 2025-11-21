@@ -3,15 +3,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronDown, Building2, User, Plus, Check, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  getUserOrganizations, 
-  switchToOrganization, 
+import {
+  getUserOrganizations,
+  switchToOrganization,
   switchToPersonal,
   getCurrentUserContext
 } from '../utils/organizationService';
+import { useOrganizationTranslation } from '../tolgee/hooks/useOrganizationTranslation';
 
 const OrganizationSwitcher = ({ onCreateOrganization, currentContext, onContextChange }) => {
   const { currentUser } = useAuth();
+  const { t } = useOrganizationTranslation();
   
   // Check if user is rapid-works admin
   const isRapidWorksAdmin = currentUser?.email?.endsWith('@rapid-works.io');
@@ -89,7 +91,7 @@ const OrganizationSwitcher = ({ onCreateOrganization, currentContext, onContextC
     if (currentContext?.type === 'organization' && currentContext.organization) {
       return currentContext.organization.name;
     }
-    return isRapidWorksAdmin ? 'Rapid Works' : 'Personal Account';
+    return isRapidWorksAdmin ? t('rapidWorks') : t('personalAccount');
   };
 
   const getCurrentIcon = () => {
@@ -114,7 +116,7 @@ const OrganizationSwitcher = ({ onCreateOrganization, currentContext, onContextC
             {getCurrentDisplayName()}
           </div>
           <div className="text-xs text-gray-500">
-            {currentContext?.type === 'organization' ? 'Organization' : (isRapidWorksAdmin ? 'Organization' : 'Personal')}
+            {currentContext?.type === 'organization' ? t('organizationLabel') : (isRapidWorksAdmin ? t('organizationLabel') : t('personalLabel'))}
           </div>
         </div>
         {switching ? (
@@ -136,8 +138,8 @@ const OrganizationSwitcher = ({ onCreateOrganization, currentContext, onContextC
           >
             {isRapidWorksAdmin ? <Building2 className="h-4 w-4 text-gray-600" /> : <User className="h-4 w-4 text-gray-600" />}
             <div className="flex-1">
-              <div className="font-medium text-sm">{isRapidWorksAdmin ? 'Rapid Works' : 'Personal Account'}</div>
-              <div className="text-xs text-gray-500">{isRapidWorksAdmin ? 'Organization workspace' : 'Your personal workspace'}</div>
+              <div className="font-medium text-sm">{isRapidWorksAdmin ? t('rapidWorks') : t('personalAccount')}</div>
+              <div className="text-xs text-gray-500">{isRapidWorksAdmin ? t('organizationWorkspace') : t('personalWorkspace')}</div>
             </div>
             {currentContext?.type === 'personal' && (
               <Check className="h-4 w-4 text-blue-600" />
@@ -153,7 +155,7 @@ const OrganizationSwitcher = ({ onCreateOrganization, currentContext, onContextC
           {loading ? (
             <div className="px-4 py-3 text-center text-gray-500 text-sm">
               <Loader2 className="h-4 w-4 animate-spin mx-auto mb-1" />
-              Loading organizations...
+              {t('loadingOrganizations')}
             </div>
           ) : (
             organizations.map((org) => (
@@ -187,7 +189,7 @@ const OrganizationSwitcher = ({ onCreateOrganization, currentContext, onContextC
               >
                 <Plus className="h-4 w-4" />
                 <div className="font-medium text-sm">
-                  {isRapidWorksAdmin ? 'Create Client Organization' : 'Create Organization'}
+                  {isRapidWorksAdmin ? t('createClientOrganization') : t('createOrganization')}
                 </div>
               </button>
             </div>

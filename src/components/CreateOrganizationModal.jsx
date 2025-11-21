@@ -11,10 +11,14 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import './phone-input-custom.css';
 import { sendOrganizationCreatedNotification } from '../utils/teamsWebhookService';
+import { useOrganizationTranslation } from '../tolgee/hooks/useOrganizationTranslation';
+import { useCommonTranslation } from '../tolgee/hooks/useCommonTranslation';
 
 const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => {
   const { currentUser } = useAuth();
   const router = useRouter();
+  const { t } = useOrganizationTranslation();
+  const { tAction } = useCommonTranslation();
   const [formData, setFormData] = useState({
     name: '',
     street: '',
@@ -41,7 +45,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
         setHasCreatedOrg(hasCreated);
       } catch (error) {
         console.error('Error checking organization creation restriction:', error);
-        setError('Failed to check organization creation status');
+        setError(t('errorCheckingStatus'));
       } finally {
         setCheckingRestriction(false);
       }
@@ -65,12 +69,12 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
     
     // Validation
     if (!formData.name.trim()) {
-      setError('Organization name is required');
+      setError(t('errorNameRequired'));
       return;
     }
-    
+
     if (!formData.street.trim() || !formData.city.trim() || !formData.postalCode.trim()) {
-      setError('Complete address is required');
+      setError(t('errorAddressRequired'));
       return;
     }
 
@@ -148,7 +152,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
       onClose();
     } catch (error) {
       console.error('Error creating organization:', error);
-      setError(error.message || 'Failed to create organization. Please try again.');
+      setError(error.message || t('errorCreateFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -171,8 +175,8 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
               <Building2 className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Create Organization</h2>
-              <p className="text-sm text-gray-600">Set up your organization account</p>
+              <h2 className="text-xl font-bold text-gray-900">{t('createOrganizationTitle')}</h2>
+              <p className="text-sm text-gray-600">{t('createOrganizationSubtitle')}</p>
             </div>
           </div>
         </div>
@@ -183,7 +187,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
             // Loading state
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-[#7C3BEC]" />
-              <span className="ml-3 text-gray-600">Checking permissions...</span>
+              <span className="ml-3 text-gray-600">{t('checkingPermissions')}</span>
             </div>
           ) : hasCreatedOrg ? (
             // Restriction message
@@ -191,12 +195,12 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertTriangle className="h-8 w-8 text-orange-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Organization Limit Reached</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('organizationLimitTitle')}</h3>
               <p className="text-gray-600 mb-4">
-                You can currently create only one organization. However, you can still be invited to and join multiple organizations.
+                {t('organizationLimitMessage')}
               </p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-                <strong>Good news:</strong> You can still be a member of unlimited organizations when others invite you!
+                {t('organizationLimitInfo')}
               </div>
             </div>
           ) : (
@@ -211,7 +215,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
           {/* Organization Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-              Organization Name *
+              {t('organizationNameLabel')}
             </label>
             <div className="relative">
               <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -221,7 +225,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                placeholder="Enter organization name"
+                placeholder={t('organizationNamePlaceholder')}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-[#7C3BEC] outline-none transition-colors"
                 disabled={isSubmitting}
                 required
@@ -233,13 +237,13 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
               <MapPin className="h-4 w-4" />
-              <span>Address</span>
+              <span>{t('addressSection')}</span>
             </div>
 
             {/* Street */}
             <div>
               <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-2">
-                Street Address *
+                {t('streetLabel')}
               </label>
               <input
                 type="text"
@@ -247,7 +251,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
                 name="street"
                 value={formData.street}
                 onChange={handleInputChange}
-                placeholder="Enter street address"
+                placeholder={t('streetPlaceholder')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-[#7C3BEC] outline-none transition-colors"
                 disabled={isSubmitting}
                 required
@@ -258,7 +262,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                  City *
+                  {t('cityLabel')}
                 </label>
                 <input
                   type="text"
@@ -266,7 +270,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
-                  placeholder="Enter city"
+                  placeholder={t('cityPlaceholder')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-[#7C3BEC] outline-none transition-colors"
                   disabled={isSubmitting}
                   required
@@ -274,7 +278,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
               </div>
               <div>
                 <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-2">
-                  Postal Code *
+                  {t('postalCodeLabel')}
                 </label>
                 <input
                   type="text"
@@ -282,7 +286,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
                   name="postalCode"
                   value={formData.postalCode}
                   onChange={handleInputChange}
-                  placeholder="Enter postal code"
+                  placeholder={t('postalCodePlaceholder')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-[#7C3BEC] outline-none transition-colors"
                   disabled={isSubmitting}
                   required
@@ -294,7 +298,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
           {/* Phone Number Section */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number (optional)
+              {t('phoneLabel')}
             </label>
             <PhoneInput
               defaultCountry="DE"
@@ -302,7 +306,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
               onChange={setPhoneNumber}
               disabled={isSubmitting}
               className="phone-input-custom"
-              placeholder="Enter phone number (without leading zeros)"
+              placeholder={t('phonePlaceholder')}
             />
           </div>
 
@@ -316,7 +320,7 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
               className="flex-1 px-4 py-3 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               disabled={isSubmitting}
             >
-              Cancel
+              {tAction('cancel')}
             </button>
             <button
               type="submit"
@@ -326,10 +330,10 @@ const CreateOrganizationModal = ({ isOpen, onClose, onOrganizationCreated }) => 
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Creating...
+                  {t('creating')}
                 </>
               ) : (
-                'Create Organization'
+                t('createButton')
               )}
             </button>
           </div>

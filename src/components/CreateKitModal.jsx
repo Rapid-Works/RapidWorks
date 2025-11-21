@@ -4,8 +4,12 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Package, AlertTriangle, Building2 } from 'lucide-react';
 import { createBrandingKit } from '../utils/brandingKitService';
+import { useBrandingTranslation } from '../tolgee/hooks/useBrandingTranslation';
+import { useCommonTranslation } from '../tolgee/hooks/useCommonTranslation';
 
 const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
+  const { t } = useBrandingTranslation();
+  const { tAction } = useCommonTranslation();
   const [formData, setFormData] = useState({
     kitName: '',
     organizationName: '',
@@ -27,7 +31,7 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.kitName.trim()) {
-      setError('Kit name is required and will be used as the document ID');
+      setError(t('errorKitNameRequired'));
       return;
     }
 
@@ -46,8 +50,8 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
       onSuccess();
     } catch (err) {
       console.error('Error creating branding kit:', err);
-      setError(err.message || 'Failed to create branding kit');
-    } finally {
+      setError(err.message || t('errorCreateKitFailed'));
+    } finally{
       setCreating(false);
     }
   };
@@ -64,8 +68,8 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
               <Plus className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">List New Branding Kit</h2>
-              <p className="text-sm text-gray-600">Add metadata for an existing branding kit</p>
+              <h2 className="text-xl font-bold text-gray-900">{t('listNewKitTitle')}</h2>
+              <p className="text-sm text-gray-600">{t('listNewKitSubtitle')}</p>
             </div>
           </div>
           <button
@@ -89,7 +93,7 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
             {/* Kit Name with Warning */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Kit Name (Document ID) *
+                {t('kitNameLabel')}
               </label>
               <input
                 type="text"
@@ -97,14 +101,13 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.kitName}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent"
-                placeholder="e.g., rapidworks, calvergy, vitera"
+                placeholder={t('kitNamePlaceholder')}
                 required
               />
               <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-yellow-800">
-                  <strong>Important:</strong> This kit name must match exactly with the ID used in the code. 
-                  The assets are already coded - this only controls access and status.
+                  {t('kitNameWarning')}
                 </div>
               </div>
             </div>
@@ -113,7 +116,7 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <Building2 className="inline h-4 w-4 mr-1" />
-                Organization Name (optional)
+                {t('organizationNameLabel')}
               </label>
               <input
                 type="text"
@@ -121,17 +124,17 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
                 value={formData.organizationName}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent"
-                placeholder="Leave empty for personal kits"
+                placeholder={t('organizationNamePlaceholder')}
               />
               <p className="mt-1 text-xs text-gray-500">
-                If specified, this kit will only be visible to members of this organization
+                {t('organizationNameHelp')}
               </p>
             </div>
 
             {/* Emails */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Authorized Emails *
+                {t('authorizedEmailsLabel')}
               </label>
               <textarea
                 name="emails"
@@ -139,18 +142,18 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
                 onChange={handleInputChange}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent"
-                placeholder="email1@example.com, email2@example.com, email3@example.com"
+                placeholder={t('authorizedEmailsPlaceholder')}
                 required
               />
               <p className="mt-1 text-xs text-gray-500">
-                Comma-separated list of emails that can access this kit
+                {t('authorizedEmailsHelp')}
               </p>
             </div>
 
             {/* Status Checkboxes */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Kit Status</h3>
-              
+              <h3 className="text-lg font-medium text-gray-900">{t('kitStatusTitle')}</h3>
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -160,7 +163,7 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
                   className="h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-700">
-                  Paid - Kit has been paid for
+                  {t('paidLabel')}
                 </label>
               </div>
 
@@ -173,7 +176,7 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
                   className="h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-700">
-                  Ready - Kit is ready for download
+                  {t('readyLabel')}
                 </label>
               </div>
             </div>
@@ -186,7 +189,7 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
                 disabled={creating}
                 className="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
               >
-                Cancel
+                {tAction('cancel')}
               </button>
               <button
                 type="submit"
@@ -196,12 +199,12 @@ const CreateKitModal = ({ isOpen, onClose, onSuccess }) => {
                 {creating ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Creating...
+                    {t('creatingKit')}
                   </>
                 ) : (
                   <>
                     <Plus className="h-4 w-4" />
-                    Create Kit
+                    {t('createKitButton')}
                   </>
                 )}
               </button>

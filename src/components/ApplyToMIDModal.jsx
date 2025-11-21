@@ -11,6 +11,8 @@ import { getCurrentUserContext } from '../utils/organizationService';
 import { checkMIDFieldsCompletion } from '../utils/midFieldsChecker';
 import { useLanguage } from '../contexts/LanguageContext';
 import { isPostalCodeInNRW } from '../utils/nrwPostalCodes';
+import { useMIDTranslation } from '../tolgee/hooks/useMIDTranslation';
+import { useCommonTranslation } from '../tolgee/hooks/useCommonTranslation';
 
 const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, hasMIDSubmission }) => {
   const { currentUser } = useAuth();
@@ -31,100 +33,10 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [pendingCloseAction, setPendingCloseAction] = useState(null);
 
-  // Translation object
-  const translations = {
-    en: {
-      modal: {
-        title: "Apply to MID",
-        introText: "Please review your information carefully before proceeding. Make sure all details are correct.",
-        companyInfo: "Company Information",
-        contactInfo: "Contact Information",
-        address: "Address",
-        bankingInfo: "Banking Information",
-        privacyPolicy: {
-          title: "Privacy Policy Acceptance",
-          text: "I have read and accept the",
-          linkText: "MID privacy policy",
-          agreement: "and agree to the processing of my data for the MID application."
-        },
-        digitalSignature: {
-          title: "Digital Signature",
-          confirmation: "I hereby confirm that all information provided in this MID application is true and accurate to the best of my knowledge.",
-          terms: "I have taken note of the",
-          termsBold: "general terms and conditions",
-          termsAgreement: "and mandate RapidWorks accordingly to use my data for the registration and application of the MID Digitalization Voucher NRW in my name."
-        },
-        buttons: {
-          cancel: "Cancel",
-          changeEntries: "Change entries",
-          submit: "Submit Application",
-          submitting: "Submitting...",
-          submitted: "Submitted Successfully!",
-          goToCompanyInfo: "Go to Company Information",
-          editCompanyInfo: "Edit Company Information"
-        },
-        alerts: {
-          existingApplication: "Existing Application Found",
-          existingApplicationText: "You already have a MID application. Submitting again will update your existing application with any changes you've made.",
-          missingInfo: "Missing Required Information",
-          missingInfoText: "Please complete all MID-required fields in your Company Information before applying. The following fields are missing:",
-          privacyRequired: "Please accept the privacy policy to continue.",
-          signatureRequired: "Please accept the digital signature to continue.",
-          termsRequired: "Please accept the terms and conditions to continue.",
-          submitError: "Failed to submit MID application. Please try again.",
-          notEligible: "Not Eligible for MID Applications",
-          notInNRW: "The postal code is not in North Rhine-Westphalia. MID funding is only available for companies located in NRW."
-        }
-      }
-    },
-    de: {
-      modal: {
-        title: "MID-Antrag stellen",
-        introText: "Hier aufgelistet siehst du deine Organisationsangaben, welche wir für deine offizielle MID-Registrierung verwenden werden. Bitte überprüfe sorgfältig, dass diese korrekt sind. Wir übernehmen keine Haftung für inkorrekte Angaben.",
-        companyInfo: "Unternehmensinformationen",
-        contactInfo: "Kontaktinformationen",
-        address: "Adresse",
-        bankingInfo: "Bankinformationen",
-        privacyPolicy: {
-          title: "Datenschutzerklärung akzeptieren",
-          text: "Ich habe die",
-          linkText: "MID-Datenschutzerklärung",
-          agreement: "gelesen und akzeptiert und stimme der Verarbeitung meiner Daten für den MID-Antrag zu."
-        },
-        digitalSignature: {
-          title: "Digitale Signatur",
-          confirmation: "Ich bestätige, dass alle Angaben in diesem MID-Antrag nach meinem besten Wissen wahrheitsgemäß und korrekt sind.",
-          terms: "Ich habe die",
-          termsBold: "allgemeinen Geschäftsbestimmungen",
-          termsAgreement: "zur Kenntnis genommen und mandatiere RapidWorks entsprechend dieser dazu, meine Daten zur Registrierung und Beantragung des MID Digitalisierungs Gutscheins NRW in meinem Namen zu verwenden."
-        },
-        buttons: {
-          cancel: "Abbrechen",
-          changeEntries: "Einträge ändern",
-          submit: "Antrag einreichen",
-          submitting: "Wird eingereicht...",
-          submitted: "Erfolgreich eingereicht!",
-          goToCompanyInfo: "Zu Unternehmensinformationen",
-          editCompanyInfo: "Unternehmensinformationen bearbeiten"
-        },
-        alerts: {
-          existingApplication: "Bestehender Antrag gefunden",
-          existingApplicationText: "Sie haben bereits einen MID-Antrag. Eine erneute Einreichung aktualisiert Ihren bestehenden Antrag mit allen vorgenommenen Änderungen.",
-          missingInfo: "Fehlende erforderliche Informationen",
-          missingInfoText: "Bitte vervollständigen Sie alle MID-erforderlichen Felder in Ihren Unternehmensinformationen, bevor Sie sich bewerben. Die folgenden Felder fehlen:",
-          privacyRequired: "Bitte akzeptieren Sie die Datenschutzerklärung, um fortzufahren.",
-          signatureRequired: "Bitte akzeptieren Sie die digitale Signatur, um fortzufahren.",
-          termsRequired: "Bitte akzeptieren Sie die Geschäftsbedingungen, um fortzufahren.",
-          submitError: "MID-Antrag konnte nicht eingereicht werden. Bitte versuchen Sie es erneut.",
-          notEligible: "Nicht berechtigt für MID-Anträge",
-          notInNRW: "Die Postleitzahl befindet sich nicht in Nordrhein-Westfalen. MID-Förderungen sind nur für Unternehmen in NRW verfügbar."
-        }
-      }
-    }
-  };
-
+  // Use Tolgee translations
+  const { t } = useMIDTranslation();
+  const { tAction } = useCommonTranslation();
   const { language } = context;
-  const t = translations[language] || translations.en;
 
   useEffect(() => {
     if (isOpen && currentUser) {
@@ -287,15 +199,15 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
 
   const handleSubmit = async () => {
     if (!privacyAccepted) {
-      alert(t.modal.alerts.privacyRequired);
+      alert(t('applyPrivacyRequired'));
       return;
     }
     if (!digitalSignatureAccepted) {
-      alert(t.modal.alerts.signatureRequired);
+      alert(t('applySignatureRequired'));
       return;
     }
     if (!termsAccepted) {
-      alert(t.modal.alerts.termsRequired);
+      alert(t('applyTermsRequired'));
       return;
     }
     
@@ -398,7 +310,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
       }, 2000);
     } catch (error) {
       console.error('Error submitting MID application:', error);
-      alert(t.modal.alerts.submitError);
+      alert(t('applySubmitError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -466,7 +378,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
             <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
               <FileText className="h-6 w-6 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-white">{t.modal.title}</h2>
+            <h2 className="text-2xl font-bold text-white">{t('applyToMIDTitle')}</h2>
           </div>
           <button
             onClick={handleClose}
@@ -492,9 +404,9 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                   <div className="flex items-start gap-3">
                     <Info className="h-6 w-6 text-blue-500 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-blue-900 mb-2">{t.modal.alerts.existingApplication}</h3>
+                          <h3 className="text-lg font-semibold text-blue-900 mb-2">{t('applyExistingApplication')}</h3>
                           <p className="text-sm text-blue-700 mb-3">
-                            {t.modal.alerts.existingApplicationText}
+                            {t('applyExistingApplicationText')}
                           </p>
                       <button
                         onClick={() => {
@@ -506,7 +418,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                           >
                             <Edit2 className="h-4 w-4" />
-                            {t.modal.buttons.editCompanyInfo}
+                            {t('applyEditCompanyInfo')}
                           </button>
                     </div>
                   </div>
@@ -518,9 +430,9 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                   <div className="flex items-start gap-3">
                     <AlertCircle className="h-6 w-6 text-red-500 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-red-900 mb-2">{t.modal.alerts.missingInfo}</h3>
+                          <h3 className="text-lg font-semibold text-red-900 mb-2">{t('applyMissingInfo')}</h3>
                           <p className="text-sm text-red-700 mb-4">
-                            {t.modal.alerts.missingInfoText}
+                            {t('applyMissingInfoText')}
                           </p>
                       <div className="bg-white rounded-lg p-4">
                         <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -541,7 +453,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                         }}
                             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                           >
-                            {t.modal.buttons.goToCompanyInfo}
+                            {t('applyGoToCompanyInfo')}
                           </button>
                     </div>
                   </div>
@@ -581,7 +493,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                         </div>
                         <div className="ml-3">
                           <h3 className="text-sm font-medium text-red-800">
-                            {t.modal.alerts.notEligible}
+                            {t('applyNotEligible')}
                           </h3>
                           <div className="mt-2 text-sm text-red-700">
                             <p>Large enterprises are not eligible for MID applications. Please contact us for alternative funding options.</p>
@@ -602,7 +514,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                         </div>
                         <div className="ml-3">
                           <h3 className="text-sm font-medium text-red-800">
-                            {t.modal.alerts.notEligible}
+                            {t('applyNotEligible')}
                           </h3>
                           <div className="mt-2 text-sm text-red-700">
                             <p>Organizations with 250 or more employees are not eligible for MID applications. Please contact us for alternative funding options.</p>
@@ -623,10 +535,10 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                         </div>
                         <div className="ml-3">
                           <h3 className="text-sm font-medium text-red-800">
-                            {t.modal.alerts.notEligible}
+                            {t('applyNotEligible')}
                           </h3>
                           <div className="mt-2 text-sm text-red-700">
-                            <p>{t.modal.alerts.notInNRW}</p>
+                            <p>{t('applyNotInNRW')}</p>
                           </div>
                         </div>
                       </div>
@@ -636,7 +548,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                   {/* Intro Text */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p className="text-sm text-blue-700">
-                      {t.modal.introText}
+                      {t('applyModalIntro')}
                     </p>
                   </div>
 
@@ -646,7 +558,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                       <div className="p-2 bg-purple-50 rounded-lg border border-purple-100">
                         <Building className="h-5 w-5 text-purple-600" />
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900">{t.modal.companyInfo}</h3>
+                      <h3 className="text-lg font-bold text-gray-900">{t('applyCompanyInfo')}</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <InfoItem label="Legal Name" value={submissionData.legalName} />
@@ -669,7 +581,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                       <div className="p-2 bg-purple-50 rounded-lg border border-purple-100">
                         <User className="h-5 w-5 text-purple-600" />
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900">{t.modal.contactInfo}</h3>
+                      <h3 className="text-lg font-bold text-gray-900">{t('applyContactInfo')}</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <InfoItem label="First Name" value={submissionData.contactFirstName} />
@@ -684,7 +596,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                       <div className="p-2 bg-purple-50 rounded-lg border border-purple-100">
                         <MapPin className="h-5 w-5 text-purple-600" />
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900">{t.modal.address}</h3>
+                      <h3 className="text-lg font-bold text-gray-900">{t('applyAddress')}</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <InfoItem label="Street" value={submissionData.street} />
@@ -700,7 +612,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                       <div className="p-2 bg-purple-50 rounded-lg border border-purple-100">
                         <CreditCard className="h-5 w-5 text-purple-600" />
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900">{t.modal.bankingInfo}</h3>
+                      <h3 className="text-lg font-bold text-gray-900">{t('applyBankingInfo')}</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <InfoItem label="IBAN" value={submissionData.iban} />
@@ -712,7 +624,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
 
                   {/* Privacy Policy */}
                   <div className="border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.modal.privacyPolicy.title}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('applyPrivacyTitle')}</h3>
                     <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
@@ -722,23 +634,23 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                         className="mt-1 h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300 rounded"
                       />
                       <label htmlFor="privacy-modal" className="text-sm text-gray-700">
-                        {t.modal.privacyPolicy.text}{' '}
-                        <a 
-                          href="https://antrag.mittelstand-innovativ-digital.nrw/index.php?index=131" 
-                          target="_blank" 
+                        {t('applyPrivacyText')}{' '}
+                        <a
+                          href="https://antrag.mittelstand-innovativ-digital.nrw/index.php?index=131"
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-[#7C3BEC] hover:underline"
                         >
-                          {t.modal.privacyPolicy.linkText}
+                          {t('applyPrivacyLink')}
                         </a>{' '}
-                        {t.modal.privacyPolicy.agreement}
+                        {t('applyPrivacyAgreement')}
                       </label>
                     </div>
                   </div>
 
                   {/* Digital Signature */}
                   <div className="border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.modal.digitalSignature.title}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('applyDigitalSignatureTitle')}</h3>
                     <div className="space-y-4">
                       <div className="flex items-start gap-3">
                         <input
@@ -749,7 +661,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                           className="mt-1 h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300 rounded"
                         />
                         <label htmlFor="digital-signature-modal" className="text-sm text-gray-700">
-                          {t.modal.digitalSignature.confirmation}
+                          {t('applyDigitalSignatureConfirmation')}
                         </label>
                       </div>
                       
@@ -762,7 +674,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                           className="mt-1 h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300 rounded"
                         />
                         <label htmlFor="terms-conditions-modal" className="text-sm text-gray-700">
-                          {t.modal.digitalSignature.terms} <strong>{t.modal.digitalSignature.termsBold}</strong> {t.modal.digitalSignature.termsAgreement}
+                          {t('applyDigitalSignatureTerms')} <strong>{t('applyDigitalSignatureTermsBold')}</strong> {t('applyDigitalSignatureTermsAgreement')}
                         </label>
                       </div>
                     </div>
@@ -781,7 +693,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
               onClick={handleClose}
               className="px-5 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-all duration-200 font-medium"
             >
-              {t.modal.buttons.cancel}
+              {tAction('cancel')}
             </button>
             {missingFields.length === 0 && submissionData && (
               <button
@@ -793,7 +705,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                 }}
                 className="px-5 py-2.5 text-gray-700 hover:text-gray-900 hover:bg-white border border-gray-300 rounded-lg transition-all duration-200 font-medium"
               >
-                {t.modal.buttons.changeEntries}
+                {t('applyChangeEntries')}
               </button>
             )}
             {missingFields.length === 0 && submissionData && (
@@ -811,12 +723,12 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    {t.modal.buttons.submitting}
+                    {t('applySubmitting')}
                   </>
                 ) : showSuccess ? (
                   <>
                     <Check className="h-4 w-4" />
-                    {t.modal.buttons.submitted}
+                    {t('applySubmittedSuccess')}
                   </>
                 ) : isInCooldown ? (
                   <>
@@ -841,7 +753,7 @@ const ApplyToMIDModal = ({ isOpen, onClose, onSuccess, onNavigateToCompanyInfo, 
                 ) : (
                   <>
                     <CheckCircle className="h-4 w-4" />
-                    {t.modal.buttons.submit}
+                    {t('applySubmitApplication')}
                   </>
                 )}
               </button>

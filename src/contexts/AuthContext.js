@@ -12,7 +12,7 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { auth, googleProvider, functions } from '../firebase/config';
-import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import notificationInitService from '../utils/notificationInitService';
 
@@ -28,28 +28,41 @@ export function AuthProvider({ children }) {
   const db = getFirestore();
 
   // Create or update user document in Firestore
-  const ensureUserDocument = useCallback(async (user) => {
+  const ensureUserDocument = useCallback(async (user, isNewUser = false) => {
     if (!user) return;
-    
+
     try {
       const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, {
+
+      // Check if user document exists to determine if we should set createdAt
+      const userDoc = await getDoc(userRef);
+      const isFirstTimeUser = !userDoc.exists();
+
+      const userData = {
         email: user.email,
         displayName: user.displayName || user.email?.split('@')[0] || 'User',
         photoURL: user.photoURL || null,
-        updatedAt: serverTimestamp()
-      }, { merge: true }); // merge: true preserves existing fields like currentOrganizationId
-      
-      
+        updatedAt: serverTimestamp(),
+        lastLoginAt: serverTimestamp()
+      };
+
+      // Only set createdAt for new users (first time document creation)
+      if (isFirstTimeUser || isNewUser) {
+        userData.createdAt = serverTimestamp();
+      }
+
+      await setDoc(userRef, userData, { merge: true }); // merge: true preserves existing fields like currentOrganizationId
+
+
     } catch (error) {
-      
+
     }
   }, [db]);
 
   // Sign up with email and password
   async function signup(email, password, displayName = null) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    await ensureUserDocument(userCredential.user);
+    await ensureUserDocument(userCredential.user, true); // true = new user
     
     // Update displayName if provided (for firstName/lastName from registration)
     if (displayName) {

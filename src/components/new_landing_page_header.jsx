@@ -413,7 +413,7 @@ export default function RapidWorksHeader() {
           {navItems.map((item) => (
             <Link
               key={item.name}
-              to={item.path}
+              href={item.path}
               className={`px-4 py-3 rounded-lg flex items-center gap-2 transition-all duration-300 font-medium w-full text-left ${
                 isActive(item.path)
                   ? ''

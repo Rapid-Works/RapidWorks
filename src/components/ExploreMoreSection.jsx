@@ -1,51 +1,13 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Megaphone, Users, FileText, Compass, Euro, ArrowRight, Handshake } from 'lucide-react';
-import { useLanguage } from "../contexts/LanguageContext";
+import { useExploreMoreTranslation } from '../tolgee/hooks/useExploreMoreTranslation';
 
 const ExploreMoreSection = ({ excludeService }) => {
-  const context = useLanguage();
-
-  // Minimal loading state until context is ready
-  if (!context) {
-    return null; // Or a minimal loader if preferred
-  }
-
-  const { language } = context;
-
-  // Content object specific to this section
-  const sectionContent = {
-    en: {
-      badge: "Explore More",
-      title: "Did you know we do more than just this?",
-      description: "Check out our other services to help you grow your startup - from expert assistance to MVP development, coaching, and financing solutions.",
-      cta: "Explore all services",
-      services: {
-        Branding: "Branding",
-        Experts: "Experts",
-        Partners: "Partners",
-        Coaching: "Coaching",
-        Financing: "Financing"
-      }
-    },
-    de: {
-      badge: "MEHR ENTDECKEN",
-      title: "Wusstest du, dass wir mehr als nur das anbieten?",
-      description: "Entdecke unsere weiteren Dienstleistungen, die dir beim Wachstum deines Startups helfen - von Expertenunterstützung über MVP-Entwicklung bis hin zu Coaching und Finanzierungslösungen.",
-      cta: "Alle Services entdecken",
-      services: {
-        Branding: "Branding",
-        Experts: "Experten",
-        Partners: "Partner",
-        Coaching: "Coaching",
-        Financing: "Finanzierung"
-      }
-    }
-  };
-
-  const content = sectionContent[language];
+  // Use Tolgee translations
+  const content = useExploreMoreTranslation();
 
   // Define all possible services
   const allServices = [
@@ -59,32 +21,13 @@ const ExploreMoreSection = ({ excludeService }) => {
   // Filter out the service specified by the prop
   const servicesToShow = allServices.filter(service => service.labelKey !== excludeService);
 
-  // Dynamically adjust title
-  let dynamicTitle;
-  const serviceToBeMentioned = excludeService 
-    ? (content.services[excludeService] || excludeService) 
+  // Dynamically adjust title using the service name
+  const serviceToBeMentioned = excludeService
+    ? (content.services[excludeService] || excludeService)
     : (content.services["Branding"] || "Branding");
 
-  if (language === 'en') {
-    // English title: "Did you know we do more than just this?"
-    // We replace "just this" with "just [Service Name]"
-    // The original question mark at the end of content.title is preserved.
-    dynamicTitle = content.title.replace(
-      "just this", 
-      `just ${serviceToBeMentioned}`
-    );
-  } else if (language === 'de') {
-    // German title: "Wusstest du, dass wir mehr als nur das anbieten?"
-    // We replace "nur das" with "nur [Service Name]"
-    // The original question mark at the end of content.title is preserved.
-    dynamicTitle = content.title.replace(
-      "nur das", 
-      `nur ${serviceToBeMentioned}`
-    );
-  } else {
-    // Fallback for any other languages or if content.title is structured differently
-    dynamicTitle = content.title;
-  }
+  // Get the dynamic title with the service name
+  const dynamicTitle = content.getTitle(serviceToBeMentioned);
 
 
   const containerClass = "max-w-[1280px] w-full mx-auto px-4 sm:px-6 lg:px-8 relative";

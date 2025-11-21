@@ -2,42 +2,12 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { useContext } from 'react'
-import { useLanguage } from '../contexts/LanguageContext'
 import NewsletterForm from './NewsletterForm'
+import { useFooterTranslation } from '../tolgee/hooks/useFooterTranslation'
 
 const Footer = ({ showFAQ = false, onFAQClick }) => {
-  const context = useLanguage()
-  
-  if (!context) {
-    return null // Return null if context is not available
-  }
-
-  const { language } = context
-
-  // Translation object
-  const translations = {
-    en: {
-      footer: {
-        copyright: "© 2025 RapidWorks. All rights reserved.",
-        terms: "Terms of Service",
-        privacy: "Privacy Policy",
-        impressum: "Legal Notice",
-        faq: "FAQ"
-      }
-    },
-    de: {
-      footer: {
-        copyright: "© 2025 RapidWorks. Alle Rechte vorbehalten.",
-        terms: "AGB",
-        privacy: "Datenschutz",
-        impressum: "Impressum",
-        faq: "FAQ"
-      }
-    }
-  }
-
-  const content = translations[language]?.footer || translations.de.footer
+  // Use Tolgee translations
+  const content = useFooterTranslation()
 
   return (
     <>
@@ -57,27 +27,27 @@ const Footer = ({ showFAQ = false, onFAQClick }) => {
                 {content.copyright}
               </div>
               <div className="flex gap-6">
-                <Link href="/agb" 
+                <Link href="/agb"
                   className="text-gray-400 hover:text-[#7C3BEC] transition-colors"
                 >
-                  {content.terms}
+                  {content.termsOfService}
                 </Link>
-                <Link href="/datenschutz" 
+                <Link href="/datenschutz"
                   className="text-gray-400 hover:text-[#7C3BEC] transition-colors"
                 >
-                  {content.privacy}
+                  {content.privacyPolicy}
                 </Link>
-                <Link href="/impressum" 
+                <Link href="/impressum"
                   className="text-gray-400 hover:text-[#7C3BEC] transition-colors"
                 >
-                  {content.impressum}
+                  {content.legalNotice}
                 </Link>
                 {showFAQ && (
-                  <button 
+                  <button
                     onClick={onFAQClick}
                     className="text-gray-400 hover:text-[#7C3BEC] transition-colors"
                   >
-                    {content.faq}
+                    FAQ
                   </button>
                 )}
               </div>

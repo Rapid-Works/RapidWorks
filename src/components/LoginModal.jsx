@@ -8,6 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, X } from 'lucide-react';
 import { isTestEmail } from '../services/midFormService';
+import { useAuthTranslation } from '../tolgee/hooks/useAuthTranslation';
 
 const LoginModal = ({ 
   isOpen, 
@@ -31,118 +32,48 @@ const LoginModal = ({
   const router = useRouter();
   const context = useLanguage();
   const language = context?.language || 'en';
+  const { t } = useAuthTranslation();
 
-  const contextMessages = {
-    task: {
-      title: "Account needed",
-      subtitle: "In order to make fixed price requests you first need to create a RapidWorks account so that we can reach you back.",
-      signupTitle: "Create Account",
-      signupSubtitle: "Create your RapidWorks account to request fixed price tasks from our experts.",
-      // German translations
-      titleDe: "Konto erforderlich",
-      subtitleDe: "Um Fixpreis-Anfragen zu stellen, benötigen Sie zuerst ein RapidWorks-Konto, damit wir Sie erreichen können.",
-      signupTitleDe: "Konto erstellen",
-      signupSubtitleDe: "Erstellen Sie Ihr RapidWorks-Konto, um Fixpreis-Aufgaben von unseren Experten anzufragen."
-    },
-    branding: {
-      title: "Account needed", 
-      subtitle: "In order to request Rapid Branding you first need to create a RapidWorks account so that we can reach you back.",
-      signupTitle: "Create Account",
-      signupSubtitle: "Create your RapidWorks account to request Rapid Branding services.",
-      // German translations
-      titleDe: "Konto erforderlich",
-      subtitleDe: "Um Rapid Branding anzufragen, benötigen Sie zuerst ein RapidWorks-Konto, damit wir Sie erreichen können.",
-      signupTitleDe: "Konto erstellen",
-      signupSubtitleDe: "Erstellen Sie Ihr RapidWorks-Konto, um Rapid Branding Services anzufragen."
-    },
-    general: {
-      title: "Sign into your account",
-      subtitle: "Access your RapidWorks dashboard and services",
-      signupTitle: "Create Account", 
-      signupSubtitle: "Join RapidWorks to access our services.",
-      // German translations
-      titleDe: "In Ihr Konto anmelden",
-      subtitleDe: "Greifen Sie auf Ihr RapidWorks Dashboard und Services zu",
-      signupTitleDe: "Konto erstellen",
-      signupSubtitleDe: "Treten Sie RapidWorks bei, um auf unsere Services zuzugreifen."
+  // Get title and subtitle based on context
+  const getTitle = () => {
+    if (isSignup) {
+      return t('createAccount');
     }
+    return modalContext === 'task' || modalContext === 'branding' ? t('accountNeeded') : t('signIntoAccount');
   };
 
-  const currentMessage = contextMessages[modalContext] || contextMessages.general;
-
-  // Language-specific labels
-  const labels = {
-    en: {
-      emailLabel: "Email Address",
-      emailPlaceholder: "Enter your email",
-      passwordLabel: "Password", 
-      passwordPlaceholder: "Enter your password",
-      confirmPasswordLabel: "Confirm Password",
-      confirmPasswordPlaceholder: "Confirm your password",
-      forgotPassword: "Forgot your password?",
-      signInButton: "Sign In",
-      createAccountButton: "Create Account",
-      signingInButton: "Signing in...",
-      creatingAccountButton: "Creating Account...",
-      continueWithGoogle: "Continue with Google",
-      alreadyHaveAccount: "Already have an account?",
-      dontHaveAccount: "Don't have an account?",
-      signIn: "Sign in",
-      signUp: "Sign up",
-      passwordRequirement: "Password must be at least 6 characters long",
-      signupSuccess: "Account created successfully!",
-      checkEmailMessage: "Please check your email for a verification link to activate your account.",
-      emailNotVerified: "Your account is not verified. Please check your email for a verification link and click it to activate your account.",
-      emailNotVerifiedLogin: "Please verify your email address before signing in. Check your inbox for a verification link."
-    },
-    de: {
-      emailLabel: "E-Mail-Adresse",
-      emailPlaceholder: "E-Mail eingeben",
-      passwordLabel: "Passwort",
-      passwordPlaceholder: "Passwort eingeben", 
-      confirmPasswordLabel: "Passwort bestätigen",
-      confirmPasswordPlaceholder: "Passwort bestätigen",
-      forgotPassword: "Passwort vergessen?",
-      signInButton: "Anmelden",
-      createAccountButton: "Registrieren",
-      signingInButton: "Anmelden...",
-      creatingAccountButton: "Registrieren...",
-      continueWithGoogle: "Mit Google fortfahren",
-      alreadyHaveAccount: "Bereits ein Konto?",
-      dontHaveAccount: "Noch kein Konto?",
-      signIn: "Anmelden",
-      signUp: "Registrieren",
-      passwordRequirement: "Passwort muss mindestens 6 Zeichen lang sein",
-      signupSuccess: "Konto erfolgreich erstellt!",
-      checkEmailMessage: "Bitte überprüfen Sie Ihre E-Mail für einen Bestätigungslink zur Aktivierung Ihres Kontos.",
-      emailNotVerified: "Ihr Konto ist nicht verifiziert. Bitte überprüfen Sie Ihre E-Mail für einen Bestätigungslink und klicken Sie darauf, um Ihr Konto zu aktivieren.",
-      emailNotVerifiedLogin: "Bitte verifizieren Sie Ihre E-Mail-Adresse vor der Anmeldung. Überprüfen Sie Ihren Posteingang auf einen Bestätigungslink."
+  const getSubtitle = () => {
+    if (isSignup) {
+      if (modalContext === 'task') return t('createAccountTask');
+      if (modalContext === 'branding') return t('createAccountBranding');
+      return t('joinRapidWorks');
     }
+    if (modalContext === 'task') return t('accountNeededTaskSubtitle');
+    if (modalContext === 'branding') return t('accountNeededBrandingSubtitle');
+    return t('accessDashboard');
   };
-
-  const currentLabels = labels[language] || labels.en;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (isSignup && (!email || !password || !firstName || !lastName)) {
-      setError('Please fill in all fields');
+      setError(t('fillAllFields'));
       return;
     }
-    
+
     if (!isSignup && (!email || !password)) {
-      setError('Please fill in all fields');
+      setError(t('fillAllFields'));
       return;
     }
 
     if (isSignup && password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('passwordsDoNotMatch'));
       return;
     }
 
     // Client-side password validation for signup
     if (isSignup && password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError(t('passwordRequirement'));
       return;
     }
 
@@ -379,16 +310,10 @@ const LoginModal = ({
         {!showSuccess && (
           <div className="text-center mb-8 mt-4">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {language === 'de' 
-                ? (isSignup ? currentMessage.signupTitleDe : currentMessage.titleDe)
-                : (isSignup ? currentMessage.signupTitle : currentMessage.title)
-              }
+              {getTitle()}
             </h1>
             <p className="text-gray-600 leading-relaxed">
-              {language === 'de'
-                ? (isSignup ? currentMessage.signupSubtitleDe : currentMessage.subtitleDe)
-                : (isSignup ? currentMessage.signupSubtitle : currentMessage.subtitle)
-              }
+              {getSubtitle()}
             </p>
           </div>
         )}
@@ -408,10 +333,10 @@ const LoginModal = ({
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-green-800 mb-2">
-                {currentLabels.signupSuccess}
+                {t('signupSuccess')}
               </h3>
               <p className="text-green-700">
-                {currentLabels.checkEmailMessage}
+                {t('checkEmailMessage')}
               </p>
             </div>
           </div>
@@ -425,7 +350,7 @@ const LoginModal = ({
                 {language === 'de' ? 'E-Mail nicht verifiziert' : 'Email Not Verified'}
               </h3>
               <p className="text-yellow-700 mb-4">
-                {currentLabels.emailNotVerified}
+                {t('emailNotVerified')}
               </p>
               <div className="space-y-3">
                 <button
@@ -442,7 +367,7 @@ const LoginModal = ({
                   }}
                   className="w-full text-yellow-600 hover:text-yellow-700 underline text-sm"
                 >
-                  {language === 'de' ? 'Zurück zur Anmeldung' : 'Back to Sign In'}
+                  {t('backToSignIn')}
                 </button>
               </div>
             </div>
@@ -454,7 +379,7 @@ const LoginModal = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'de' ? 'Vorname' : 'First Name'}
+                  {t('firstName')}
                 </label>
                 <input
                   id="firstName"
@@ -462,13 +387,13 @@ const LoginModal = ({
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent text-black"
-                  placeholder={language === 'de' ? 'Vorname' : 'First name'}
+                  placeholder={t('firstName')}
                   required={isSignup}
                 />
               </div>
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'de' ? 'Nachname' : 'Last Name'}
+                  {t('lastName')}
                 </label>
                 <input
                   id="lastName"
@@ -476,7 +401,7 @@ const LoginModal = ({
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent text-black"
-                  placeholder={language === 'de' ? 'Nachname' : 'Last name'}
+                  placeholder={t('lastName')}
                   required={isSignup}
                 />
               </div>
@@ -484,7 +409,7 @@ const LoginModal = ({
           )}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              {currentLabels.emailLabel}
+              {t('emailAddress')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -496,7 +421,7 @@ const LoginModal = ({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent text-black"
-                placeholder={currentLabels.emailPlaceholder}
+                placeholder={t('emailPlaceholder')}
                 required
               />
             </div>
@@ -504,7 +429,7 @@ const LoginModal = ({
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              {currentLabels.passwordLabel}
+              {t('password')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -516,7 +441,7 @@ const LoginModal = ({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent text-black"
-                placeholder={currentLabels.passwordPlaceholder}
+                placeholder={t('passwordPlaceholder')}
                 required
               />
               <button
@@ -534,7 +459,7 @@ const LoginModal = ({
             </div>
             {isSignup && (
               <p className="text-xs text-gray-500 mt-1">
-                {currentLabels.passwordRequirement}
+                {t('passwordRequirement')}
               </p>
             )}
           </div>
@@ -542,7 +467,7 @@ const LoginModal = ({
           {isSignup && (
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                {currentLabels.confirmPasswordLabel}
+                {t('confirmPassword')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -554,7 +479,7 @@ const LoginModal = ({
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent text-black"
-                  placeholder={currentLabels.confirmPasswordPlaceholder}
+                  placeholder={t('confirmPasswordPlaceholder')}
                   required
                 />
                 <button
@@ -579,7 +504,7 @@ const LoginModal = ({
                 className="text-sm text-[#7C3BEC] hover:text-[#6B32D6] underline"
                 onClick={handleClose}
               >
-                {currentLabels.forgotPassword}
+                {t('forgotPassword')}
               </Link>
             </div>
           )}
@@ -589,9 +514,9 @@ const LoginModal = ({
             disabled={loading}
             className="w-full bg-[#7C3BEC] text-white py-3 px-4 rounded-lg hover:bg-[#6B32D6] focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
-            {loading 
-              ? (isSignup ? currentLabels.creatingAccountButton : currentLabels.signingInButton) 
-              : (isSignup ? currentLabels.createAccountButton : currentLabels.signInButton)
+            {loading
+              ? (isSignup ? t('creatingAccount') : t('signingIn'))
+              : (isSignup ? t('createAccount') : t('signIn'))
             }
           </button>
         </form>
@@ -629,17 +554,17 @@ const LoginModal = ({
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            {currentLabels.continueWithGoogle}
+            {t('continueWithGoogle')}
           </button>
         </div>
 
         <p className="mt-8 text-center text-sm text-gray-600">
-          {isSignup ? currentLabels.alreadyHaveAccount : currentLabels.dontHaveAccount}{' '}
-          <button 
+          {isSignup ? t('alreadyHaveAccount') : t('dontHaveAccount')}{' '}
+          <button
             onClick={switchMode}
             className="text-[#7C3BEC] hover:text-[#6B32D6] underline font-medium"
           >
-            {isSignup ? currentLabels.signIn : currentLabels.signUp}
+            {isSignup ? t('signIn') : t('signUp')}
           </button>
         </p>
           </>

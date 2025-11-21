@@ -33,8 +33,9 @@ import {
 import RapidWorksHeader from "./new_landing_page_header"
 import { useLanguage } from "../contexts/LanguageContext"
 import WebinarModal from './WebinarModal'
+import { useHomePageTranslation } from '../tolgee/hooks/useHomePageTranslation'
 import { getNextWebinarDates } from '../utils/dateUtils'
-import { testimonials } from "../testimonialsData"
+import { useTestimonialsTranslation } from '../tolgee/hooks/useTestimonialsTranslation'
 import TestimonialCard from "./TestimonialCard"
 
 // Import custom images - moved to public/images
@@ -142,264 +143,15 @@ export default function RapidWorksPage() {
     return new Date(date).toLocaleString(locale, options);
   };
 
-  const pageContent = {
-    en: {
-      hero: {
-        platform: "Startup Acceleration Platform",
-        title1: "The Full Service Agency for",
-        title2: "your Startup",
-        subtitle: "You are not alone, 80% of the problems faced by startups are identical. We solve these at unbeatable prices, so you can spend your time and capital on your core business.",
-        getStarted: "Get Started",
-        learnMore: "Learn More",
-        scrollIndicatorAria: "Scroll to services"
-      },
-      whoWeAre: {
-        title: "Who We Are",
-        description: "We are Startup enthusiasts. We have experience in Software Development, Marketing, Finance, Fundraising, Validating market needs and especially founding startups ourselves and working with startups. We know the pains and the gains, the ups and downs and have been in your shoes before. We know the most painful parts of being a founder and provide affordable solutions so founders can focus on their business again instead of getting hung up."
-      },
-      commonGround: {
-        title: "What All Our Offers Have in Common",
-        points: [
-          {
-            title: "They are tailored to your individual needs",
-            description: "There is no one-size-fits-all solution for startups. That's why we don't offer pre-packaged deals but take the time to understand your specific challenges and goals. Whether you need just one service or a comprehensive solution, we tailor our offerings to fit your needs.",
-            icon: "/images/landing_page_goal.png" // Changed from "Tailored" to image
-          },
-          {
-            title: "They deliver measurable results with unparalleled speed",
-            description: "Startups cant afford to loose time. We know that, so we built all our services so that you can get the first measurable results in just 1 week time. Doesn't matter if you need to enter a market, develop an mvp, get expert coaching, have a meeting with a tax advisor ... we will get you in action.",
-            icon: "/images/landing_page_bolt.png" // Changed from "Zap" to image
-          },
-          {
-            title: "They are either free or can be subsidized",
-            description: "We know that in startups, every Euro invested must create 10 Euros in value. Therefore, we have designed all our services so that they can be subsidized through funding programs, or are completely free for you. We are happy to show you free of charge which subsidies are available to your startup and gladly support you with the application process.",
-            icon: "/images/landing_page_gift.png" // Changed from "Gift" to image
-          },
-          {
-            title: "They build upon each other",
-            description: "All of our services build on one another, though they don't require each other. You can step in and out at every stage. If you need guidance finding out which of our services might help you the best feel free to book a free call with us to discuss your individual needs together. By the way we will stop you from booking services we don't see fit your current biggest needs. We hope for your understanding.",
-            icon: "/images/landing_page_stack.png" // Changed from "Layers" to image
-          },
-          {
-            title: "They all provide cost transparency and always deliver value before we charge you",
-            description: "You will always know upfront what we will charge and when we will do so. We will always only charge when you are satisfied with our work.",
-            icon: "/images/landing_page_security.png" // Changed from "ShieldCheck" to image
-          },
-          {
-            title: "They are strategically designed",
-            description: "Our services are not random offerings but strategically designed elements that work together to move your startup forward. Each service is purposefully crafted to address specific startup challenges at the right time in your journey.",
-            icon: "/images/landing_page_brain.png" // Changed from "Brain" to image (re-using for now)
-          }
-        ]
-      },
-      services: {
-        title: "Our Services",
-        subtitle: "Everything you need to build and scale your startup, all in one place.",
-        rapidAnswers: {
-          category: "Q&A",
-          title: "Rapid Answers",
-          description: "Ask your early-stage startup questions live! Join our free Q&A webinar with experienced founders.",
-          learnMore: "Learn more",
-          joinWebinar: "Join Free Webinar",
-          nextWebinarPrefix: "Next:"
-        },
-        branding: {
-          category: "Visibility",
-          title: "Rapid Branding",
-          description: "Get visible to your market in 1 week cheaper than building it yourself!",
-          learnMore: "Learn more"
-        },
-        experts: {
-          category: "Experts",
-          title: "Rapid Experts",
-          description: "Find your expert the same day cheaper than own employees!",
-          learnMore: "Learn more"
-        },
-        partners: {
-          category: "Network",
-          title: "Rapid Partners",
-          description: "Connect with verified notaries, tax advisors, auditors, and more.",
-          learnMore: "Learn more"
-        },
-        coaching: {
-          category: "Growth",
-          title: "Rapid Coaching",
-          description: "Unleash your full potential with year-round coaching by a veteran founder!",
-          learnMore: "Learn more"
-        },
-        workshops: {
-          category: "Knowledge",
-          title: "Rapid Workshops",
-          description: "Close your business knowledge gaps. Don't become reliant on consultants!",
-          learnMore: "Learn more"
-        },
-        financing: {
-          title: "Rapid Financing",
-          description: "Don't know how to finance your growth now? Did you know you can get up to 80% of our services subsidized? There are several options, contact us for free to learn more!",
-          learnMore: "Learn more",
-          freeConsultation: "Free Consultation"
-        }
-      },
-      financingSection: {
-         title: "Need Financing?",
-         subtitle: "Don't worry about how to finance your growth, we will show you the possibilities and help you apply for subsidies."
-      },
-      bundle: {
-        title: "Rapid Bundle",
-        description: "Reach the next level with all our Services combined in one bundle!",
-        financingNote: "Du denkst das wäre unbezahlbar? Ganz im Gegenteil, gemeinsam mit dir bereiten wir die Finanzierung unserer Dienstleistungen vor und suchen nach Fördermitteln, um die Kosten für dich auf einen Bruchteil marktüblicher Preise zu reduzieren!",
-        getBundle: "Get Your Bundle"
-      },
-      cta: {
-        title: "Ready to accelerate your startup?",
-        description: "Book a call with our team and discover how RapidWorks can help you build and scale your company.",
-        bookCall: "Book a Call Now"
-      },
-      modal: {
-        title: "Schedule a Free Consultation",
-        loadingText: "Loading scheduling calendar..."
-      },
-      testimonialSection: {
-        title: "Real Results, Rapid Growth",
-        subtitle: "Hear directly from founders who leveraged RapidWorks services to accelerate their startup journey."
-      },
-    },
-    de: {
-      hero: {
-        platform: "Startup-Beschleunigungsplattform",
-        title1: "Die Full-Service-Agentur für",
-        title2: "dein Startup",
-        subtitle: "Du bist nicht allein, 80% der Probleme, mit denen Startups konfrontiert sind, sind identisch. Wir lösen diese zu unschlagbaren Preisen, damit du deine Zeit und dein Kapital für dein Kerngeschäft einsetzen kannst.",
-        getStarted: "Jetzt starten",
-        learnMore: "Mehr erfahren",
-        scrollIndicatorAria: "Zu den Services scrollen"
-      },
-      whoWeAre: {
-        title: "Wer wir sind",
-        description: "Wir sind Startup-Enthusiasten. Wir haben Erfahrung in Softwareentwicklung, Marketing, Finanzen, Fundraising, der Validierung von Marktbedürfnissen und insbesondere darin, selbst Startups zu gründen und mit Startups zusammenzuarbeiten. Wir kennen die Schmerzen und die Erfolge, die Höhen und Tiefen und waren schon mehrfach in deiner Situation. Wir kennen die schmerzhaftesten Aspekte des Gründerdaseins und bieten erschwingliche Lösungen, damit sich Gründer wieder auf ihr Geschäft konzentrieren können, anstatt stecken zu bleiben."
-      },
-      commonGround: {
-        title: "Was alle unsere Angebote gemeinsam haben",
-        points: [
-          {
-            title: "Sie sind alle auf die Bedürfnisse von Startups zugeschnitten",
-            description: "Wir lieben Startups und verstehen ihre Bedürfnisse aus eigenen früheren Startup-Reisen und jahrelanger Arbeit im Startup Ökosystem. Daher sind alle unsere Dienstleistungen darauf ausgelegt, die häufigsten Startup-Bedürfnisse auf die zeit- und kosteneffektivste Weise zu erfüllen.",
-            icon: "/images/landing_page_goal.png" // Changed from "Tailored" to image
-          },
-          {
-            title: "Sie liefern messbare Ergebnisse mit beispielloser Geschwindigkeit",
-            description: "Startups können es sich nicht leisten, Zeit zu verlieren. Wir wissen das, deshalb haben wir alle unsere Dienstleistungen so aufgebaut, dass du bereits nach einer Woche erste messbare Ergebnisse erzielen kannst. Egal, ob du einen Markt erschließen, ein MVP entwickeln, Experten-Coaching erhalten oder ein Treffen mit einem Steuerberater benötigst ... wir bringen dich in Aktion.",
-            icon: "/images/landing_page_bolt.png" // Changed from "Zap" to image
-          },
-          {
-            title: "Sie sind entweder kostenlos oder können gefördert werden",
-            description: "Wir wissen, dass in Startups jeder investierte Euro 10 Euro an Wert schaffen muss. Daher haben wir all unsere Services so ausgerichtet, dass sie durch Förderprogramme subventioniert werden können, oder gänzlich kostenfrei für dich sind. Wir zeigen dir gerne kostenfrei auf, welche Förderungen deinem Startup zustehen und unterstützen gerne bei der Beantragung.",
-            icon: "/images/landing_page_gift.png" // Changed from "Gift" to image
-          },
-          {
-            title: "Sie bauen aufeinander auf",
-            description: "Alle unsere Dienstleistungen bauen sinnvoll aufeinander auf, funktionieren jedoch auch unabhängig voneinander. Du kannst in jeder Phase flexibel ein- und aussteigen. Gerne helfen wir dir in einem kostenlosen Gespräch herauszufinden, welche Leistung aktuell am besten zu deinen Bedürfnissen passt. Übrigens: Wir raten auch aktiv von Leistungen ab, die deiner Situation momentan nicht entsprechen. Wir bitten um dein Verständnis.",
-            icon: "/images/landing_page_stack.png" // Changed from "Layers" to image
-          },
-          {
-            title: "Sie bieten alle Kostentransparenz und liefern immer Wert, bevor wir etwas berechnen",
-            description: "Du wirst immer im Voraus wissen, was wir berechnen und wann wir dies tun. Wir berechnen immer erst dann etwas, wenn du mit unserer Arbeit zufrieden bist.",
-            icon: "/images/landing_page_security.png" // Changed from "ShieldCheck" to image
-          },
-          {
-            title: "Sie sind strategisch durchdacht",
-            description: "Unsere Dienstleistungen basieren nicht auf Zufall. Jedes Element – von der visuellen Gestaltung bis hin zur Customer Journey – ist bewusst so konzipiert, dass es deine Marke stärkt und dich näher an deine Ziele bringt.",
-            icon: "/images/landing_page_brain.png" // Changed from "Brain" to image (re-using for now)
-          }
-        ]
-      },
-      services: {
-        title: "Unsere Dienstleistungen",
-        subtitle: "Alles, was du brauchst, um dein Startup aufzubauen und zu skalieren, an einem Ort.",
-        rapidAnswers: {
-          category: "Q&A",
-          title: "Rapid Answers",
-          description: "Stelle deine Fragen zur frühen Startup-Phase live! Nimm an unserem kostenlosen Q&A-Webinar mit erfahrenen Gründern teil.",
-          learnMore: "Mehr erfahren",
-          joinWebinar: "Kostenlos teilnehmen",
-          nextWebinarPrefix: "Nächste:"
-        },
-        branding: {
-          category: "Sichtbarkeit",
-          title: "Rapid Branding",
-          description: "Werde in 1 Woche sichtbar für deinen Markt – günstiger als es selbst zu bauen!",
-          learnMore: "Mehr erfahren"
-        },
-        experts: {
-          category: "Experten",
-          title: "Rapid Experts",
-          description: "Finde deinen Experten am selben Tag – günstiger als eigene Mitarbeiter!",
-          learnMore: "Mehr erfahren",
-          freeHour: "1 Stunde gratis erhalten"
-        },
-        partners: {
-          category: "Netzwerk",
-          title: "Rapid Partners",
-          description: "Vernetze dich mit geprüften Notaren, Steuerberatern, Wirtschaftsprüfern und mehr.",
-          learnMore: "Mehr erfahren"
-        },
-        coaching: {
-          category: "Wachstum",
-          title: "Rapid Coaching",
-          description: "Entfessle dein volles Potenzial mit ganzjährigem Coaching durch einen erfahrenen Gründer!",
-          learnMore: "Mehr erfahren"
-        },
-        workshops: {
-          category: "Wissen",
-          title: "Rapid Workshops",
-          description: "Schließe deine Wissenslücken im Business. Werde nicht von Beratern abhängig!",
-          learnMore: "Mehr erfahren"
-        },
-        financing: {
-          title: "Rapid Financing",
-          description: "Du weißt nicht, wie du dein Wachstum jetzt finanzieren sollst? Wusstest du, dass du bis zu 80% unserer Dienstleistungen fördern lassen kannst? Es gibt mehrere Optionen, kontaktiere uns kostenlos, um mehr zu erfahren!",
-          learnMore: "Mehr erfahren",
-          freeConsultation: "Kostenlose Beratung"
-        }
-      },
-      financingSection: {
-          title: "Finanzierung benötigt?",
-          subtitle: "Mach dir keine Sorgen über die Finanzierung deines Wachstums. Wir zeigen dir die Möglichkeiten und helfen dir bei der Beantragung von Fördermitteln."
-       },
-      bundle: {
-        title: "Bündle & spare",
-        description: "Kombiniere unsere Dienstleistungen und erhalte einen Rabatt von 10%. Ideal für Startups, die umfassende Unterstützung benötigen.",
-        getBundle: "Paket schnüren",
-        financingNote: "Sie sind entweder kostenlos oder können gefördert werden"
-      },
-      cta: {
-        title: "Bereit, dein Startup zu beschleunigen?",
-        description: "Buche einen Anruf mit unserem Team und entdecke, wie RapidWorks dir helfen kann, dein Unternehmen aufzubauen und zu skalieren.",
-        bookCall: "Jetzt Gespräch buchen"
-      },
-      modal: {
-        title: "Kostenlose Beratung vereinbaren",
-        loadingText: "Terminkalender wird geladen..."
-      },
-      testimonialSection: {
-        title: "Echte Ergebnisse, schnelles Wachstum",
-        subtitle: "Hör direkt von Gründern, die RapidWorks-Dienste genutzt haben, um ihre Startup-Reise zu beschleunigen."
-      },
-    }
-  }
-
-  // Helper to get icon component by name
-  const iconComponents = {
-    Target, Zap, Gift, Layers, ShieldCheck, Calendar,
-    // Add other icons used elsewhere if needed for consistency, or keep separate
-  };
+  // Use Tolgee translations
+  const content = useHomePageTranslation();
+  const testimonials = useTestimonialsTranslation();
 
   if (isLoading || !context) {
     return <div className="flex justify-center items-center h-screen"><Loader2 className="h-12 w-12 animate-spin text-purple-600" /></div>;
   }
 
   const { language } = context;
-  const content = pageContent[language];
 
   const formattedNextDate = formatDateForCard(nextWebinarDate, language);
 
@@ -430,7 +182,7 @@ export default function RapidWorksPage() {
           <div className="text-center mb-16">
             <span className="inline-flex items-center gap-2 text-purple-600 text-sm uppercase tracking-wider font-light mb-4 px-4 py-1.5 rounded-full bg-white border border-purple-100 shadow-sm">
               <MessageSquareText className="h-4 w-4" /> {/* Use an icon */}
-              Success Stories
+              {content.testimonialSection?.badge || "Success Stories"}
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               {content.testimonialSection?.title || "What Our Clients Say"}

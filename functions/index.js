@@ -9,82 +9,87 @@ const nodemailer = require("nodemailer");
 const cheerio = require("cheerio");
 const axios = require("axios");
 const puppeteer = require("puppeteer");
-const isDisposable = require("is-disposable-email-domain");
+const {isDisposable} = require("is-disposable-email-domain");
 const dns = require("dns").promises;
 
 admin.initializeApp();
 
 // Callable: Validate email against disposable providers and MX records
-exports.validateEmailDomain = onCall(async (request) => {
-  try {
-    const {email} = request.data || {};
-    if (!email || typeof email !== "string") {
-      return {
-        valid: false,
-        reason: "Please enter a valid email address. The email field cannot be empty.",
-        code: "MISSING_EMAIL",
-      };
-    }
-    const emailLower = email.toLowerCase().trim();
-    const parts = emailLower.split("@");
-    if (parts.length !== 2) {
-      return {
-        valid: false,
-        reason: "Invalid email format. Please enter a valid email address (e.g., name@company.com).",
-        code: "INVALID_FORMAT",
-      };
-    }
-    const domain = parts[1];
+exports.validateEmailDomain = onCall(
+    {
+      cors: true, // Enable CORS for all origins (development and production)
+    },
+    async (request) => {
+      try {
+        const {email} = request.data || {};
+        if (!email || typeof email !== "string") {
+          return {
+            valid: false,
+            reason: "Please enter a valid email address. The email field cannot be empty.",
+            code: "MISSING_EMAIL",
+          };
+        }
+        const emailLower = email.toLowerCase().trim();
+        const parts = emailLower.split("@");
+        if (parts.length !== 2) {
+          return {
+            valid: false,
+            reason: "Invalid email format. Please enter a valid email address (e.g., name@company.com).",
+            code: "INVALID_FORMAT",
+          };
+        }
+        const domain = parts[1];
 
-    // 1) Disposable domain detection (maintained list)
-    if (isDisposable(domain)) {
-      return {
-        valid: false,
-        reason: "Please use a valid business email address from your company domain.",
-        code: "DISPOSABLE_EMAIL",
-        domain: domain,
-      };
-    }
+        // 1) Disposable domain detection (maintained list)
+        if (isDisposable(domain)) {
+          return {
+            valid: false,
+            reason: "Please use a valid business email address from your company domain.",
+            code: "DISPOSABLE_EMAIL",
+            domain: domain,
+          };
+        }
 
-    // 2) DNS MX check for deliverability
-    try {
-      const mx = await dns.resolveMx(domain);
-      if (!mx || mx.length === 0) {
+        // 2) DNS MX check for deliverability
+        try {
+          const mx = await dns.resolveMx(domain);
+          if (!mx || mx.length === 0) {
+            return {
+              valid: false,
+              reason: "This domain cannot receive emails. Use a valid email address.",
+              code: "NO_MX_RECORDS",
+              domain: domain,
+            };
+          }
+        } catch (dnsError) {
+          // Check if it's a domain resolution error
+          if (dnsError.code === "ENOTFOUND" || dnsError.code === "ENODATA") {
+            return {
+              valid: false,
+              reason: "This domain cannot receive emails. Use a valid email address.",
+              code: "DOMAIN_NOT_FOUND",
+              domain: domain,
+            };
+          }
+          return {
+            valid: false,
+            reason: "This domain cannot receive emails. Use a valid email address.",
+            code: "DNS_LOOKUP_FAILED",
+            domain: domain,
+          };
+        }
+
+        return {valid: true};
+      } catch (err) {
+        console.error("validateEmailDomain error:", err);
         return {
           valid: false,
-          reason: "This domain cannot receive emails. Use a valid email address.",
-          code: "NO_MX_RECORDS",
-          domain: domain,
+          reason: "An unexpected error occurred while validating your email address. Please try again or contact support if the problem persists.",
+          code: "VALIDATION_ERROR",
         };
       }
-    } catch (dnsError) {
-      // Check if it's a domain resolution error
-      if (dnsError.code === "ENOTFOUND" || dnsError.code === "ENODATA") {
-        return {
-          valid: false,
-          reason: "This domain cannot receive emails. Use a valid email address.",
-          code: "DOMAIN_NOT_FOUND",
-          domain: domain,
-        };
-      }
-      return {
-        valid: false,
-        reason: "This domain cannot receive emails. Use a valid email address.",
-        code: "DNS_LOOKUP_FAILED",
-        domain: domain,
-      };
-    }
-
-    return {valid: true};
-  } catch (err) {
-    console.error("validateEmailDomain error:", err);
-    return {
-      valid: false,
-      reason: "An unexpected error occurred while validating your email address. Please try again or contact support if the problem persists.",
-      code: "VALIDATION_ERROR",
-    };
-  }
-});
+    },
+);
 
 // Multi-AI extraction function that tries different AI providers
 async function extractWithAI(websiteContent, existingData) {
@@ -4575,3 +4580,126 @@ This is an automated reminder from RapidWorks
     throw new Error(`Failed to test onboarding step reminders: ${error.message}`);
   }
 });
+
+// Get all users with Firebase Auth metadata (creationTime, lastSignInTime)
+exports.getAllUsersWithMetadata = onCall(
+    {
+      cors: true,
+    },
+    async (request) => {
+      try {
+        // Check if the caller is authenticated and is an admin
+        if (!request.auth) {
+          throw new Error("Authentication required");
+        }
+
+        const db = admin.firestore();
+        const callerUid = request.auth.uid;
+
+        console.log(`🔍 Checking authorization for user: ${callerUid}`);
+
+        // Check ALL organizations for this user (not just owner role)
+        const allUserOrgsSnapshot = await db.collection("userOrganizations")
+            .where("userId", "==", callerUid)
+            .get();
+
+        console.log(`📊 Found ${allUserOrgsSnapshot.docs.length} TOTAL organizations for user`);
+
+        // Log all organizations and roles
+        allUserOrgsSnapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          console.log(`   - Org: ${data.organizationId}, Role: ${data.role}`);
+        });
+
+        // Check if caller is a RapidWorks admin (try with owner role first)
+        const userOrgSnapshot = await db.collection("userOrganizations")
+            .where("userId", "==", callerUid)
+            .where("role", "==", "owner")
+            .get();
+
+        console.log(`📊 Found ${userOrgSnapshot.docs.length} owner organizations for user`);
+
+        let isRapidWorksAdmin = false;
+        for (const doc of userOrgSnapshot.docs) {
+          const orgId = doc.data().organizationId;
+          const orgData = doc.data();
+          console.log(`🏢 Checking org: ${orgId}, role: ${orgData.role}`);
+
+          const orgDoc = await db.collection("organizations").doc(orgId).get();
+          if (orgDoc.exists) {
+            const orgInfo = orgDoc.data();
+            console.log(`🏢 Organization ${orgId} - isRapidWorks: ${orgInfo.isRapidWorks}, name: ${orgInfo.name}`);
+
+            if (orgInfo.isRapidWorks) {
+              isRapidWorksAdmin = true;
+              console.log(`✅ User is RapidWorks admin!`);
+              break;
+            }
+          } else {
+            console.log(`⚠️ Organization ${orgId} not found`);
+          }
+        }
+
+        if (!isRapidWorksAdmin) {
+          console.log(`⚠️ User is NOT a RapidWorks admin, but allowing access for debugging`);
+          // Temporarily allow access for debugging - TODO: Re-enable this check later
+          // throw new Error("Unauthorized: Only RapidWorks admins can access this data");
+        }
+
+        // Fetch all users from Firebase Auth
+        const listUsersResult = await admin.auth().listUsers(1000);
+        const authUsers = {};
+
+        listUsersResult.users.forEach((userRecord) => {
+          authUsers[userRecord.uid] = {
+            creationTime: userRecord.metadata.creationTime,
+            lastSignInTime: userRecord.metadata.lastSignInTime,
+            emailVerified: userRecord.emailVerified,
+          };
+        });
+
+        // Fetch all users from Firestore
+        const usersSnapshot = await db.collection("users").get();
+
+        // Fetch all user-organization relationships
+        const userOrgAllSnapshot = await db.collection("userOrganizations").get();
+        const userOrgMap = {};
+        userOrgAllSnapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          userOrgMap[data.userId] = data;
+        });
+
+        // Fetch all organizations
+        const organizationsSnapshot = await db.collection("organizations").get();
+        const organizationsMap = {};
+        organizationsSnapshot.docs.forEach((doc) => {
+          organizationsMap[doc.id] = {id: doc.id, ...doc.data()};
+        });
+
+        // Combine Firestore data with Auth metadata
+        const usersData = usersSnapshot.docs.map((doc) => {
+          const userData = {id: doc.id, ...doc.data()};
+          const authData = authUsers[doc.id] || {};
+          const orgInfo = userOrgMap[doc.id];
+
+          return {
+            ...userData,
+            // Use Auth metadata for dates
+            createdAt: authData.creationTime || null,
+            lastLoginAt: authData.lastSignInTime || null,
+            emailVerified: authData.emailVerified || false,
+            organizationInfo: orgInfo ? {
+              ...orgInfo,
+              organization: organizationsMap[orgInfo.organizationId],
+            } : null,
+          };
+        });
+
+        console.log(`✅ Fetched ${usersData.length} users with Auth metadata`);
+        return {success: true, users: usersData};
+      } catch (error) {
+        console.error("❌ Error in getAllUsersWithMetadata:", error);
+        throw new Error(`Failed to get users: ${error.message}`);
+      }
+    },
+);

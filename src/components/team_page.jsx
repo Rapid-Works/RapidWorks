@@ -32,13 +32,14 @@ import { useAuth } from '../contexts/AuthContext'
 import { checkOrganizationFrameworkStatus } from '../utils/frameworkAgreementService'
 import { getCurrentUserContext, hasUserOrganizationMembership } from '../utils/organizationService'
 import ExploreMoreSection from "./ExploreMoreSection" // Import the new component
-import { testimonials } from "../testimonialsData"
+import { useTestimonialsTranslation } from '../tolgee/hooks/useTestimonialsTranslation'
 import TestimonialCard from "./TestimonialCard"
 import ExpertRequestModal from "./ExpertRequestModal" // <-- Import the new modal
 import NewTaskModal from "./NewTaskModal" // <-- Import the task request modal
 import LoginModal from "./LoginModal" // <-- Import the login modal
 import FrameworkAgreementModal from "./FrameworkAgreementModal" // <-- Import the framework agreement modal
 // import { submitExpertRequestToAirtable } from '../utils/airtableService' // <-- Import the Airtable function
+import { useExpertsPageTranslation } from '../tolgee/hooks/useExpertsPageTranslation'
 
 // Import team profile images - moved to public/images
 // import SamuelProfile from "../images/SamuelProfile.jpg"
@@ -214,7 +215,7 @@ const benefits = [
 ]
 
 // +++ Add Experts Testimonials Section +++
-const ExpertsTestimonialsSection = ({ content }) => {
+const ExpertsTestimonialsSection = ({ content, testimonials }) => {
   const expertsTestimonials = testimonials.filter(
     t => t.services.includes("experts") // Find experts testimonials
   );
@@ -288,187 +289,17 @@ const TeamPage = () => {
     benefitsRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  const pageContent = {
-    en: {
-      pageTitle: "Rapid Experts",
-      hero: {
-        title1: "All the ",
-        titleHighlight: "Expertise",
-        title2: " you need",
-        subtitle: "Why build an expensive team in Germany with 3+ months of hiring time when our team can start work on your project in just 1 day?",
-        scrollIndicatorAria: "Scroll to benefits"
-      },
-      benefits: {
-        title: "Why Choose The Rapid Experts?",
-        subtitle: "Your advantage with Rapid Experts – flexibility, efficiency, and zero risk",
-        items: [
-          { text: "No upfront cost", description: "Start working with our experts without any initial investment" },
-          { text: "Up to 70% cheaper with subsidies", description: "Save significantly with our Rapid Financing subsidy solutions", linkText: "Learn about subsidies" },
-          { text: "First hour for free", description: "Try our services with no risk or obligation" },
-          { text: "Transparent Communication", description: "Receive clear information about project status and direct communication with your personal expert." },
-          { text: "Pay by the hour", description: "Flexible payment model - only pay for the time you need" },
-          { text: "Always available", description: "Our experts are ready to start within a day" },
-        ],
-        discoverMore: "Discover more benefits",
-      },
-      cta: {
-        title: "Ready to get started?",
-        description: "Request a fixed price offer and get help from our experts.",
-        buttonText: "Request Fixed Price Task",
-      },
-      team: {
-        expertiseTitle: "Expertise",
-        moreSkills: "...and more",
-        growingTitle: "Our team is growing!",
-        growingDescription: "We're constantly expanding our team of experts to better serve your needs. If you are interested in an expert we don't have yet, let us know by requesting the expert, you will then be the first to be informed as soon as the expert becomes available.",
-        getNotified: "Get notified when new experts join",
-        comingSoon: "Coming Soon",
-        requestExpertButton: "Request this Expert",
-        bookNowButton: "Request Fixed Price Task"
-      },
-      modalContent: {
-        title: "Request Expert Access",
-        subtitle1: "Enter your email to be notified when our",
-        subtitle2: "becomes available.",
-        emailLabel: "Your Email",
-        emailPlaceholder: "you@example.com",
-        expertNeededLabel: "Expert Needed",
-        successTitle: "Thank You!",
-        successMessage: "We've received your request and will notify you.",
-        submitButton: "Notify Me",
-        submittingButton: "Submitting...",
-        defaultError: "Failed to submit request. Please try again.",
-        closeAriaLabel: "Close modal",
-        getNotified: "Benachrichtigt werden, wenn neue Experten beitreten",
-        comingSoon: "Demnächst verfügbar",
-        requestExpertButton: "Diesen Experten anfragen",
-        bookNowButton: "Jetzt buchen"
-      },
-      memberRoles: {
-        "Marketing Expert": "Marketing Expert",
-        "Software Expert": "Software Expert",
-        "Design Expert": "Design Expert",
-        "Finance Expert": "Finance Expert",
-        "Data Analysis Expert": "Data Analysis Expert",
-        "AI Expert": "AI Expert",
-        "DevOps Expert": "DevOps Expert",
-        "Software Test Expert": "Software Test Expert",
-        "Database Expert": "Database Expert",
-        "Social Media Expert": "Social Media Expert",
-      },
-      memberQuotes: {
-        "prince": "Driving growth through strategic digital marketing solutions",
-        "samuel": "Building scalable solutions with cutting-edge technologies",
-        "design": "Creating beautiful, functional designs that delight users",
-        "finance": "Optimizing financial strategies for sustainable growth",
-        "data": "Transform data into valuable insights that enable strategic decisions",
-        "ai": "Develop intelligent systems that automate processes and promote innovation",
-        "devops": "Create efficient development and deployment processes for sustainable scalability",
-        "test": "Ensure reliable software through targeted testing and quality assurance",
-        "database": "Design performant and secure data architecture for modern applications",
-        "social": "Build digital reach through creative and data-driven social media strategies",
-      },
-      memberExperienceSuffix: "years",
-      testimonials: {
-        badge: "Customer Experiences",
-        title: "Accelerated Development with Rapid Experts",
-        subtitle: "Discover how founders leveraged our on-demand talent to build and scale faster."
-      }
-    },
-    de: {
-      pageTitle: "Rapid Experts",
-      hero: {
-        title1: "",
-        titleHighlight: "Alle Expertise",
-        title2: ", die du brauchst",
-        subtitle: "Warum ein teures Team in Deutschland aufbauen mit 3+ Monaten Einstellungszeit, wenn unser Team in nur 1 Tag mit der Arbeit an deinem Projekt beginnen kann?",
-        scrollIndicatorAria: "Zu den Vorteilen scrollen"
-      },
-      benefits: {
-        title: "Warum die Rapid Experts wählen?",
-        subtitle: "Dein Vorteil mit Rapid Experts – Flexibilität, Effizienz und null Risiko",
-        items: [
-          { text: "Keine Vorauskosten", description: "Beginne die Zusammenarbeit mit unseren Experten ohne anfängliche Investition" },
-          { text: "Bis zu 80% günstiger mit Förderungen", description: "Spare erheblich mit unseren Rapid Financing Förderlösungen", linkText: "Erfahre mehr über Förderungen" },
-          { text: "Kostenlose Fixpreisanfrage", description: "Lass uns einfach deine Aufgabe wissen, wir erstellen dir ein kostenfreies Fixpreisangebot." },
-          { text: "Transparente Kommunikation", description: "Du erhältst klare Informationen über den Projektstatus und direkte Kommunikation mit deinen Experten." },
-          { text: "Stundenweise bezahlen", description: "Du erhältst von uns für jede Aufgabe immer ein Fixpreisangebot und zahlst erst nach Durchführung." },
-          { text: "Immer verfügbar", description: "Unsere Experten sind bereit, innerhalb eines Tages zu starten" },
-        ],
-        discoverMore: "Entdecke weitere Vorteile",
-      },
-      cta: {
-        title: "Bereit loszulegen?",
-        description: "Frage ein Fixpreis-Angebot an und erhalte Hilfe von unseren Experten.",
-        buttonText: "Fixpreis-Angebot anfragen",
-      },
-      team: {
-        expertiseTitle: "Expertise",
-        moreSkills: "...und mehr",
-        growingTitle: "Unser Team wächst!",
-        growingDescription: "Wir erweitern ständig unser Expertenteam, um deine Bedürfnisse besser zu erfüllen. Wenn du an einem Experten interessiert bist, den wir noch nicht haben, sag uns Bescheid, indem du den Experten anfragst. Du wirst dann als Erstes informiert, sobald der Experte verfügbar ist.",
-        getNotified: "Benachrichtigt werden, wenn neue Experten beitreten",
-        comingSoon: "Demnächst verfügbar",
-        requestExpertButton: "Diesen Experten anfragen",
-        bookNowButton: "Fixpreis-Angebot anfragen"
-      },
-      modalContent: {
-        title: "Expertenzugang anfordern",
-        subtitle1: "Gib deine E-Mail-Adresse ein, um benachrichtigt zu werden, wenn unser",
-        subtitle2: "verfügbar wird.",
-        emailLabel: "Deine E-Mail",
-        emailPlaceholder: "du@beispiel.com",
-        expertNeededLabel: "Benötigter Experte",
-        successTitle: "Vielen Dank!",
-        successMessage: "Wir haben deine Anfrage erhalten und werden dich benachrichtigen.",
-        submitButton: "Benachrichtige mich",
-        submittingButton: "Wird gesendet...",
-        defaultError: "Anfrage konnte nicht gesendet werden. Bitte versuche es erneut.",
-        closeAriaLabel: "Modal schließen",
-        getNotified: "Benachrichtigt werden, wenn neue Experten beitreten",
-        comingSoon: "Demnächst verfügbar",
-        requestExpertButton: "Diesen Experten anfragen",
-        bookNowButton: "Jetzt buchen"
-      },
-      memberRoles: {
-        "Marketing Expert": "Marketing Experte",
-        "Software Expert": "Software Experte",
-        "Design Expert": "Design Experte",
-        "Finance Expert": "Finanz Experte",
-        "Data Analysis Expert": "Datenanalyse Experte",
-        "AI Expert": "KI Experte",
-        "DevOps Expert": "DevOps Experte",
-        "Software Test Expert": "Softwaretest Experte",
-        "Database Expert": "Datenbank Experte",
-        "Social Media Expert": "Social Media Experte",
-      },
-      memberQuotes: {
-        "prince": "Wachstum durch strategische digitale Marketinglösungen vorantreiben",
-        "samuel": "Skalierbare Lösungen mit Spitzentechnologien entwickeln",
-        "design": "Schöne, funktionale Designs schaffen, die Benutzer begeistern",
-        "finance": "Finanzstrategien für nachhaltiges Wachstum optimieren",
-        "data": "Daten in wertvolle Erkenntnisse verwandeln, die strategische Entscheidungen ermöglichen",
-        "ai": "Intelligente Systeme entwickeln, die Prozesse automatisieren und Innovation fördern",
-        "devops": "Effiziente Entwicklungs- und Deployment-Prozesse für nachhaltige Skalierbarkeit schaffen",
-        "test": "Zuverlässige Software durch gezieltes Testing und Qualitätssicherung gewährleisten",
-        "database": "Performante und sichere Datenarchitektur für moderne Anwendungen gestalten",
-        "social": "Digitale Reichweite aufbauen durch kreative und datenbasierte Social Media Strategien",
-      },
-      memberExperienceSuffix: "Jahre",
-      testimonials: {
-        badge: "Kundenerfahrungen",
-        title: "Beschleunigte Entwicklung mit Rapid Experts",
-        subtitle: "Entdecke, wie Gründer unsere On-Demand-Experten nutzten, um ihre Unternehmen schneller zu skalieren."
-      }
-    }
-  }
+  // pageContent removed - now using useExpertsPageTranslation hook
+
+  // Use Tolgee translations
+  const content = useExpertsPageTranslation();
+  const testimonials = useTestimonialsTranslation();
 
   if (isLoading || !context) {
      return <div className="flex justify-center items-center h-screen"><Loader2 className="h-12 w-12 animate-spin text-purple-600" /></div>;
   }
 
   const { language } = context;
-  const content = pageContent[language];
 
   const benefitsContent = content.benefits.items;
 
@@ -736,12 +567,12 @@ const TeamPage = () => {
                           </div>
                     <div className="mt-4">
                       <p className="text-gray-600 text-base leading-relaxed">{benefit.description}</p>
-                            {benefit.linkText && (
-                              <a 
+                            {benefit.linkText && benefit.linkText.trim() !== '' && !benefit.linkText.includes('experts.benefits.items') && (
+                              <a
                                 href={originalBenefit?.linkTo}
                           className="text-blue-600 font-semibold mt-3 inline-flex items-center gap-1.5 group"
                               >
-                          {benefit.linkText} 
+                          {benefit.linkText}
                           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                               </a>
                             )}
@@ -896,7 +727,7 @@ const TeamPage = () => {
       </main>
       
       {/* Add the new component */}
-      <ExpertsTestimonialsSection content={content} />
+      <ExpertsTestimonialsSection content={content} testimonials={testimonials} />
 
       <ExploreMoreSection excludeService="Experts" />
 

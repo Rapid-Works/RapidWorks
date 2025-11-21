@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Users, Mail, Calendar, Filter } from 'lucide-react';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase/config';
 import StandardTabs, { StandardTable } from './ui/StandardTabs';
 
 const AllUsers = () => {
@@ -52,14 +52,14 @@ const AllUsers = () => {
         case 'email':
           return (a.email || '').localeCompare(b.email || '');
         case 'lastLogin':
-          const aLogin = a.lastLoginAt?.toDate?.() || a.lastLoginAt || new Date(0);
-          const bLogin = b.lastLoginAt?.toDate?.() || b.lastLoginAt || new Date(0);
-          return new Date(bLogin) - new Date(aLogin);
+          const aLogin = a.lastLoginAt ? new Date(a.lastLoginAt) : new Date(0);
+          const bLogin = b.lastLoginAt ? new Date(b.lastLoginAt) : new Date(0);
+          return bLogin - aLogin;
         case 'createdAt':
         default:
-          const aCreated = a.createdAt?.toDate?.() || a.createdAt || new Date(0);
-          const bCreated = b.createdAt?.toDate?.() || b.createdAt || new Date(0);
-          return new Date(bCreated) - new Date(aCreated);
+          const aCreated = a.createdAt ? new Date(a.createdAt) : new Date(0);
+          const bCreated = b.createdAt ? new Date(b.createdAt) : new Date(0);
+          return bCreated - aCreated;
       }
     });
 
@@ -73,45 +73,18 @@ const AllUsers = () => {
   const fetchAllUsers = async () => {
     setLoading(true);
     try {
-      console.log('🔄 Fetching all users...');
-      
-      // Fetch all users from the users collection
-      const usersSnapshot = await getDocs(collection(db, 'users'));
-      console.log(`📊 Found ${usersSnapshot.docs.length} users`);
+      console.log('🔄 Fetching all users with Auth metadata...');
 
-      // Fetch all user-organization relationships
-      const userOrgSnapshot = await getDocs(collection(db, 'userOrganizations'));
-      const userOrgMap = {};
-      userOrgSnapshot.docs.forEach(doc => {
-        const data = doc.data();
-        userOrgMap[data.userId] = data;
-      });
-      console.log(`📊 Found ${userOrgSnapshot.docs.length} user-organization relationships`);
+      // Call Cloud Function to get users with Firebase Auth metadata
+      const getAllUsersWithMetadata = httpsCallable(functions, 'getAllUsersWithMetadata');
+      const result = await getAllUsersWithMetadata();
 
-      // Fetch all organizations
-      const organizationsSnapshot = await getDocs(collection(db, 'organizations'));
-      const organizationsMap = {};
-      organizationsSnapshot.docs.forEach(doc => {
-        organizationsMap[doc.id] = { id: doc.id, ...doc.data() };
-      });
-      console.log(`📊 Found ${organizationsSnapshot.docs.length} organizations`);
-
-      // Combine user data with organization info
-      const usersData = usersSnapshot.docs.map(doc => {
-        const userData = { id: doc.id, ...doc.data() };
-        const orgInfo = userOrgMap[doc.id];
-        
-        return {
-          ...userData,
-          organizationInfo: orgInfo ? {
-            ...orgInfo,
-            organization: organizationsMap[orgInfo.organizationId]
-          } : null
-        };
-      });
-
-      console.log(`📊 Processed ${usersData.length} users with organization info`);
-      setUsers(usersData);
+      if (result.data.success) {
+        console.log(`📊 Fetched ${result.data.users.length} users with Auth metadata`);
+        setUsers(result.data.users);
+      } else {
+        throw new Error('Failed to fetch users');
+      }
     } catch (error) {
       console.error('❌ Error fetching users:', error);
     } finally {
@@ -119,10 +92,12 @@ const AllUsers = () => {
     }
   };
 
-  const formatDate = (timestamp) => {
-    if (!timestamp) return 'Never';
-    const date = timestamp?.toDate?.() || timestamp;
-    return new Date(date).toLocaleDateString('en-US', {
+  const formatDate = (dateValue) => {
+    if (!dateValue) return 'Never';
+    // Handle Firestore timestamps, ISO strings, or Date objects
+    const date = dateValue?.toDate?.() || new Date(dateValue);
+    if (isNaN(date.getTime())) return 'Never';
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

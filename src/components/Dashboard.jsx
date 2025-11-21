@@ -7,6 +7,7 @@ import { Megaphone, Users, MessageSquare, FileCheck, Receipt, ChevronDown, Chevr
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/config';
+import { useDashboardTranslation } from '../tolgee/hooks/useDashboardTranslation';
 import RapidWorksHeader from './new_landing_page_header';
 import BrandingKits from './BrandingKits';
 import ProfileEditModal from './ProfileEditModal';
@@ -44,6 +45,7 @@ import { useOnboarding } from '../hooks/useOnboarding';
 const Dashboard = () => {
   const { currentUser } = useAuth();
   const { isComplete: onboardingComplete } = useOnboarding();
+  const { t } = useDashboardTranslation();
   // const router = useRouter();
   const { kitId, taskId } = useParams();
   const pathname = usePathname();
@@ -717,7 +719,7 @@ const Dashboard = () => {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7C3BEC] mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading dashboard...</p>
+            <p className="text-gray-600">{t('loadingDashboard')}</p>
           </div>
         </div>
       </div>
@@ -781,7 +783,7 @@ const Dashboard = () => {
                 >
                   <Home className="h-5 w-5" />
                   <div className="flex-1">
-                        <div className="font-medium">Setup</div>
+                        <div className="font-medium">{t('setup')}</div>
                   </div>
                 </button>
                 
@@ -807,9 +809,7 @@ const Dashboard = () => {
                       >
                         <Building2 className="h-5 w-5" />
                         <div className="flex-1">
-                          <div className="font-medium">
-                            {currentContext?.type === 'organization' || canAccessMembers ? 'Your organization' : 'Your organization'}
-                          </div>
+                          <div className="font-medium">{t('yourOrganization')}</div>
                         </div>
                       </button>
                     )}
@@ -830,7 +830,7 @@ const Dashboard = () => {
                       >
                         <Users className="h-5 w-5" />
                         <div className="flex-1">
-                          <div className="font-medium">Members</div>
+                          <div className="font-medium">{t('members')}</div>
                         </div>
                       </button>
                     )}
@@ -858,7 +858,7 @@ const Dashboard = () => {
                 >
                   <Megaphone className="h-5 w-5" />
                   <div className="flex-1">
-                    <div className="font-medium">Rapid Branding</div>
+                    <div className="font-medium">{t('rapidBranding')}</div>
                   </div>
                 </button>
                 
@@ -894,7 +894,7 @@ const Dashboard = () => {
                       )}
                       <Users className="h-5 w-5" />
                       <div className="flex-1">
-                        <div className="font-medium">Expert Tasks</div>
+                        <div className="font-medium">{t('expertTasks')}</div>
                       </div>
                       {unreadTotal > 0 && (
                         <span className="ml-auto inline-flex items-center justify-center text-[10px] font-semibold bg-red-500 text-white rounded-full h-5 px-2">
@@ -929,7 +929,7 @@ const Dashboard = () => {
                           <div className="w-6 h-6 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
                             <MessageSquare className="h-3 w-3 text-white" />
                           </div>
-                          <span>All Tasks</span>
+                          <span>{t('allTasks')}</span>
                         </button>
                         
                         {/* Individual Experts */}
@@ -998,7 +998,7 @@ const Dashboard = () => {
                       <Users className="h-5 w-5" />
                       <div className="flex-1">
                         <div className="font-medium">
-                          {userIsExpert ? 'Expert Tasks' : (currentUser?.email?.endsWith('@rapid-works.io') ? 'My Requests' : 'Rapid Experts')}
+                          {userIsExpert ? t('expertTasks') : (currentUser?.email?.endsWith('@rapid-works.io') ? t('myRequests') : t('rapidExperts'))}
                         </div>
                       </div>
                       {userIsExpert && unreadTotal > 0 && (
@@ -1031,7 +1031,7 @@ const Dashboard = () => {
                   >
                     <FileCheck className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium">Agreements</div>
+                      <div className="font-medium">{t('agreements')}</div>
                     </div>
                     {currentUser?.email?.endsWith('@rapid-works.io') && (
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
@@ -1066,7 +1066,7 @@ const Dashboard = () => {
                   >
                     <Receipt className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium">Invoicing</div>
+                      <div className="font-medium">{t('invoicing')}</div>
                     </div>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                       activeTab === 'invoicing' 
@@ -1100,7 +1100,7 @@ const Dashboard = () => {
                     >
                       <Building className="h-5 w-5" />
                       <div className="flex-1">
-                        <div className="font-medium">Organizations</div>
+                        <div className="font-medium">{t('organizations')}</div>
                       </div>
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                         activeTab === 'organizations' 
@@ -1134,7 +1134,7 @@ const Dashboard = () => {
                   >
                     <Users className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium">Users</div>
+                      <div className="font-medium">{t('users')}</div>
                     </div>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                       activeTab === 'users' 
@@ -1188,7 +1188,7 @@ const Dashboard = () => {
                   >
                     <Compass className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium">Rapid Coaching</div>
+                      <div className="font-medium">{t('rapidCoaching')}</div>
                     </div>
                   </button>
                 )}
@@ -1215,7 +1215,7 @@ const Dashboard = () => {
                   >
                     <span className="pl-0.5 text-lg font-bold">€</span>
                     <div className="flex-1">
-                      <div className="pl-1.5 font-medium">Rapid Financing</div>
+                      <div className="pl-1.5 font-medium">{t('rapidFinancing')}</div>
                     </div>
                   </button>
                 )}
@@ -1243,7 +1243,7 @@ const Dashboard = () => {
                   >
                     <FileText className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium">MID Submissions</div>
+                      <div className="font-medium">{t('midSubmissions')}</div>
                     </div>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                       activeTab === 'mid-submissions' 
@@ -1270,7 +1270,7 @@ const Dashboard = () => {
                 >
                   <User className="h-5 w-5" />
                   <div className="flex-1">
-                    <div className="font-medium">Profile</div>
+                    <div className="font-medium">{t('profile')}</div>
                   </div>
                 </button>
 
@@ -1286,7 +1286,7 @@ const Dashboard = () => {
                         <Mail className="h-4 w-4 text-blue-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900 text-sm mb-1">Need help?</h3>
+                        <h3 className="font-semibold text-gray-900 text-sm mb-1">{t('needHelp')}</h3>
                         <p className="text-xs text-gray-600">
                           Reach out at{' '}
                           <a 
@@ -1316,20 +1316,20 @@ const Dashboard = () => {
                   </svg>
                 </button>
                 <h1 className="text-lg font-semibold text-gray-900 truncate">
-                  {activeTab === 'home' && 'Setup'}
-                  {activeTab === 'branding' && 'Rapid Branding'}
-                  {activeTab === 'tasks' && (userIsExpert ? 'Expert Tasks' : (currentUser?.email?.endsWith('@rapid-works.io') ? 'My Requests' : 'Rapid Experts'))}
-                  {activeTab === 'agreements' && 'Agreements'}
-                  {activeTab === 'invoicing' && 'Invoicing'}
-                  {activeTab === 'organizations' && 'Organizations'}
-                  {activeTab === 'users' && 'Users'}
+                  {activeTab === 'home' && t('setup')}
+                  {activeTab === 'branding' && t('rapidBranding')}
+                  {activeTab === 'tasks' && (userIsExpert ? t('expertTasks') : (currentUser?.email?.endsWith('@rapid-works.io') ? t('myRequests') : t('rapidExperts')))}
+                  {activeTab === 'agreements' && t('agreements')}
+                  {activeTab === 'invoicing' && t('invoicing')}
+                  {activeTab === 'organizations' && t('organizations')}
+                  {activeTab === 'users' && t('users')}
                   {/* {activeTab === 'analytics' && 'Rapid Analytics'} */}
-                  {activeTab === 'coachings' && 'Rapid Coaching'}
-                  {activeTab === 'financing' && 'Rapid Financing'}
-                  {activeTab === 'mid-submissions' && currentUser?.email?.endsWith('@rapid-works.io') && 'MID Submissions'}
+                  {activeTab === 'coachings' && t('rapidCoaching')}
+                  {activeTab === 'financing' && t('rapidFinancing')}
+                  {activeTab === 'mid-submissions' && currentUser?.email?.endsWith('@rapid-works.io') && t('midSubmissions')}
                   {/* {activeTab === 'twilio-test' && 'Twilio Test'} */}
-                  {activeTab === 'members' && (currentUser?.email?.endsWith('@rapid-works.io') ? 'Members' : 'Organization')}
-                  {activeTab === 'profile' && 'Profile'}
+                  {activeTab === 'members' && (currentUser?.email?.endsWith('@rapid-works.io') ? t('members') : t('organization'))}
+                  {activeTab === 'profile' && t('profile')}
                 </h1>
               </div>
 
@@ -1405,7 +1405,7 @@ const Dashboard = () => {
                             ) : (
                               <MessageSquare className="h-4 w-4" />
                             )}
-                            {isRequestLoading ? 'Processing...' : 'Request Fixed Price Task'}
+                            {isRequestLoading ? t('processing') : t('requestFixedPriceTask')}
                           </button>
                         ) : null}
                       />

@@ -22,319 +22,12 @@ import HeroImage from "../images/heroimage.jpg"
 import HeroImage1 from "../images/heroimage2.jpg"
 import HeroImage2 from "../images/heroimage3.jpg"
 import NRWLogo from "../images/nwrlogo.png"
+import { useTranslate } from '@tolgee/react'
 
 // Create Language Context
 const LanguageContext = createContext()
 
-// Translation Object
-const translations = {
-    en: {
-        nav: {
-            services: "Services",
-            approach: "Our Approach",
-            contact: "Contact",
-            getStarted: "Get Started",
-            impressum: "Legal Notice",
-        },
-        hero: {
-            title: "Your Idea, Live in 2 Weeks",
-            subtitle: "Get your MVP free of charge, only pay when you are amazed by the result.",
-            cta: "Book Your Free Consultation",
-        },
-        services: {
-            title: "Our Services",
-            subtitle: "Tailored solutions to launch your idea faster than ever",
-            strategic: {
-                title: "Strategic Coaching",
-                description:
-                    "One-on-one expert coaching by an experienced founder to help validate and refine your idea. We'll work together to define your MVP and create a roadmap for success.",
-                features: ["Idea validation and refinement", "Market analysis and positioning", "MVP feature prioritization"],
-            },
-            development: {
-                title: "Rapid MVP Development",
-                description:
-                    "We bring your MVP to life in just 2 weeks. Focus on your core business while we handle the technical implementation, delivering a fully functional product ready for user testing.",
-                features: ["Full-stack development", "User-centric design", "Core feature implementation"],
-            },
-            funding: {
-                title: "Funding Guidance",
-                description: "We assist startups in securing government funding to support their growth and development.",
-                features: [
-                    "Up to €35,000 in government funding",
-                    "Guidance through the application process",
-                    "Support for startups in North Rhine-Westphalia",
-                ],
-                specialNote: "* This funding is specific to NRW, but we can support startups in other regions as well.",
-            },
-        },
-        approach: {
-            title: "Our 3D Approach to MVP Success",
-            subtitle: "A proven methodology to turn your idea into a market-ready product",
-            steps: {
-                discovery: {
-                    title: "Discovery",
-                    description:
-                        "Together we dive deep into your idea, market, and goals to create a solid foundation for your MVP. Our guidance helps refine your concept for maximum customer validation.",
-                },
-                development: {
-                    title: "Development",
-                    description:
-                        "We bring your MVP to life in just 2 weeks, using cutting-edge technologies. We focus on core features that demonstrate your product's value to real customers.",
-                },
-                delivery: {
-                    title: "Delivery",
-                    description:
-                        "We present your fully functional MVP, ready for user testing. So far this has been completely free of charge. If you're not amazed by your MVP right now, you don't have to buy it. The only thing you have to invest is 2 weeks of our time.",
-                },
-            },
-        },
-        why: {
-            title: "Why Founders Choose RapidWorks",
-            subtitle: "Unmatched speed, expertise, and support for your journey",
-            features: {
-                founders: {
-                    title: "Built By Founders, For Founders",
-                    description: "We understand your unique challenges and time constraints because we've been there ourselves.",
-                },
-                speed: {
-                    title: "Lightning Fast Development",
-                    description: "Get your MVP in just 2 weeks, accelerating your time to market and investor pitches.",
-                },
-                risk: {
-                    title: "Risk-Free Engagement",
-                    description: "Free consultation and 2-week development period. Pay only when you're satisfied with your MVP.",
-                },
-                funding: {
-                    title: "Government Funding Support",
-                    description:
-                        "For startups in North Rhine-Westphalia, we assist in applying for government funding covering 70% of our services.",
-                },
-            },
-        },
-        postMVP: {
-            title: "Our Offer After Your MVP",
-            subtitle: "Continue your journey with flexible, high-quality development support",
-            features: {
-                hours: {
-                    title: "1,000 Hours of Development",
-                    description: "Access a pool of 1,000 development hours to use as needed. Start and stop at your convenience.",
-                },
-                developer: {
-                    title: "Dedicated Developer",
-                    description:
-                        "Work with the same developer throughout the year, ensuring consistency and deep understanding of your project.",
-                },
-                payment: {
-                    title: "Flexible Payment",
-                    description:
-                        "Pay only for the hours worked, billed at the end of each month. Cancel anytime with no long-term commitment.",
-                },
-            },
-        },
-        contact: {
-            title: "Ready to Launch Your Idea?",
-            subtitle:
-                "Take the first step towards bringing your idea to life. Schedule your free consultation today and let's build something amazing together.",
-            form: {
-                name: "Your Name",
-                email: "Your Email",
-                idea: "Tell us about your project idea",
-                submit: "Request Free Consultation",
-                terms: "By submitting this form, you agree to our",
-                termsLink: "terms of service",
-                and: "and",
-                privacyLink: "privacy policy",
-            },
-        },
-        footer: {
-            copyright: "© 2025 RapidWorks Agency. All rights reserved.",
-            terms: "Terms of Service",
-            privacy: "Privacy Policy",
-        },
-        impressum: {
-            title: "Legal Notice",
-            companyInfo: {
-                title: "Company Information",
-                name: "RapidWorks Agency GmbH",
-                street: "Innovationsstraße 42",
-                city: "50667 Köln",
-                country: "Germany",
-                email: "contact@rapidworks.de",
-                phone: "+49 (0) 221 123456",
-                managing: "Managing Director",
-                managingName: "Max Mustermann",
-            },
-            registration: {
-                title: "Registration",
-                court: "District Court Köln",
-                number: "HRB 123456",
-                vatId: "VAT ID: DE123456789",
-            },
-            responsibility: {
-                title: "Responsible for Content",
-                name: "Max Mustermann",
-                address: "Address same as above",
-            },
-        },
-    },
-    de: {
-        nav: {
-            services: "Leistungen",
-            approach: "Unser Ansatz",
-            contact: "Kontakt",
-            getStarted: "Jetzt starten",
-            impressum: "Impressum",
-        },
-        hero: {
-            title: "Deine Idee, live in 2 Wochen",
-            subtitle: "Wir entwickeln deinen MVP in nur 14 Tagen - kostenfrei bis du von den Ergebnissen begeistert bist.",
-            cta: "Kostenloses Beratungsgespräch",
-        },
-        services: {
-            title: "Unsere Rapid MVP Services",
-            subtitle: "Maßgeschneiderte Lösungen, um deine Idee schneller als je zuvor zu verwirklichen",
-            strategic: {
-                title: "Strategische Beratung",
-                description:
-                    "Individuelle Expertenberatung durch einen erfahrenen Gründer, um deine Idee zu validieren und zu verfeinern. Gemeinsam definieren wir deinen MVP und erstellen einen Fahrplan zum Erfolg.",
-                features: [
-                    "Ideenvalidierung und -verfeinerung",
-                    "Marktanalyse und Positionierung",
-                    "MVP Feature-Priorisierung",
-                ],
-            },
-            development: {
-                title: "Schnelle MVP-Entwicklung",
-                description:
-                    "Wir erwecken deinen MVP in nur 2 Wochen zum Leben. Konzentriere dich auf dein Kerngeschäft, während wir die technische Umsetzung übernehmen und ein voll funktionsfähiges Produkt für Benutzertests liefern.",
-                features: ["Full-Stack-Entwicklung", "Benutzerorientiertes Design", "Kernfunktionen-Implementierung"],
-            },
-            funding: {
-                title: "Fördermittelberatung",
-                description: "Wir unterstützen Startups bei der Beschaffung von staatlichen Fördermitteln zur Förderung ihres Wachstums und ihrer Entwicklung.",
-                features: [
-                    "Bis zu 35.000€ staatliche Förderung",
-                    "Betreuung während des Antragsverfahrens",
-                    "Unterstützung für Startups in Nordrhein-Westfalen",
-                ],
-                specialNote: "* Diese Förderung gilt speziell für NRW, wir können aber auch Startups in anderen Regionen unterstützen.",
-            },
-        },
-        approach: {
-            title: "Unser 3D-Ansatz zum MVP-Erfolg",
-            subtitle: "Eine bewährte Methodik, um deine Idee in ein marktreifes Produkt zu verwandeln",
-            steps: {
-                discovery: {
-                    title: "Entdeckung",
-                    description:
-                        "Gemeinsam tauchen wir tief in deine Idee, den Markt und deine Ziele ein, um eine solide Grundlage für deinen MVP zu schaffen. Unsere Beratung hilft, dein Konzept für maximale Kundenvalidierung zu verfeinern.",
-                },
-                development: {
-                    title: "Entwicklung",
-                    description:
-                        "Wir bringen deinen MVP in nur 2 Wochen zum Leben und nutzen modernste Technologien. Wir konzentrieren uns auf Kernfunktionen, die den Wert deines Produkts für echte Kunden demonstrieren.",
-                },
-                delivery: {
-                    title: "Übergabe",
-                    description:
-                        "Wir präsentieren deinen voll funktionsfähigen MVP, bereit für Benutzertests. Bis hierhin ist alles komplett kostenfrei. Wenn du von deinem MVP nicht begeistert bist, musst du ihn nicht kaufen. Das Einzige, was du investieren musst, sind 2 Wochen unserer Zeit.",
-                },
-            },
-        },
-        why: {
-            title: "Warum Gründer RapidWorks wählen",
-            subtitle: "Unübertroffene Geschwindigkeit, Expertise und Unterstützung für deine Reise",
-            features: {
-                founders: {
-                    title: "Von Gründern für Gründer",
-                    description:
-                        "Wir verstehen deine einzigartigen Herausforderungen und zeitlichen Einschränkungen, weil wir selbst dort waren.",
-                },
-                speed: {
-                    title: "Blitzschnelle Entwicklung",
-                    description:
-                        "Erhalte deinen MVP in nur 2 Wochen und beschleunige deinen Markteintritt und Investorenpräsentationen.",
-                },
-                risk: {
-                    title: "Risikofreies Engagement",
-                    description:
-                        "Kostenlose Beratung und 2-wöchige Entwicklungsphase. Du zahlst nur, wenn du mit deinem MVP zufrieden bist.",
-                },
-                funding: {
-                    title: "Förderung durch die öffentliche Hand",
-                    description:
-                        "Für Startups in Nordrhein-Westfalen unterstützen wir dich bei der Beantragung von öffentlichen Fördermitteln, die 70% unserer Leistungen abdecken.",
-                },
-            },
-        },
-        postMVP: {
-            title: "Unser Angebot nach deinem MVP",
-            subtitle: "Setze deine Reise mit flexibler, hochwertiger Entwicklungsunterstützung fort",
-            features: {
-                hours: {
-                    title: "1.000 Stunden Entwicklung",
-                    description:
-                        "Zugriff auf einen Pool von 1.000 Entwicklungsstunden nach Bedarf. Starte und stoppe ganz bequem.",
-                },
-                developer: {
-                    title: "Dedizierter Entwickler",
-                    description:
-                        "Arbeite das ganze Jahr über mit demselben Entwickler zusammen, um Konsistenz und ein tiefes Verständnis deines Projekts zu gewährleisten.",
-                },
-                payment: {
-                    title: "Flexible Zahlung",
-                    description:
-                        "Bezahle nur die geleisteten Stunden, die am Ende jedes Monats abgerechnet werden. Jederzeit kündbar ohne langfristige Bindung.",
-                },
-            },
-        },
-        contact: {
-            title: "Bereit, deine Idee zu starten?",
-            subtitle:
-                "Mache den ersten Schritt, um deine Idee zum Leben zu erwecken. Vereinbare noch heute dein kostenloses Beratungsgespräch und lass uns gemeinsam etwas Erstaunliches aufbauen.",
-            form: {
-                name: "Dein Name",
-                email: "Deine E-Mail",
-                idea: "Erzähl uns von deiner Projektidee",
-                submit: "Kostenloses Beratungsgespräch anfragen",
-                terms: "Mit dem Absenden des Formulars stimmst du unseren",
-                termsLink: "AGBs",
-                and: "und der",
-                privacyLink: "Datenschutzerklärung zu",
-            },
-        },
-        footer: {
-            copyright: "© 2025 RapidWorks Agency. Alle Rechte vorbehalten.",
-            terms: "AGB",
-            privacy: "Datenschutz",
-        },
-        impressum: {
-            title: "Impressum",
-            companyInfo: {
-                title: "Firmeninformationen",
-                name: "RapidWorks Agentur GmbH",
-                street: "Innovationsstraße 42",
-                city: "50667 Köln",
-                country: "Deutschland",
-                email: "kontakt@rapidworks.de",
-                phone: "+49 (0) 221 123456",
-                managing: "Geschäftsführer",
-                managingName: "Max Mustermann",
-            },
-            registration: {
-                title: "Registrierung",
-                court: "Amtsgericht Köln",
-                number: "HRB 123456",
-                vatId: "USt-IdNr.: DE123456789",
-            },
-            responsibility: {
-                title: "Verantwortlich für den Inhalt",
-                name: "Max Mustermann",
-                address: "Adresse wie oben",
-            },
-        },
-    },
-}
+// translations object removed - now using Tolgee with 'coaching' namespace
 
 // Language Flag Component
 const LanguageFlag = ({ code }) => {
@@ -981,7 +674,7 @@ const Footer = () => {
 }
 
 function MVPpage() {
-    // Initialize language from localStorage or default to 'en'
+    // Initialize language from localStorage or default to 'de'
     const [language, setLanguage] = useState(() => {
         const saved = localStorage.getItem("language")
         return saved || "de"
@@ -993,14 +686,42 @@ function MVPpage() {
         transition: { duration: 0.6 },
     }
 
-    // Translation helper function
+    // Use Tolgee for translations (flat structure with coaching. prefix)
+    const { t } = useTranslate()
+
+    // Translation helper function - now uses Tolgee with coaching. prefix
     const translate = (key) => {
-        const keys = key.split(".")
-        let value = translations[language]
-        for (const k of keys) {
-            value = value?.[k]
+        // Handle nested objects like why.features which returns an object
+        if (key === 'why.features') {
+            return {
+                founders: {
+                    title: t('coaching.why.features.founders.title'),
+                    description: t('coaching.why.features.founders.description'),
+                },
+                speed: {
+                    title: t('coaching.why.features.speed.title'),
+                    description: t('coaching.why.features.speed.description'),
+                },
+                risk: {
+                    title: t('coaching.why.features.risk.title'),
+                    description: t('coaching.why.features.risk.description'),
+                },
+                funding: {
+                    title: t('coaching.why.features.funding.title'),
+                    description: t('coaching.why.features.funding.description'),
+                },
+            }
         }
-        return value || key
+        // Handle array returns for features
+        if (key.endsWith('.features')) {
+            const prefix = key.replace('.features', '')
+            return [
+                t(`coaching.${prefix}.features.0`),
+                t(`coaching.${prefix}.features.1`),
+                t(`coaching.${prefix}.features.2`),
+            ]
+        }
+        return t(`coaching.${key}`)
     }
 
     // Save language preference to localStorage

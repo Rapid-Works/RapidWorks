@@ -4,7 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, User, Save, Loader2, Camera, AlertTriangle, Eye, EyeOff, Lock, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useMIDTranslation } from '../hooks/useMIDTranslation';
+import { useCommonTranslation } from '../tolgee/hooks/useCommonTranslation';
+import { useProfileTranslation } from '../tolgee/hooks/useProfileTranslation';
 import StandardTabs from './ui/StandardTabs';
 import { reauthenticateWithCredential, EmailAuthProvider, updatePassword, deleteUser } from 'firebase/auth';
 import { deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -12,7 +13,8 @@ import { db } from '../firebase/config';
 
 const ProfileTab = () => {
   const { currentUser, updateUserProfile, logout } = useAuth();
-  const { t } = useMIDTranslation();
+  const { tField, tAction } = useCommonTranslation();
+  const { t } = useProfileTranslation();
   
   // Profile Data State
   const [profileLoading, setProfileLoading] = useState(false);
@@ -314,16 +316,16 @@ const ProfileTab = () => {
           </div>
           
           <p className="text-sm text-gray-500 text-center">
-            {t('onboarding.profile.addProfilePicture')}
+            {t('addProfilePicture')}
             <br />
-            <span className="text-xs">{t('onboarding.profile.maxFileSize')}</span>
+            <span className="text-xs">{t('maxFileSize')}</span>
           </p>
         </div>
 
         {/* First Name */}
         <div>
           <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-            {t('onboarding.profile.firstName')} *
+            {tField('firstName')} *
           </label>
           <input
             id="firstName"
@@ -332,7 +334,7 @@ const ProfileTab = () => {
             value={formData.firstName}
             onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent text-black"
-            placeholder={t('onboarding.profile.firstNamePlaceholder')}
+            placeholder={t('firstNamePlaceholder')}
             required
           />
         </div>
@@ -340,7 +342,7 @@ const ProfileTab = () => {
         {/* Last Name */}
         <div>
           <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-            {t('onboarding.profile.lastName')} *
+            {tField('lastName')} *
           </label>
           <input
             id="lastName"
@@ -349,7 +351,7 @@ const ProfileTab = () => {
             value={formData.lastName}
             onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent text-black"
-            placeholder={t('onboarding.profile.lastNamePlaceholder')}
+            placeholder={t('lastNamePlaceholder')}
             required
           />
         </div>
@@ -357,7 +359,7 @@ const ProfileTab = () => {
         {/* Email (read-only) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t('onboarding.profile.email')}
+            {tField('email')}
           </label>
           <input
             type="email"
@@ -366,7 +368,7 @@ const ProfileTab = () => {
             disabled
           />
           <p className="text-xs text-gray-500 mt-1">
-            {t('onboarding.profile.contactSupport')}
+            {t('contactSupport')}
           </p>
         </div>
 
@@ -399,7 +401,7 @@ const ProfileTab = () => {
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                {t('onboarding.profile.save')}
+                {tAction('save')}
               </>
             )}
           </button>
@@ -415,14 +417,14 @@ const ProfileTab = () => {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Lock className="h-5 w-5 text-[#7C3BEC]" />
-          {t('onboarding.profile.changePassword')}
+          {t('changePassword')}
         </h3>
-        
+
         <form onSubmit={handlePasswordChange} className="space-y-4">
           {/* Current Password */}
           <div>
             <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              {t('onboarding.profile.currentPassword')}
+              {t('currentPassword')}
             </label>
             <div className="relative">
               <input
@@ -446,7 +448,7 @@ const ProfileTab = () => {
           {/* New Password */}
           <div>
             <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              {t('onboarding.profile.newPassword')}
+              {t('newPassword')}
             </label>
             <div className="relative">
               <input
@@ -470,7 +472,7 @@ const ProfileTab = () => {
           {/* Confirm Password */}
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              {t('onboarding.profile.confirmPassword')}
+              {tField('confirmPassword')}
             </label>
             <div className="relative">
               <input
@@ -519,7 +521,7 @@ const ProfileTab = () => {
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                {t('onboarding.profile.changePassword')}
+                {t('changePassword')}
               </>
             )}
           </button>
@@ -530,11 +532,11 @@ const ProfileTab = () => {
       <div className="bg-white rounded-lg border-2 border-red-200 p-6">
         <h3 className="text-lg font-semibold text-red-900 mb-4 flex items-center gap-2">
           <Trash2 className="h-5 w-5 text-red-600" />
-          {t('onboarding.profile.deleteAccount')}
+          {t('deleteAccount')}
         </h3>
-        
+
         <p className="text-sm text-gray-700 mb-6">
-          {t('onboarding.profile.deleteAccountWarning')}
+          {t('deleteAccountWarning')}
         </p>
 
         {!showDeleteConfirm ? (
@@ -543,13 +545,13 @@ const ProfileTab = () => {
             className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             <Trash2 className="h-4 w-4" />
-            {t('onboarding.profile.deleteAccountButton')}
+            {t('deleteAccountButton')}
           </button>
         ) : (
           <div className="space-y-4">
             <div>
               <label htmlFor="deletePassword" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('onboarding.profile.currentPassword')}
+                {t('currentPassword')}
               </label>
               <input
                 id="deletePassword"
@@ -557,7 +559,7 @@ const ProfileTab = () => {
                 value={deletePassword}
                 onChange={(e) => setDeletePassword(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-black"
-                placeholder={t('onboarding.profile.currentPassword')}
+                placeholder={t('currentPassword')}
               />
             </div>
             
@@ -570,7 +572,7 @@ const ProfileTab = () => {
                 }}
                 className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
               >
-                Cancel
+                {tAction('cancel')}
               </button>
               <button
                 onClick={handleDeleteAccount}
@@ -585,7 +587,7 @@ const ProfileTab = () => {
                 ) : (
                   <>
                     <Trash2 className="h-4 w-4" />
-                    {t('onboarding.profile.deleteAccountButton')}
+                    {t('deleteAccountButton')}
                   </>
                 )}
               </button>
@@ -598,12 +600,12 @@ const ProfileTab = () => {
 
   const tabs = [
     {
-      label: t('onboarding.profile.profileData'),
+      label: t('profileData'),
       icon: <User className="h-4 w-4" />,
       content: profileDataContent
     },
     {
-      label: t('onboarding.profile.security'),
+      label: t('security'),
       icon: <Lock className="h-4 w-4" />,
       content: securityContent
     }
@@ -617,5 +619,8 @@ const ProfileTab = () => {
 };
 
 export default ProfileTab;
+
+
+
 
 

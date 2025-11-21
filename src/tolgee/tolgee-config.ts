@@ -20,7 +20,7 @@ export const tolgee = Tolgee()
 
     // Static data fallback (only used when API is unavailable)
     staticData: {
-      'de': () => import('./translations/de.json'),
-      'en': () => import('./translations/en.json'),
+      de: () => import('./translations/de.json'),
+      en: () => import('./translations/en.json'),
     },
   });
