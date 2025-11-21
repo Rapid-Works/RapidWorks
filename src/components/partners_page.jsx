@@ -23,6 +23,7 @@ import RapidWorksHeader from "./new_landing_page_header"
 import { submitPartnerInterestToAirtable } from '../utils/airtableService'
 import { useLanguage } from "../contexts/LanguageContext"
 // import ExploreMoreSection from "./ExploreMoreSection" // Can remove this import if not used elsewhere
+import { usePartnersPageTranslation } from '../tolgee/hooks/usePartnersPageTranslation'
 
 const PartnersPage = () => {
   const context = useLanguage();
@@ -114,126 +115,16 @@ const PartnersPage = () => {
     }
   }
 
-  // Page content object with translations
-  const pageContent = {
-    en: {
-      badge: { // Add badge content
-        text: "Coming Soon" // Or adjust as needed
-      },
-      hero: {
-        title: "Find Your Advisors",
-        subtitle: "Not every advisor is suited for a startup's needs. We know that, so we help you find the right one. Let us know which advisors you need in the next months and we'll find them.",
-      },
-      partners: {
-        title: "Indicate Your Needs",
-        subtitle: "Select the timeframe (in months) when you anticipate needing each type of expert.",
-        selectionTitle: "Required Partners & Timeline",
-        items: [
-          { id: "notary", title: "Notary", description: "For company formation, contracts, certifications." },
-          { id: "tax-advisor", title: "Tax Advisor", description: "For tax declarations, optimization, bookkeeping setup." },
-          { id: "auditor", title: "Auditor", description: "For financial statement audits, compliance checks." },
-          { id: "legal-advisor", title: "Legal Advisor", description: "For contracts, investment rounds, legal disputes." },
-          { id: "funding-consultant", title: "Funding Consultant", description: "For grant applications, funding strategies." },
-          { id: "data-protection", title: "Data Protection Officer", description: "For GDPR compliance, data privacy policies." }
-        ],
-        demandInfo: {
-          title: "Demand-Driven Network",
-          subtitle: "We connect with experts once sufficient demand is identified. Your input shapes our partner network!",
-          cta: "Indicate your needs above"
-        }
-      },
-      form: {
-        title: "Submit Your Interest",
-        emailLabel: "Your Email Address",
-        emailPlaceholder: "you@example.com",
-        selectedNeedsTitle: "Selected Partner Needs", // Title for the summary
-        consent: {
-          checkbox: "I agree to be contacted regarding potential partner matches",
-          subtitle: "We respect your privacy and will only share relevant opportunities."
-        },
-        button: "Submit Interest",
-        success: {
-          title: "Thank You!",
-          message: "Your interest has been recorded. We'll reach out when we have relevant partner matches based on collective demand.",
-          anotherEmail: "Submit for another email"
-        }
-      },
-       errorPrompt: {
-         noSelection: "Please indicate when you might need at least one partner.",
-         invalidEmail: "Please enter a valid email address.",
-         noEmail: "Please enter your email address.",
-         submitFailed: "Failed to submit your interest. Please try again."
-       },
-       selectionPrompt: { // Add prompt text
-         title: "Indicate Needs First",
-         message: "Please select a timeframe for at least one partner from the left panel.",
-         mobileText: "Scroll up to select",
-         desktopText: "Select from the left"
-       }
-    },
-    de: {
-      badge: { // Add badge content (German)
-        text: "Demnächst verfügbar"
-      },
-      hero: {
-        title: "Finde deine Berater",
-        subtitle: "Nicht jeder Berater ist für die Bedürfnisse eines Startups geeignet. Das wissen wir, deshalb helfen wir dir, den Richtigen zu finden. Sag uns, welche Berater du in den nächsten Monaten brauchst, und wir finden sie für dich.",
-      },
-      partners: {
-        title: "Gib deinen Bedarf an",
-        subtitle: "Wähle den Zeitraum (in Monaten), wann du voraussichtlich jeden Expertentyp brauchst.",
-        selectionTitle: "Benötigte Partner & Zeitplan",
-        items: [
-          { id: "notary", title: "Notar", description: "Für Firmengründung, Verträge, Beglaubigungen." },
-          { id: "tax-advisor", title: "Steuerberater", description: "Für Steuererklärungen, Optimierung, Buchhaltungseinrichtung." },
-          { id: "auditor", title: "Wirtschaftsprüfer", description: "Für Jahresabschlussprüfungen, Compliance-Prüfungen." },
-          { id: "legal-advisor", title: "Rechtsberater", description: "Für Verträge, Investitionsrunden, Rechtsstreitigkeiten." },
-          { id: "funding-consultant", title: "Fördermittelberater", description: "Für Förderanträge, Finanzierungsstrategien." },
-          { id: "data-protection", title: "Datenschutzbeauftragter", description: "Für DSGVO-Konformität, Datenschutzrichtlinien." }
-        ],
-        demandInfo: {
-          title: "Nachfragebasiertes Netzwerk",
-          subtitle: "Wir knüpfen Kontakte zu Experten, sobald genügend Nachfrage besteht. Dein Input formt unser Partnernetzwerk!",
-          cta: "Gib oben deinen Bedarf an"
-        }
-      },
-      form: {
-        title: "Interesse bekunden",
-        emailLabel: "Deine E-Mail-Adresse",
-        emailPlaceholder: "du@example.com",
-        selectedNeedsTitle: "Ausgewählter Partnerbedarf", // Title for the summary
-        consent: {
-          checkbox: "Ich stimme zu, dass du mich bezüglich potenzieller Partner kontaktierst",
-          subtitle: "Wir respektieren deine Privatsphäre und teilen nur relevante Möglichkeiten."
-        },
-        button: "Interesse bekunden",
-        success: {
-          title: "Vielen Dank!",
-          message: "Dein Interesse wurde registriert. Wir melden uns, sobald wir basierend auf der Gesamtnachfrage relevante Partner-Matches haben.",
-          anotherEmail: "Für eine andere E-Mail eintragen"
-        }
-      },
-      errorPrompt: {
-          noSelection: "Bitte gib an, wann du mindestens einen Partner brauchen könntest.",
-          invalidEmail: "Bitte gib eine gültige E-Mail-Adresse ein.",
-          noEmail: "Bitte gib deine E-Mail-Adresse ein.",
-          submitFailed: "Interesse konnte nicht übermittelt werden. Bitte versuche es erneut."
-        },
-      selectionPrompt: { // Add prompt text (German)
-        title: "Zuerst Bedarf angeben",
-        message: "Bitte wähle einen Zeitraum für mindestens einen Partner im linken Bereich aus.",
-        mobileText: "Hochscrollen zum Auswählen",
-        desktopText: "Links auswählen"
-        }
-    }
-  };
+  // Use Tolgee translations
+  const content = usePartnersPageTranslation();
+
+  // pageContent removed - now using usePartnersPageTranslation hook
 
   if (isLoading || !context) {
     return <div className="flex justify-center items-center h-screen"><Loader2 className="h-12 w-12 animate-spin text-blue-600" /></div>;
   }
 
   const { language } = context;
-  const content = pageContent[language];
 
   // Update error messages based on language
   if (error === "Please enter your email address") setError(content.errorPrompt.noEmail);

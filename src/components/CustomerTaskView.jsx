@@ -23,9 +23,13 @@ import { storage } from '../firebase/config';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatFileSize } from '../utils/taskFileService';
 import { sendGenericTeamsNotification } from '../utils/teamsWebhookService';
+import { useTaskTranslation } from '../tolgee/hooks/useTaskTranslation';
+import { useCommonTranslation } from '../tolgee/hooks/useCommonTranslation';
 
 const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
   const { currentUser } = useAuth();
+  const { t } = useTaskTranslation();
+  const { tAction } = useCommonTranslation();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [showPriceOffer, setShowPriceOffer] = useState(false);
@@ -142,11 +146,11 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
     } catch (error) {
       console.error('Error sending message:', error);
       setMessage(messageContent); // Restore message on error
-      alert('Failed to send message. Please try again.');
+      alert(t('failedSendMessage'));
     } finally {
       setSending(false);
     }
-  }, [message, sending, currentUser?.email, currentUser?.displayName, taskData.id]);
+  }, [message, sending, currentUser?.email, currentUser?.displayName, taskData.id, t]);
 
   const handleFileSelect = async (event) => {
     const file = event.target.files[0];
@@ -154,7 +158,7 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
 
     // Validate file size (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
-      alert('File size must be less than 10MB');
+      alert(t('fileSizeError'));
       return;
     }
 
@@ -188,7 +192,7 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
       
     } catch (error) {
       console.error('Error uploading file:', error);
-      alert('Failed to upload file. Please try again.');
+      alert(t('failedUploadFile'));
     } finally {
       setUploadingFile(false);
       // Clear the file input
@@ -267,7 +271,7 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
 
     } catch (error) {
       console.error('Error accepting offer:', error);
-      alert('Failed to accept offer. Please try again.');
+      alert(t('failedAcceptOffer'));
     }
   };
 
@@ -300,7 +304,7 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
 
     } catch (error) {
       console.error('Error declining offer:', error);
-      alert('Failed to decline offer. Please try again.');
+      alert(t('failedDeclineOffer'));
     }
   };
 
@@ -364,12 +368,12 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
               <div className="inline-flex items-center justify-center w-12 h-12 bg-[#7C3BEC] rounded-full mb-3">
                 <Euro className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Fixed Price Offer</h3>
+              <h3 className="text-xl font-bold text-gray-900">{t('fixedPriceOffer')}</h3>
               <div className="text-4xl font-bold text-[#7C3BEC] mt-2">
                 {msg.content.hours}h - {formatPrice(msg.content.price)}
               </div>
               <p className="text-gray-600 text-sm">
-                €{msg.content.rate}/hour • Delivery in {msg.content.deadline}
+                €{msg.content.rate}/hour • {t('deliveryIn', { deadline: msg.content.deadline })}
               </p>
             </div>
 
@@ -379,13 +383,13 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
                   onClick={handleAcceptOffer}
                   className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
                 >
-                  Order Now with Obligation to Pay
+                  {t('orderNowButton')}
                 </button>
                 <button
                   onClick={() => setShowDeclineModal(true)}
                   className="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
                 >
-                  Decline
+                  {t('declineButton')}
                 </button>
               </div>
             )}
@@ -452,12 +456,12 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
                             setShowFileModal(true);
                           }}
                           className={`px-3 py-1 rounded text-xs transition-colors ${
-                            isCurrentUser 
-                              ? 'bg-white/20 hover:bg-white/30 text-white' 
+                            isCurrentUser
+                              ? 'bg-white/20 hover:bg-white/30 text-white'
                               : 'bg-blue-100 hover:bg-blue-200 text-blue-600'
                           }`}
                         >
-                          Preview
+                          {t('preview')}
                         </button>
                       )}
                       <a
@@ -465,12 +469,12 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`px-3 py-1 rounded text-xs transition-colors ${
-                          isCurrentUser 
-                            ? 'bg-white/20 hover:bg-white/30 text-white' 
+                          isCurrentUser
+                            ? 'bg-white/20 hover:bg-white/30 text-white'
                             : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                         }`}
                       >
-                        Download
+                        {t('download')}
                       </a>
                     </div>
                   </div>
@@ -518,8 +522,8 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
             <FileText className="h-4 w-4 text-gray-600" />
           </div>
           <div className="flex-1">
-            <h4 className="font-semibold text-gray-900 mb-2">Original Task Request</h4>
-            
+            <h4 className="font-semibold text-gray-900 mb-2">{t('originalTaskRequest')}</h4>
+
             {hasDescription && (
               <div className="mb-3" data-testid="task-description">
                 <p className="text-sm text-gray-700 leading-relaxed">
@@ -532,14 +536,14 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
               <div className="mb-3">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Calendar className="h-4 w-4" />
-                  <span>Due: {formatDueDateWithTime(currentTaskData)}</span>
+                  <span>{t('due', { date: formatDueDateWithTime(currentTaskData) })}</span>
                 </div>
               </div>
             )}
 
             {hasFiles && (
               <div data-testid="task-files">
-                <p className="text-sm font-medium text-gray-900 mb-2">Attached Files:</p>
+                <p className="text-sm font-medium text-gray-900 mb-2">{t('attachedFiles')}</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {currentTaskData.files.map((file, index) => (
                     <div key={index} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group">
@@ -594,7 +598,7 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
                               }}
                               className="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 py-1 px-2 rounded transition-colors"
                             >
-                              Preview
+                              {t('preview')}
                             </button>
                           )}
                           {file.url && (
@@ -603,9 +607,9 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex-1 text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 py-1 px-2 rounded transition-colors text-center"
-                              title="Download file"
+                              title={t('downloadFile')}
                             >
-                              Download
+                              {t('download')}
                             </a>
                           )}
                         </div>
@@ -646,7 +650,7 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
             <User className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 text-lg">{currentTaskData.expertName || 'Expert'}</h3>
+            <h3 className="font-semibold text-gray-900 text-lg">{currentTaskData.expertName || t('expert')}</h3>
             <p className="text-sm text-gray-600">{currentTaskData.taskName}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
@@ -657,15 +661,15 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
                   onClick={handleAcceptOffer}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
                 >
-                  Order Now
+                  {t('orderNow')}
                 </button>
               )}
               <button
                 onClick={scrollToTop}
                 className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50"
-                title="View details"
+                title={t('viewDetails')}
               >
-                View details
+                {t('viewDetails')}
               </button>
               
               <div className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -675,17 +679,17 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
                 currentTaskData.status === 'completed' ? 'bg-green-100 text-green-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
-                {(currentTaskData.status === 'estimate_provided' || currentTaskData.status === 'estimated') && 'Pending'}
-                {currentTaskData.status === 'accepted' && 'Accepted'}
-                {currentTaskData.status === 'in_progress' && 'Active'}
-                {currentTaskData.status === 'completed' && 'Done'}
-                {currentTaskData.status === 'pending' && 'New Task'}
+                {(currentTaskData.status === 'estimate_provided' || currentTaskData.status === 'estimated') && t('statusPendingShort')}
+                {currentTaskData.status === 'accepted' && t('statusAcceptedShort')}
+                {currentTaskData.status === 'in_progress' && t('statusActiveShort')}
+                {currentTaskData.status === 'completed' && t('statusDoneShort')}
+                {currentTaskData.status === 'pending' && t('statusNewTask')}
               </div>
             </div>
             {currentTaskData.createdAt && (
               <p className="text-xs text-gray-500">
                 {formatReadableDate(currentTaskData.createdAt)}
-                {` • Created by ${currentTaskData.userName || currentTaskData.userEmail || 'Customer'}`}
+                {` • ${t('createdBy', { name: currentTaskData.userName || currentTaskData.userEmail || t('customer') })}`}
               </p>
             )}
           </div>
@@ -717,7 +721,7 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
           <button
             onClick={scrollToBottom}
             className="absolute right-6 bottom-28 bg-white/90 border border-gray-200 shadow-sm hover:shadow-md rounded-full p-2"
-            title="Scroll to latest"
+            title={t('scrollToLatest')}
           >
             <ArrowDown className="h-4 w-4 text-gray-700" />
           </button>
@@ -728,11 +732,11 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
       {!viewOnly ? (
         <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 pt-8 pb-16 backdrop-blur-sm bg-white/95">
         <div className="flex items-end gap-3">
-          <button 
+          <button
             onClick={triggerFileUpload}
             disabled={uploadingFile}
             className="p-3 hover:bg-gray-100 rounded-xl transition-colors flex-shrink-0 mb-1 disabled:opacity-50"
-            title={uploadingFile ? 'Uploading...' : 'Attach file'}
+            title={uploadingFile ? t('uploading') : t('attachFile')}
           >
             {uploadingFile ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600"></div>
@@ -757,7 +761,7 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                placeholder="Type your message..."
+                placeholder={t('typeMessage')}
                 disabled={sending}
                 className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#7C3BEC]/50 focus:border-[#7C3BEC] disabled:opacity-50 bg-gray-50 focus:bg-white transition-colors resize-none"
               />
@@ -785,8 +789,8 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
           <div className="flex items-center justify-center">
             <div className="flex items-center space-x-2 text-amber-700">
               <AlertCircle className="h-5 w-5" />
-              <span className="font-medium">View Only Mode</span>
-              <span className="text-sm">You can view this conversation but cannot interact</span>
+              <span className="font-medium">{t('viewOnlyMode')}</span>
+              <span className="text-sm">{t('viewOnlyDescription')}</span>
             </div>
           </div>
         </div>
@@ -818,7 +822,7 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
               ) : (
                 <div className="text-center py-12">
                   <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-4">Preview not available for this file type</p>
+                  <p className="text-gray-600 mb-4">{t('previewNotAvailable')}</p>
                   <a
                     href={selectedFile.url}
                     target="_blank"
@@ -826,7 +830,7 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    Download File
+                    {t('downloadFile')}
                   </a>
                 </div>
               )}
@@ -844,20 +848,20 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <X className="h-8 w-8 text-red-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Decline Offer</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{t('declineOfferTitle')}</h3>
                 <p className="text-gray-600">
-                  We are sorry for not meeting your expectations. To improve our services we would be happy if you let us know in which way we failed your expectations.
+                  {t('declineOfferDescription')}
                 </p>
               </div>
-              
+
               <textarea
                 value={declineFeedback}
                 onChange={(e) => setDeclineFeedback(e.target.value)}
-                placeholder="Please share your feedback (optional)..."
+                placeholder={t('feedbackPlaceholder')}
                 rows={4}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none mb-6"
               />
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -866,13 +870,13 @@ const CustomerTaskView = ({ taskData, onBack, viewOnly = false }) => {
                   }}
                   className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
                 >
-                  Cancel
+                  {tAction('cancel')}
                 </button>
                 <button
                   onClick={handleDeclineOffer}
                   className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
                 >
-                  Decline Offer
+                  {t('declineOfferButton')}
                 </button>
               </div>
             </div>

@@ -7,9 +7,11 @@ import { Megaphone, Users, MessageSquare, FileCheck, Receipt, ChevronDown, Chevr
 import { useParams, usePathname } from 'next/navigation';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/config';
+import { useDashboardTranslation } from '../tolgee/hooks/useDashboardTranslation';
 import RapidWorksHeader from './new_landing_page_header';
 import BrandingKits from './BrandingKits';
 import ProfileEditModal from './ProfileEditModal';
+import ProfileTab from './ProfileTab';
 import NotificationSettingsModal from './NotificationSettingsModal';
 import TaskList from './TaskList';
 import SignedAgreements from './SignedAgreements';
@@ -44,9 +46,11 @@ import { useOnboarding } from '../hooks/useOnboarding';
 const Dashboard = () => {
   const { currentUser } = useAuth();
   const { isComplete: onboardingComplete } = useOnboarding();
+  const { t } = useDashboardTranslation();
   // const router = useRouter();
   const { kitId, taskId } = useParams();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   // Open Notification Settings if history link set the flag
   const initialOpenNotif = typeof window !== 'undefined' && localStorage.getItem('openNotificationSettings') === '1';
@@ -219,8 +223,7 @@ const Dashboard = () => {
 
   // Handle URL query parameters for tab and organization deep linking
   useEffect(() => {
-    if (!contextLoading) {
-      const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    if (!contextLoading && searchParams) {
       const tabParam = searchParams.get('tab');
       const orgIdParam = searchParams.get('orgId');
       const openInviteParam = searchParams.get('openInvite');
@@ -248,7 +251,7 @@ const Dashboard = () => {
         window.history.replaceState({}, '', newUrl);
       }
     }
-  }, [pathname, contextLoading]);
+  }, [pathname, searchParams, contextLoading]);
   
   // Check if current user is an expert or admin
   const userIsExpert = currentUser ? isExpert(currentUser.email) : false;
@@ -717,7 +720,7 @@ const Dashboard = () => {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7C3BEC] mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading dashboard...</p>
+            <p className="text-gray-600">{t('loadingDashboard')}</p>
           </div>
         </div>
       </div>
@@ -781,7 +784,7 @@ const Dashboard = () => {
                 >
                   <Home className="h-5 w-5" />
                   <div className="flex-1">
-                        <div className="font-medium">Setup</div>
+                        <div className="font-medium">{t('setup')}</div>
                   </div>
                 </button>
                 
@@ -805,11 +808,9 @@ const Dashboard = () => {
                         }`}
                         title={isTabDisabled('members') ? 'Complete onboarding to access this tab' : ''}
                       >
-                        <Building className="h-5 w-5" />
+                        <Building2 className="h-5 w-5" />
                         <div className="flex-1">
-                          <div className="font-medium">
-                            {currentContext?.type === 'organization' || canAccessMembers ? 'Your organization' : 'Your organization'}
-                          </div>
+                          <div className="font-medium">{t('yourOrganization')}</div>
                         </div>
                       </button>
                     )}
@@ -830,7 +831,7 @@ const Dashboard = () => {
                       >
                         <Users className="h-5 w-5" />
                         <div className="flex-1">
-                          <div className="font-medium">Members</div>
+                          <div className="font-medium">{t('members')}</div>
                         </div>
                       </button>
                     )}
@@ -858,7 +859,30 @@ const Dashboard = () => {
                 >
                   <Megaphone className="h-5 w-5" />
                   <div className="flex-1">
-                    <div className="font-medium">Rapid Branding</div>
+                    <div className="font-medium">{t('rapidBranding')}</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (!isTabDisabled('automation_analysis')) {
+                      setActiveTab('automation_analysis');
+                      setIsMobileMenuOpen(false);
+                    }
+                  }}
+                  disabled={isTabDisabled('automation_analysis')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                    isTabDisabled('automation_analysis')
+                      ? 'text-gray-400 cursor-not-allowed opacity-50'
+                      : activeTab === 'automation_analysis'
+                      ? 'bg-[#7C3BEC] text-white shadow-lg'
+                      : 'text-gray-700 hover:bg-white hover:shadow-md'
+                  }`}
+                  title={isTabDisabled('automation_analysis') ? 'Complete onboarding to access this tab' : ''}
+                >
+                  <Sparkles className="h-5 w-5" />
+                  <div className="flex-1">
+                    <div className="font-medium">Automation Analysis</div>
                   </div>
                 </button>
 
@@ -917,7 +941,7 @@ const Dashboard = () => {
                       )}
                       <Users className="h-5 w-5" />
                       <div className="flex-1">
-                        <div className="font-medium">Expert Tasks</div>
+                        <div className="font-medium">{t('expertTasks')}</div>
                       </div>
                       {unreadTotal > 0 && (
                         <span className="ml-auto inline-flex items-center justify-center text-[10px] font-semibold bg-red-500 text-white rounded-full h-5 px-2">
@@ -952,7 +976,7 @@ const Dashboard = () => {
                           <div className="w-6 h-6 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
                             <MessageSquare className="h-3 w-3 text-white" />
                           </div>
-                          <span>All Tasks</span>
+                          <span>{t('allTasks')}</span>
                         </button>
                         
                         {/* Individual Experts */}
@@ -1021,7 +1045,7 @@ const Dashboard = () => {
                       <Users className="h-5 w-5" />
                       <div className="flex-1">
                         <div className="font-medium">
-                          {userIsExpert ? 'Expert Tasks' : (currentUser?.email?.endsWith('@rapid-works.io') ? 'My Requests' : 'Rapid Experts')}
+                          {userIsExpert ? t('expertTasks') : (currentUser?.email?.endsWith('@rapid-works.io') ? t('myRequests') : t('rapidExperts'))}
                         </div>
                       </div>
                       {userIsExpert && unreadTotal > 0 && (
@@ -1054,7 +1078,7 @@ const Dashboard = () => {
                   >
                     <FileCheck className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium">Agreements</div>
+                      <div className="font-medium">{t('agreements')}</div>
                     </div>
                     {currentUser?.email?.endsWith('@rapid-works.io') && (
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
@@ -1089,7 +1113,7 @@ const Dashboard = () => {
                   >
                     <Receipt className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium">Invoicing</div>
+                      <div className="font-medium">{t('invoicing')}</div>
                     </div>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                       activeTab === 'invoicing' 
@@ -1123,7 +1147,7 @@ const Dashboard = () => {
                     >
                       <Building className="h-5 w-5" />
                       <div className="flex-1">
-                        <div className="font-medium">Organizations</div>
+                        <div className="font-medium">{t('organizations')}</div>
                       </div>
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                         activeTab === 'organizations' 
@@ -1157,7 +1181,7 @@ const Dashboard = () => {
                   >
                     <Users className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium">Users</div>
+                      <div className="font-medium">{t('users')}</div>
                     </div>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                       activeTab === 'users' 
@@ -1211,7 +1235,7 @@ const Dashboard = () => {
                   >
                     <Compass className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium">Rapid Coaching</div>
+                      <div className="font-medium">{t('rapidCoaching')}</div>
                     </div>
                   </button>
                 )}
@@ -1238,7 +1262,7 @@ const Dashboard = () => {
                   >
                     <span className="pl-0.5 text-lg font-bold">€</span>
                     <div className="flex-1">
-                      <div className="pl-1.5 font-medium">Rapid Financing</div>
+                      <div className="pl-1.5 font-medium">{t('rapidFinancing')}</div>
                     </div>
                   </button>
                 )}
@@ -1266,7 +1290,7 @@ const Dashboard = () => {
                   >
                     <FileText className="h-5 w-5" />
                     <div className="flex-1">
-                      <div className="font-medium">MID Submissions</div>
+                      <div className="font-medium">{t('midSubmissions')}</div>
                     </div>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                       activeTab === 'mid-submissions' 
@@ -1277,6 +1301,25 @@ const Dashboard = () => {
                     </span>
                   </button>
                 )}
+
+                {/* Profile Tab - Always visible */}
+                <button
+                  onClick={() => {
+                    setActiveTab('profile');
+                    setSelectedTaskId(null);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                    activeTab === 'profile'
+                      ? 'bg-[#7C3BEC] text-white shadow-lg'
+                      : 'text-gray-700 hover:bg-white hover:shadow-md'
+                  }`}
+                >
+                  <User className="h-5 w-5" />
+                  <div className="flex-1">
+                    <div className="font-medium">{t('profile')}</div>
+                  </div>
+                </button>
 
                 {/* Twilio WhatsApp Test - Temporarily hidden (integrated into organization creation) */}
                       </div>
@@ -1290,7 +1333,7 @@ const Dashboard = () => {
                         <Mail className="h-4 w-4 text-blue-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900 text-sm mb-1">Need help?</h3>
+                        <h3 className="font-semibold text-gray-900 text-sm mb-1">{t('needHelp')}</h3>
                         <p className="text-xs text-gray-600">
                           Reach out at{' '}
                           <a 
@@ -1329,11 +1372,12 @@ const Dashboard = () => {
                   {activeTab === 'organizations' && 'Organizations'}
                   {activeTab === 'users' && 'Users'}
                   {/* {activeTab === 'analytics' && 'Rapid Analytics'} */}
-                  {activeTab === 'coachings' && 'Rapid Coaching'}
-                  {activeTab === 'financing' && 'Rapid Financing'}
-                  {activeTab === 'mid-submissions' && currentUser?.email?.endsWith('@rapid-works.io') && 'MID Submissions'}
+                  {activeTab === 'coachings' && t('rapidCoaching')}
+                  {activeTab === 'financing' && t('rapidFinancing')}
+                  {activeTab === 'mid-submissions' && currentUser?.email?.endsWith('@rapid-works.io') && t('midSubmissions')}
                   {/* {activeTab === 'twilio-test' && 'Twilio Test'} */}
-                  {activeTab === 'members' && (currentUser?.email?.endsWith('@rapid-works.io') ? 'Members' : 'Organization')}
+                  {activeTab === 'members' && (currentUser?.email?.endsWith('@rapid-works.io') ? t('members') : t('organization'))}
+                  {activeTab === 'profile' && t('profile')}
                 </h1>
               </div>
 
@@ -1420,7 +1464,7 @@ const Dashboard = () => {
                             ) : (
                               <MessageSquare className="h-4 w-4" />
                             )}
-                            {isRequestLoading ? 'Processing...' : 'Request Fixed Price Task'}
+                            {isRequestLoading ? t('processing') : t('requestFixedPriceTask')}
                           </button>
                         ) : null}
                       />
@@ -1558,6 +1602,17 @@ const Dashboard = () => {
                         onNavigateToTab={setActiveTab}
                     />
                     )}
+                  </motion.div>
+                )}
+
+                {activeTab === 'profile' && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-white rounded-lg border border-gray-200 p-4 lg:p-6"
+                  >
+                    <ProfileTab />
                   </motion.div>
                 )}
               </div>

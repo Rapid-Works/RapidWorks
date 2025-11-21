@@ -181,7 +181,7 @@ export const hasExpertAccess = (email) => {
   return isAdmin(email) || isExpert(email);
 };
 
-export default {
+const expertService = {
   EXPERTS,
   EXPERT_EMAIL_MAP,
   EXPERT_ROLE_EMAIL_MAP,
@@ -197,4 +197,6 @@ export default {
   getExpertDashboardTitle,
   isAdmin,
   hasExpertAccess
-}; 
+};
+
+export default expertService; 

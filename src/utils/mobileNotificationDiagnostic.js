@@ -105,7 +105,7 @@ export const runMobileNotificationDiagnostic = async () => {
 
   // 10. Mobile-specific Firebase messaging issues
   try {
-    const { getMessaging, isSupported } = await import('firebase/messaging');
+    const { isSupported } = await import('firebase/messaging');
     const supported = await isSupported();
     results.checks.firebaseMessagingSupported = supported;
     

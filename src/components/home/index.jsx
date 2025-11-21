@@ -50,8 +50,6 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     markTaskComplete,
     markTaskSkipped,
     refreshOnboarding,
-    checkProfileCompletion,
-    markProfileCompleted,
     refreshMIDFieldsStatus
   } = useOnboarding();
   
@@ -234,14 +232,15 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     }
   };
 
-  const handleProfileCompleted = async () => {
-    try {
-      await markProfileCompleted();
-      console.log('✅ Profile completion marked in onboarding');
-    } catch (error) {
-      console.error('Error marking profile as completed:', error);
-    }
-  };
+  // Profile completion removed - names are collected during registration
+  // const handleProfileCompleted = async () => {
+  //   try {
+  //     await markProfileCompleted();
+  //     console.log('✅ Profile completion marked in onboarding');
+  //   } catch (error) {
+  //     console.error('Error marking profile as completed:', error);
+  //   }
+  // };
 
   const handleOptOutSubmit = async () => {
     if (!optOutReason.trim()) {
@@ -292,7 +291,10 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     );
   }
 
-  const userName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'there';
+  // Extract first name from displayName (format: "FirstName LastName")
+  const userName = currentUser?.displayName 
+    ? currentUser.displayName.split(' ')[0] 
+    : currentUser?.email?.split('@')[0] || 'there';
   
   // Check if user is a non-admin member (invited user)
   // This includes users who:
@@ -381,43 +383,8 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       ),
     },
     {
-      id: 'profileCompleted',
-      stepNumber: 2,
-      title: t('onboarding.completeProfile.title'),
-      description: tasks.profileCompleted 
-        ? t('onboarding.completeProfile.completed')
-        : checkProfileCompletion() 
-          ? t('onboarding.completeProfile.needsCompletion')
-          : t('onboarding.completeProfile.addNames'),
-      completed: tasks.profileCompleted,
-      icon: User,
-      color: checkProfileCompletion() ? 'orange' : 'purple',
-      requiresPrevious: true,
-      action: tasks.profileCompleted ? null : (
-        <div className="mt-2 space-y-2">
-          <button
-            onClick={() => setIsProfileModalOpen(true)}
-            className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors ${
-              checkProfileCompletion() 
-                ? 'bg-orange-600 hover:bg-orange-700' 
-                : 'bg-[#7C3BEC] hover:bg-[#6B32D6]'
-            }`}
-          >
-            <User className="h-4 w-4" />
-            {t('onboarding.completeProfile.buttonText')}
-            <ArrowRight className="h-4 w-4" />
-          </button>
-          {checkProfileCompletion() && (
-            <p className="text-xs text-orange-700">
-              {t('onboarding.completeProfile.namesRequired')}
-            </p>
-          )}
-        </div>
-      ),
-    },
-    {
       id: 'organizationCreated',
-      stepNumber: 3,
+      stepNumber: 2,
       title: t('onboarding.createOrganization.title'),
       description: t('onboarding.createOrganization.description'),
       completed: tasks.organizationCreated,
@@ -447,7 +414,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     },
     {
       id: 'midApplied',
-      stepNumber: 4,
+      stepNumber: 3,
       title: t('onboarding.applyToMID.title'),
       description: midFieldsStatus.isLoading
         ? t('onboarding.applyToMID.checkingRequirements')
@@ -557,7 +524,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                 <ArrowRight className="h-4 w-4" />
               </button>
               <p className="text-xs text-orange-700">
-                {midFieldsStatus.missingFields.length} required fields need to be filled.
+                {t('onboarding.applyToMID.requiredFieldsMessage').replace('{count}', midFieldsStatus.missingFields.length)}
               </p>
               
               <div className="text-center">
@@ -578,7 +545,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     },
     {
       id: 'bookingCallCompleted',
-      stepNumber: 5,
+      stepNumber: 4,
       title: t('onboarding.bookCoachingCall.title'),
       description: tasks.bookingCallCompleted === true 
         ? 'Coaching call booked.' 
@@ -618,7 +585,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
     },
     {
       id: 'coworkersInvited',
-      stepNumber: 6,
+      stepNumber: 5,
       title: t('onboarding.inviteCoworkers.title'),
       description: tasks.coworkersInvited === true 
         ? t('onboarding.inviteCoworkers.teamInvited')
@@ -1000,7 +967,6 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
       <ProfileEditModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
-        onProfileCompleted={handleProfileCompleted}
       />
 
       {/* Organization Creation Modal */}
@@ -1026,7 +992,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
           }}
         >
           <div 
-            className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
+            className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-xl modal-container"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
@@ -1057,8 +1023,9 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                 </svg>
               </button>
             </div>
-            <div className="p-6">
-              <MIDForm 
+            <div className="modal-content modal-scrollable max-h-[calc(90vh-80px)]">
+              <div className="p-6">
+                <MIDForm 
                 key={organizationModalKey}
                 currentContext={currentContext} 
                 missingMIDFields={missingFieldsForModal}
@@ -1115,6 +1082,7 @@ export const HomePage = ({ onNavigateToTab, onNavigateToMIDWithFields, onOpenInv
                   }
                 }}
               />
+              </div>
             </div>
           </div>
         </div>

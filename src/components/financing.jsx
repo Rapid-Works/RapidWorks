@@ -7,11 +7,12 @@ import RapidWorksHeader from "./new_landing_page_header"
 import { useState, useEffect, useRef, useContext } from "react"
 import { useLanguage } from "../contexts/LanguageContext"
 import ExploreMoreSection from "./ExploreMoreSection"
-import { testimonials } from "../testimonialsData"
+import { useTestimonialsTranslation } from '../tolgee/hooks/useTestimonialsTranslation'
 import TestimonialCard from "./TestimonialCard"
 import { MessageSquareText } from 'lucide-react'
+import { useFinancingPageTranslation } from '../tolgee/hooks/useFinancingPageTranslation'
 
-const FinancingTestimonialsSection = ({ content }) => {
+const FinancingTestimonialsSection = ({ content, testimonials }) => {
   const financingTestimonials = testimonials.filter(
     t => t.services.includes("financing")
   )
@@ -26,13 +27,13 @@ const FinancingTestimonialsSection = ({ content }) => {
         <div className="text-center mb-16 max-w-4xl mx-auto">
            <div className="inline-flex items-center gap-3 text-rose-600 text-sm font-semibold mb-6 px-5 py-2.5 rounded-full border-2 border-rose-300 bg-white shadow-sm">
               <div className="w-2.5 h-2.5 bg-rose-500 rounded-full"></div>
-              <span>KUNDENERFAHRUNGEN</span>
+              <span>{content.testimonials?.badge || "CUSTOMER EXPERIENCES"}</span>
            </div>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Erfolgsgeschichten Finanzierung
+            {content.testimonials?.title || "Funding Success Stories"}
           </h2>
           <p className="text-xl text-gray-600 leading-relaxed">
-            Lies, wie Startups mit unserer Unterstützung die Finanzierungslandschaft gemeistert haben.
+            {content.testimonials?.subtitle || "Read how startups navigated the financing landscape with our support."}
           </p>
         </div>
         <div className="grid md:grid-cols-2 gap-8 max-w-7xl mx-auto">
@@ -86,55 +87,11 @@ const FinancingPage = () => {
         contentSectionRef.current?.scrollIntoView({ behavior: "smooth" });
     }
 
-    // Page content with translations
-    const pageContent = {
-        en: {
-            badge: {
-                text: "Rapid Financing"
-            },
-            hero: {
-                title: "Need help getting Financing?",
-                subtitle: "We help startups navigate the complex world of financing, from grants and subsidies to venture capital and strategic partnerships.",
-                scrollIndicatorAria: "Scroll to content"
-            },
-            mainSection: {
-                title: "The right financing at the right time",
-                description: "Every stage of your startup journey requires different financing strategies. We work with you to identify the optimal funding mix for your current needs and future growth plans.",
-                buttonText: "Free Consultation"
-            },
-            modal: {
-                title: "Schedule a Free Consultation",
-                loading: "Loading scheduling calendar..."
-            },
-            testimonials: {
-                title: "Funding Success Stories",
-                subtitle: "Read how startups navigated the financing landscape with our support."
-            }
-        },
-        de: {
-            badge: {
-                text: "Rapid Finanzierung"
-            },
-            hero: {
-                title: "Hilfe bei der Finanzierung benötigt?",
-                subtitle: "Wir helfen Startups, sich in der komplexen Welt der Finanzierung zurechtzufinden - von Zuschüssen und Subventionen bis hin zu Risikokapital und strategischen Partnerschaften.",
-                scrollIndicatorAria: "Zum Inhalt scrollen"
-            },
-            mainSection: {
-                title: "Die richtige Finanzierung zum richtigen Zeitpunkt",
-                description: "Jede Phase deiner Startup-Reise erfordert unterschiedliche Finanzierungsstrategien. Wir arbeiten mit dir zusammen, um den optimalen Finanzierungsmix für deine aktuellen Bedürfnisse und zukünftigen Wachstumspläne zu identifizieren.",
-                buttonText: "Kostenlose Beratung"
-            },
-            modal: {
-                title: "Kostenlose Beratung planen",
-                loading: "Terminkalender wird geladen..."
-            },
-            testimonials: {
-                title: "Erfolgsgeschichten Finanzierung",
-                subtitle: "Lies, wie Startups mit unserer Unterstützung die Finanzierungslandschaft gemeistert haben."
-            }
-        }
-    };
+    // Use Tolgee translations
+    const content = useFinancingPageTranslation();
+    const testimonials = useTestimonialsTranslation();
+
+    // pageContent removed - now using useFinancingPageTranslation hook
 
     // Prevent body scroll when modal is open
     useEffect(() => {
@@ -160,7 +117,6 @@ const FinancingPage = () => {
     }
 
     const { language } = context;
-    const content = pageContent[language];
 
     return (
         <div className="min-h-screen bg-white font-sans selection:bg-rose-200 selection:text-rose-900">
@@ -244,7 +200,7 @@ const FinancingPage = () => {
             </main>
 
             {/* Add the new component */}
-            <FinancingTestimonialsSection content={content} />
+            <FinancingTestimonialsSection content={content} testimonials={testimonials} />
 
             <ExploreMoreSection excludeService="Financing" />
 

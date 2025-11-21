@@ -1,38 +1,15 @@
 'use client';
 
-import React, { useState, useContext } from 'react'
-import { useLanguage } from '../contexts/LanguageContext'
+import React, { useState } from 'react'
 import NewsletterPopup from './NewsletterPopup'
+import { useFooterTranslation } from '../tolgee/hooks/useFooterTranslation'
 
 const NewsletterForm = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false)
-  const context = useLanguage()
-  
-  if (!context) {
-    return null // Return null if context is not available
-  }
 
-  const { language } = context
-
-  // Translation object
-  const translations = {
-    en: {
-      newsletter: {
-        title: "Subscribe to Our Newsletter",
-        placeholder: "Enter your email",
-        button: "Subscribe"
-      }
-    },
-    de: {
-      newsletter: {
-        title: "Abonniere unseren Newsletter",
-        placeholder: "E-Mail eingeben",
-        button: "Abonnieren"
-      }
-    }
-  }
-
-  const content = translations[language]?.newsletter || translations.de.newsletter
+  // Use Tolgee translations
+  const footerContent = useFooterTranslation()
+  const content = footerContent.newsletter
 
   return (
     <>

@@ -8,8 +8,9 @@ import { ArrowRight, Compass, Calendar, Check, Target, TrendingUp, MessageSquare
 import RapidWorksHeader from "./new_landing_page_header"
 import { useLanguage } from "../contexts/LanguageContext"
 import ExploreMoreSection from "./ExploreMoreSection"
-import { testimonials } from "../testimonialsData"
+import { useTestimonialsTranslation } from '../tolgee/hooks/useTestimonialsTranslation'
 import TestimonialCard from "./TestimonialCard"
+import { useCoachingLandingPageTranslation } from '../tolgee/hooks/useCoachingLandingPageTranslation'
 
 // Single coach data
 const coach = {
@@ -36,7 +37,7 @@ const coach = {
 }
 
 // +++ Add Coaching Testimonials Section +++
-const CoachingTestimonialsSection = ({ content }) => {
+const CoachingTestimonialsSection = ({ content, testimonials }) => {
   const coachingTestimonials = testimonials.filter(
     t => t.services.includes("coaching") // Find coaching testimonials
   );
@@ -101,130 +102,15 @@ const CoachingPage = () => {
     whySectionRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  // --- Page Content Object ---
-  const pageContent = {
-    en: {
-      pageBadge: "Rapid Coaching",
-      heroTitle: "Unleash your",
-      heroHighlight: "Full Potential",
-      heroSubtitle: "Year-round coaching by veteran founders who have been in your shoes and know what it takes to succeed.",
-      scrollIndicatorAria: "Scroll to why coaching matters",
-      whySection: {
-        title: "Why Founder Coaching Matters",
-        description: "Being a founder is the hardest job in the world. Our coaching program provides the guidance, accountability, and support you need to navigate challenges and accelerate your growth.",
-        ctaButton: "Schedule a Free Session"
-      },
-      coachSection: {
-        title: "Meet Your Coach",
-        subtitle: "Work directly with an experienced founder who understands the challenges and opportunities of building a successful startup.",
-        coachRole: "CEO RapidWorks",
-        coachBio: "I am Yannick, the Founder and CEO of RapidWorks, the 3rd Startup I cofounded so far. In my Startup journey until now I built amazing software products, recruited hundreds of employees, sold amazing services to thousands of customers, scaled Startups quickly bootstrapped as well as investor financed but crucially made tons of mistakes down the road. As your Coach I will help you gaining the best results for your Startup and avoiding unnecessary mistakes.",
-        achievementsTitle: "Key Achievements",
-        expertiseTitle: "Areas of Expertise",
-        education: "BSc Mathematical Technical Software Engineer, FH Aachen",
-        experience: "Coached 50+ Startups",
-        ctaButton: "Schedule a Session with Yannick",
-        badgeText: "Your Coach",
-        subtext: "Founded 3 Startups and coached 50+ Startups"
-      },
-      howItWorks: {
-        title: "How Our Coaching Works",
-        subtitle: "A structured approach designed to deliver measurable results for your business.",
-        steps: [
-          { title: "Initial Assessment", description: "We start with a comprehensive assessment of your business, goals, challenges, and opportunities." },
-          { title: "Strategy Development", description: "Together, we create a customized coaching plan with clear objectives and key results (OKRs)." },
-          { title: "Regular Sessions", description: "Ongoing coaching sessions focused on implementation, problem-solving, and accountability." },
-          { title: "Measure & Adjust", description: "Regular progress reviews to celebrate wins, learn from setbacks, and refine your strategy." }
-        ],
-        ctaButton: "Sitzung mit Yannick vereinbaren",
-        badgeText: "Dein Coach",
-        subtext: "3 Startups gegründet und 50+ Startups gecoacht"
-      },
-      expertise: {
-        productStrategy: "Product Strategy",
-        processOptimization: "Process optimization",
-        marketValidation: "Market Validation",
-        growthHacking: "Growth Hacking",
-        teamBuilding: "Team Building",
-        fundraising: "Fundraising"
-      },
-      achievements: {
-        recruited: "Recruited 1,700 freelancers and 40 FTEs",
-        servedCustomers: "Served 6,500 customers making 7 figure revenue",
-        scaledStartups: "Scaled both Startups to 8 figure valuations",
-        coachedStartups: "Coached 50 Startups in the DigitalHUB Aachen"
-      },
-      testimonials: {
-        badge: "KUNDENERFAHRUNGEN",
-        title: "Durch Coaching transformiert",
-        subtitle: "Erfahre, wie unser persönliches Coaching Gründern half, Herausforderungen zu meistern und dein Unternehmenswachstum zu beschleunigen."
-      }
-    },
-    de: {
-      pageBadge: "Rapid Coaching",
-      heroTitle: "Entfessle dein",
-      heroHighlight: "volles Potenzial",
-      heroSubtitle: "Ganzjähriges Coaching durch erfahrene Gründer, die in deinen Schuhen gesteckt haben und wissen, was zum Erfolg führt.",
-      scrollIndicatorAria: "Scrollen, warum Coaching wichtig ist",
-      whySection: {
-        title: "Warum Gründer-Coaching wichtig ist",
-        description: "Gründer zu sein ist der härteste Job der Welt. Unser Coaching-Programm bietet die Anleitung, Verantwortlichkeit und Unterstützung, die du brauchst, um Herausforderungen zu meistern und dein Wachstum zu beschleunigen.",
-        ctaButton: "Kostenlose Sitzung vereinbaren"
-      },
-      coachSection: {
-        title: "Triff deinen Coach",
-        subtitle: "Arbeite direkt mit einem erfahrenen Gründer zusammen, der die Herausforderungen und Chancen beim Aufbau eines erfolgreichen Startups versteht.",
-        coachRole: "CEO RapidWorks",
-        coachBio: "Ich bin Yannick, Gründer und CEO von RapidWorks, dem dritten Startup, das ich bisher mitgegründet habe. Auf meiner Startup-Reise habe ich bisher erstaunliche Softwareprodukte entwickelt, Hunderte von Mitarbeitern eingestellt, großartige Dienstleistungen an Tausende von Kunden verkauft, Startups schnell gebootstrapped sowie investorenfinanziert skaliert, aber entscheidend auch Unmengen an Fehlern auf dem Weg gemacht. Als dein Coach helfe ich dir, die besten Ergebnisse für dein Startup zu erzielen und unnötige Fehler zu vermeiden.",
-        achievementsTitle: "Wichtige Erfolge",
-        expertiseTitle: "Kompetenzbereiche",
-        education: "BSc Mathematisch-technischer Softwareentwickler, FH Aachen",
-        experience: "50+ Startups gecoacht",
-        ctaButton: "Sitzung mit Yannick vereinbaren",
-        badgeText: "Dein Coach",
-        subtext: "3 Startups gegründet und 50+ Startups gecoacht"
-      },
-      howItWorks: {
-        title: "Wie unser Coaching funktioniert",
-        subtitle: "Ein strukturierter Ansatz, der darauf ausgelegt ist, messbare Ergebnisse für dein Unternehmen zu liefern.",
-        steps: [
-          { title: "Erstbewertung", description: "Wir beginnen mit einer umfassenden Bewertung deines Unternehmens, deiner Ziele, Herausforderungen und Chancen." },
-          { title: "Strategieentwicklung", description: "Gemeinsam erstellen wir einen maßgeschneiderten Coaching-Plan mit klaren Zielen und Schlüsselergebnissen (OKRs)." },
-          { title: "Regelmäßige Sitzungen", description: "Laufende Coaching-Sitzungen mit Fokus auf Umsetzung, Problemlösung und Verantwortlichkeit." },
-          { title: "Messen & Anpassen", description: "Regelmäßige Fortschrittsüberprüfungen, um Erfolge zu feiern, aus Rückschlägen zu lernen und deine Strategie zu verfeinern." }
-        ],
-        ctaButton: "Sitzung mit Yannick vereinbaren",
-        badgeText: "Dein Coach",
-        subtext: "3 Startups gegründet und 50+ Startups gecoacht"
-      },
-      expertise: {
-        productStrategy: "Produktstrategie",
-        processOptimization: "Prozessoptimierung",
-        marketValidation: "Marktvalidierung",
-        growthHacking: "Growth Hacking",
-        teamBuilding: "Teambildung",
-        fundraising: "Fundraising"
-      },
-      achievements: {
-        recruited: "1.700 Freelancer und 40 FTEs rekrutiert",
-        servedCustomers: "6.500 Kunden bedient und 7-stelligen Umsatz erzielt",
-        scaledStartups: "Beide Startups auf 8-stellige Bewertungen skaliert",
-        coachedStartups: "50 Startups im DigitalHUB Aachen gecoacht"
-      },
-      testimonials: {
-        badge: "KUNDENERFAHRUNGEN",
-        title: "Durch Coaching transformiert",
-        subtitle: "Erfahre, wie unser persönliches Coaching Gründern half, Herausforderungen zu meistern und dein Unternehmenswachstum zu beschleunigen."
-      }
-    }
-  };
+  // Use Tolgee translations
+  const content = useCoachingLandingPageTranslation();
+  const testimonials = useTestimonialsTranslation();
 
   if (isLoading || !context) {
     return <div className="flex justify-center items-center h-screen"><Loader2 className="h-12 w-12 animate-spin text-orange-600" /></div>;
   }
 
   const { language } = context;
-  const content = pageContent[language];
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-orange-200 selection:text-orange-900">
@@ -336,7 +222,7 @@ const CoachingPage = () => {
                   />
                   <div className="absolute bottom-0 left-0 right-0 p-6 pt-12" style={{ background: 'linear-gradient(to top, rgba(217, 119, 6, 0.5) 10%, transparent 100%)' }}>
                     <h3 className="text-3xl font-bold text-white mb-1">{coach.name}</h3>
-                    <p className="text-white/90 text-lg">{coach.role}</p>
+                    <p className="text-white/90 text-lg">{content.coachSection.coachRole}</p>
                     <p className="text-white/80 text-sm mt-1">{content.coachSection.subtext}</p>
                     </div>
                   </div>
@@ -434,7 +320,7 @@ const CoachingPage = () => {
         
 
         </div>
-      <CoachingTestimonialsSection content={content} />
+      <CoachingTestimonialsSection content={content} testimonials={testimonials} />
       {/* Add the new component */}
       <ExploreMoreSection excludeService="Coaching" />
 

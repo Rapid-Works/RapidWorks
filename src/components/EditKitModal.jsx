@@ -4,8 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Edit, Package, AlertTriangle, Building2 } from 'lucide-react';
 import { updateBrandingKit } from '../utils/brandingKitService';
+import { useBrandingTranslation } from '../tolgee/hooks/useBrandingTranslation';
+import { useCommonTranslation } from '../tolgee/hooks/useCommonTranslation';
 
 const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
+  const { t } = useBrandingTranslation();
+  const { tAction } = useCommonTranslation();
   const [formData, setFormData] = useState({
     organizationName: '',
     emails: '',
@@ -64,7 +68,7 @@ const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
       onSuccess();
     } catch (err) {
       console.error('Error updating branding kit:', err);
-      setError(err.message || 'Failed to update branding kit');
+      setError(err.message || t('errorUpdateKitFailed'));
     } finally {
       setUpdating(false);
     }
@@ -82,8 +86,8 @@ const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
               <Edit className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Edit Branding Kit</h2>
-              <p className="text-sm text-gray-600">Update metadata for "{kit.id}"</p>
+              <h2 className="text-xl font-bold text-gray-900">{t('editKitTitle')}</h2>
+              <p className="text-sm text-gray-600">{t('editKitSubtitle', { kitId: kit.id })}</p>
             </div>
           </div>
           <button
@@ -107,7 +111,7 @@ const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
             {/* Kit Name (Read-only) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Kit Name (Document ID)
+                {t('kitNameReadonlyLabel')}
               </label>
               <input
                 type="text"
@@ -119,7 +123,7 @@ const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
               <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
                 <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-blue-800">
-                  <strong>Note:</strong> Kit name cannot be changed as it's used as the Firebase document ID.
+                  {t('kitNameReadonlyNote')}
                 </div>
               </div>
             </div>
@@ -128,7 +132,7 @@ const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <Building2 className="inline h-4 w-4 mr-1" />
-                Organization Name (optional)
+                {t('organizationNameLabel')}
               </label>
               <input
                 type="text"
@@ -136,17 +140,17 @@ const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
                 value={formData.organizationName}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent"
-                placeholder="Leave empty for personal kits"
+                placeholder={t('organizationNamePlaceholder')}
               />
               <p className="mt-1 text-xs text-gray-500">
-                If specified, this kit will only be visible to members of this organization
+                {t('organizationNameHelp')}
               </p>
             </div>
 
             {/* Emails */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Authorized Emails *
+                {t('authorizedEmailsLabel')}
               </label>
               <textarea
                 name="emails"
@@ -154,18 +158,18 @@ const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
                 onChange={handleInputChange}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent"
-                placeholder="email1@example.com, email2@example.com, email3@example.com"
+                placeholder={t('authorizedEmailsPlaceholder')}
                 required
               />
               <p className="mt-1 text-xs text-gray-500">
-                Comma-separated list of emails that can access this kit
+                {t('authorizedEmailsHelp')}
               </p>
             </div>
 
             {/* Status Checkboxes */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Kit Status</h3>
-              
+              <h3 className="text-lg font-medium text-gray-900">{t('kitStatusTitle')}</h3>
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -175,7 +179,7 @@ const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
                   className="h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-700">
-                  Paid - Kit has been paid for
+                  {t('paidLabel')}
                 </label>
               </div>
 
@@ -188,7 +192,7 @@ const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
                   className="h-4 w-4 text-[#7C3BEC] focus:ring-[#7C3BEC] border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-700">
-                  Ready - Kit is ready for download
+                  {t('readyLabel')}
                 </label>
               </div>
             </div>
@@ -201,7 +205,7 @@ const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
                 disabled={updating}
                 className="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
               >
-                Cancel
+                {tAction('cancel')}
               </button>
               <button
                 type="submit"
@@ -211,12 +215,12 @@ const EditKitModal = ({ isOpen, onClose, onSuccess, kit }) => {
                 {updating ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Updating...
+                    {t('updatingKit')}
                   </>
                 ) : (
                   <>
                     <Edit className="h-4 w-4" />
-                    Update Kit
+                    {t('updateKitButton')}
                   </>
                 )}
               </button>

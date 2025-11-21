@@ -12,6 +12,7 @@ import { getCurrentUserContext } from '../utils/organizationService';
 import JSZip from 'jszip';
 import ListedKitsModal from './ListedKitsModal';
 import CreateKitModal from './CreateKitModal';
+import { useBrandingTranslation } from '../tolgee/hooks/useBrandingTranslation';
 
 const SkeletonCard = () => (
   <div className="animate-pulse bg-white rounded-lg border shadow-sm flex flex-col h-full">
@@ -30,6 +31,7 @@ const SkeletonCard = () => (
 );
 
 const BrandingKits = ({ initialKitId }) => {
+  const { t } = useBrandingTranslation();
   const [selectedKit, setSelectedKit] = useState(initialKitId || null);
   const [tab, setTab] = useState("my"); // Default to My Kits
   const [myKits, setMyKits] = useState([]);
@@ -196,7 +198,7 @@ const BrandingKits = ({ initialKitId }) => {
               )}
               {paid && (
                 <Button onClick={() => handleDownloadAll(kitData.id)}>
-                  <Download className="mr-2 h-4 w-4" /> Download All Assets
+                  <Download className="mr-2 h-4 w-4" /> {t('downloadAllAssets')}
                 </Button>
               )}
             </div>
@@ -285,7 +287,7 @@ const BrandingKits = ({ initialKitId }) => {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7C3BEC] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading branding kits...</p>
+          <p className="text-gray-600">{t('loadingBrandingKits')}</p>
         </div>
       </div>
     );
@@ -298,10 +300,10 @@ const BrandingKits = ({ initialKitId }) => {
       {isAdmin && (
         <div className="flex gap-4 mb-8 pt-6 px-6">
           <Button variant={tab === "my" ? "default" : "outline"} onClick={() => { setTab("my"); setSelectedKit(null); }}>
-            My Kits
+            {t('myKits')}
           </Button>
           <Button variant={tab === "all" ? "default" : "outline"} onClick={() => { setTab("all"); setSelectedKit(null); }}>
-            Explore Kits
+            {t('exploreKits')}
           </Button>
         </div>
       )}
@@ -317,11 +319,11 @@ const BrandingKits = ({ initialKitId }) => {
             </div>
           ) : myKits.length === 0 ? (
             <div className="text-center text-gray-500 py-12">
-              You don't have any kits yet.
+              {t('noKitsYet')}
               {isAdmin && (
                 <>
                   <br />
-                  <span className="text-blue-600 cursor-pointer underline" onClick={() => setTab("all")}>Explore kits</span> or create new ones to get started!
+                  <span className="text-blue-600 cursor-pointer underline" onClick={() => setTab("all")}>{t('exploreKitsLink')}</span> {t('createNewKits')}
                 </>
               )}
             </div>
@@ -337,7 +339,7 @@ const BrandingKits = ({ initialKitId }) => {
                   <div className="flex items-center justify-center py-12">
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                      <p className="text-gray-600">Loading your branding kit...</p>
+                      <p className="text-gray-600">{t('loadingYourKit')}</p>
                     </div>
                   </div>
                 );
@@ -432,7 +434,7 @@ const BrandingKits = ({ initialKitId }) => {
             className="bg-[#7C3BEC] hover:bg-[#6B32D6] text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 font-medium"
           >
             <List className="h-5 w-5" />
-            Listed Kits
+            {t('listedKits')}
           </button>
         </div>
       )}

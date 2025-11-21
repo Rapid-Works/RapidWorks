@@ -149,7 +149,7 @@ class NotificationInitService {
   /**
    * Auto-request notification permission (for desktop/PWA)
    */
-  async autoRequestPermission(user) {
+  async autoRequestPermission(_user) {
     try {
       // Check current permission status
       const currentPermission = Notification.permission;

@@ -16,8 +16,9 @@ export const useSmartNotificationStatus = () => {
       setLoading(false);
       return;
     }
-    
+
     checkSmartSubscriptionStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, refreshTrigger]);
 
   const checkSmartSubscriptionStatus = async () => {
@@ -90,7 +91,7 @@ export const useSmartNotificationStatus = () => {
           const blogEnabled = preferences.blogNotifications?.mobile || preferences.blogNotifications?.email;
           const brandingEnabled = preferences.brandingKitReady?.mobile || preferences.brandingKitReady?.email;
           hasEnabledPreferences = blogEnabled || brandingEnabled;
-        } catch (parseError) {
+        } catch (_parseError) {
           console.log('⚠️ Parse error, defaulting to enabled');
           hasEnabledPreferences = true;
         }

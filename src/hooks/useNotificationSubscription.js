@@ -14,8 +14,9 @@ export const useNotificationSubscription = () => {
       setLoading(false);
       return;
     }
-    
+
     checkSubscriptionStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const checkSubscriptionStatus = async () => {

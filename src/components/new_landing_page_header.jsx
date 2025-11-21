@@ -124,6 +124,19 @@ export default function RapidWorksHeader() {
 
   const { language, setLanguage, translate } = context
 
+  // Translations for user menu
+  const translations = {
+    en: {
+      profile: 'Profile',
+      signOut: 'Sign Out'
+    },
+    de: {
+      profile: 'Profil',
+      signOut: 'Ausloggen'
+    }
+  }
+  const t = translations[language] || translations.en
+
   const handleLanguageButtonClick = (newLang) => {
     if (newLang !== language) {
       setLanguage(newLang)
@@ -339,7 +352,13 @@ export default function RapidWorksHeader() {
                               {currentUser.email}
                             </p>
                             {currentContext && currentContext.type === 'organization' && (
-                              <div className="flex items-center gap-1 mt-1">
+                              <button
+                                onClick={() => {
+                                  setIsUserMenuOpen(false);
+                                  router.push('/dashboard?tab=members');
+                                }}
+                                className="flex items-center gap-1 mt-1 hover:opacity-80 transition-opacity cursor-pointer w-full text-left"
+                              >
                                 <Building2 className="h-3 w-3 text-blue-600" />
                                 <span className="text-xs text-blue-600 font-medium truncate">
                                   {currentContext.organization?.name}
@@ -347,7 +366,7 @@ export default function RapidWorksHeader() {
                                 <span className="text-xs text-gray-500">
                                   • {currentContext.permissions?.role === 'admin' ? 'Administrator' : 'Member'}
                                 </span>
-                              </div>
+                              </button>
                             )}
                             {currentContext && currentContext.type === 'personal' && (
                               <div className="flex items-center gap-1 mt-1">
@@ -359,9 +378,9 @@ export default function RapidWorksHeader() {
                             )}
                           </div>
                           <div className="border-t border-gray-100 my-1"></div>
-                          <button onClick={() => setIsProfileModalOpen(true)} className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                          <button onClick={() => { setIsUserMenuOpen(false); router.push('/dashboard?tab=profile'); }} className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                             <User className="h-4 w-4 mr-2" />
-                            Edit Profile
+                            {t.profile}
                           </button>
                           <button onClick={handleDashboardRedirect} className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                             <Settings className="h-4 w-4 mr-2" />
@@ -369,7 +388,7 @@ export default function RapidWorksHeader() {
                           </button>
                           <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                             <LogOut className="h-4 w-4 mr-2" />
-                            Sign Out
+                            {t.signOut}
                           </button>
                         </div>
                       </div>
@@ -394,7 +413,7 @@ export default function RapidWorksHeader() {
           {navItems.map((item) => (
             <Link
               key={item.name}
-              to={item.path}
+              href={item.path}
               className={`px-4 py-3 rounded-lg flex items-center gap-2 transition-all duration-300 font-medium w-full text-left ${
                 isActive(item.path)
                   ? ''
@@ -423,7 +442,13 @@ export default function RapidWorksHeader() {
                       {currentUser.email}
                     </div>
                     {currentContext && currentContext.type === 'organization' && (
-                      <div className="flex items-center gap-1 mt-1">
+                      <button
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          router.push('/dashboard?tab=members');
+                        }}
+                        className="flex items-center gap-1 mt-1 hover:opacity-80 transition-opacity cursor-pointer w-full text-left"
+                      >
                         <Building2 className="h-3 w-3 text-blue-600" />
                         <span className="text-xs text-blue-600 font-medium truncate">
                           {currentContext.organization?.name}
@@ -431,7 +456,7 @@ export default function RapidWorksHeader() {
                         <span className="text-xs text-gray-500">
                           • {currentContext.permissions?.role === 'admin' ? 'Administrator' : 'Member'}
                         </span>
-                      </div>
+                      </button>
                     )}
                     {currentContext && currentContext.type === 'personal' && (
                       <div className="flex items-center gap-1 mt-1">
@@ -443,9 +468,9 @@ export default function RapidWorksHeader() {
                     )}
                   </div>
                 </div>
-                <button onClick={() => { setIsProfileModalOpen(true); setMobileMenuOpen(false); }} className="flex items-center w-full px-4 py-3 rounded-lg transition-all duration-300" style={{ color: accentColor }}>
+                <button onClick={() => { router.push('/dashboard?tab=profile'); setMobileMenuOpen(false); }} className="flex items-center w-full px-4 py-3 rounded-lg transition-all duration-300" style={{ color: accentColor }}>
                   <User className="h-4 w-4 mr-3" />
-                  Edit Profile
+                  {t.profile}
                 </button>
                 <button onClick={() => { handleDashboardRedirect(); setMobileMenuOpen(false); }} className="flex items-center w-full px-4 py-3 rounded-lg transition-all duration-300" style={{ color: accentColor }}>
                   <Settings className="h-4 w-4 mr-3" />
@@ -456,7 +481,7 @@ export default function RapidWorksHeader() {
                   setMobileMenuOpen(false); 
                 }} className="flex items-center w-full px-4 py-3 rounded-lg transition-all duration-300" style={{ color: accentColor }}>
                   <LogOut className="h-4 w-4 mr-3" />
-                  Sign Out
+                  {t.signOut}
                 </button>
               </>
             ) : (

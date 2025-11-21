@@ -1,13 +1,11 @@
-import { 
-  collection, 
-  doc as firestoreDoc, 
-  getDocs, 
+import {
+  collection,
+  doc as firestoreDoc,
+  getDocs,
   getDoc,
   setDoc,
   updateDoc,
   deleteDoc,
-  query, 
-  orderBy,
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -171,7 +169,7 @@ export const getPersonalBrandingKits = async () => {
   }
 };
 
-export default {
+const brandingKitService = {
   getAllBrandingKits,
   getBrandingKit,
   createBrandingKit,
@@ -180,3 +178,5 @@ export default {
   getOrganizationBrandingKits,
   getPersonalBrandingKits
 };
+
+export default brandingKitService;

@@ -28,6 +28,8 @@ import { storage } from '../firebase/config';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import FrameworkAgreementModal from './FrameworkAgreementModal';
 import { checkFrameworkAgreementStatus, markFrameworkSignatureValidated, flagFrameworkSignatureIncorrect } from '../utils/frameworkAgreementService';
+import { useTaskTranslation } from '../tolgee/hooks/useTaskTranslation';
+import { useCommonTranslation } from '../tolgee/hooks/useCommonTranslation';
 
 function EstimateModalContent({ estimate, setEstimate, currentTaskData, onClose, onSubmit }) {
   return (
@@ -119,6 +121,8 @@ function EstimateModalContent({ estimate, setEstimate, currentTaskData, onClose,
 
 const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
   const { currentUser } = useAuth();
+  const { t } = useTaskTranslation();
+  const { tAction } = useCommonTranslation();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [showEstimateModal, setShowEstimateModal] = useState(false);
@@ -300,7 +304,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
 
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message. Please try again.');
+      alert(t('failedSendMessage'));
     } finally {
       setSending(false);
     }
@@ -312,7 +316,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
 
     // Validate file size (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
-      alert('File size must be less than 10MB');
+      alert(t('fileSizeError'));
       return;
     }
 
@@ -354,7 +358,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
       
     } catch (error) {
       console.error('Error uploading file:', error);
-      alert('Failed to upload file. Please try again.');
+      alert(t('failedUploadFile'));
     } finally {
       setUploadingFile(false);
       // Clear the file input
@@ -429,7 +433,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
 
     } catch (error) {
       console.error('Error sending estimate:', error);
-      alert('Failed to send estimate. Please try again.');
+      alert(t('failedSendEstimate'));
     }
   };
 
@@ -449,16 +453,16 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
               <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500 rounded-full mb-3">
                 <Euro className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Estimate Sent</h3>
+              <h3 className="text-lg font-bold text-gray-900">{t('estimateSent')}</h3>
               <div className="text-3xl font-bold text-green-600 mt-2">
                 {msg.content.hours}h - €{msg.content.price.toLocaleString()}
               </div>
               <p className="text-gray-600 text-sm">
-                €{msg.content.rate}/hour • Delivery in {msg.content.deadline}
+                €{msg.content.rate}/hour • {t('deliveryIn', { deadline: msg.content.deadline })}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-gray-600">Waiting for customer response...</p>
+              <p className="text-sm text-gray-600">{t('waitingForCustomer')}</p>
             </div>
           </div>
         </motion.div>
@@ -525,12 +529,12 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
                             setShowFileModal(true);
                           }}
                           className={`px-3 py-1 rounded text-xs transition-colors ${
-                            isExpert 
-                              ? 'bg-white/20 hover:bg-white/30 text-white' 
+                            isExpert
+                              ? 'bg-white/20 hover:bg-white/30 text-white'
                               : 'bg-blue-100 hover:bg-blue-200 text-blue-600'
                           }`}
                         >
-                          Preview
+                          {t('preview')}
                         </button>
                       )}
                       <a
@@ -538,12 +542,12 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`px-3 py-1 rounded text-xs transition-colors ${
-                          isExpert 
-                            ? 'bg-white/20 hover:bg-white/30 text-white' 
+                          isExpert
+                            ? 'bg-white/20 hover:bg-white/30 text-white'
                             : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                         }`}
                       >
-                        Download
+                        {t('download')}
                       </a>
                     </div>
                   </div>
@@ -600,8 +604,8 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
             <FileText className="h-4 w-4 text-gray-600" />
           </div>
           <div className="flex-1">
-            <h4 className="font-semibold text-gray-900 mb-2">Customer's Original Request</h4>
-            
+            <h4 className="font-semibold text-gray-900 mb-2">{t('customerOriginalRequest')}</h4>
+
             {currentTaskData.taskDescription && (
               <div className="mb-3">
                 <p className="text-sm text-gray-700 leading-relaxed">
@@ -614,14 +618,14 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
               <div className="mb-3">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Calendar className="h-4 w-4" />
-                  <span>Due: {formatDueDateWithTime(currentTaskData)}</span>
+                  <span>{t('due', { date: formatDueDateWithTime(currentTaskData) })}</span>
                 </div>
               </div>
             )}
 
             {currentTaskData.files && currentTaskData.files.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-gray-900 mb-2">Customer's Files:</p>
+                <p className="text-sm font-medium text-gray-900 mb-2">{t('customersFiles')}</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {currentTaskData.files.map((file, index) => (
                     <div key={index} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer group">
@@ -676,7 +680,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
                               }}
                               className="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 py-1 px-2 rounded transition-colors"
                             >
-                              Preview
+                              {t('preview')}
                             </button>
                           )}
                           {file.url && (
@@ -685,9 +689,9 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex-1 text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 py-1 px-2 rounded transition-colors text-center"
-                              title="Download file"
+                              title={t('downloadFile')}
                             >
-                              Download
+                              {t('download')}
                             </a>
                           )}
                         </div>
@@ -743,9 +747,9 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
               <button
                 onClick={scrollToTop}
                 className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50"
-                title="View details"
+                title={t('viewDetails')}
               >
-                View details
+                {t('viewDetails')}
               </button>
               {currentTaskData.status !== 'pending' && (
                 <div className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -755,17 +759,17 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
                   currentTaskData.status === 'completed' ? 'bg-green-100 text-green-800' :
                   'bg-gray-100 text-gray-800'
                 }`}>
-                  {(currentTaskData.status === 'estimate_provided' || currentTaskData.status === 'estimated') && 'Pending'}
-                  {currentTaskData.status === 'accepted' && 'Accepted'}
-                  {currentTaskData.status === 'in_progress' && 'Active'}
-                  {currentTaskData.status === 'completed' && 'Done'}
+                  {(currentTaskData.status === 'estimate_provided' || currentTaskData.status === 'estimated') && t('statusPendingShort')}
+                  {currentTaskData.status === 'accepted' && t('statusAcceptedShort')}
+                  {currentTaskData.status === 'in_progress' && t('statusActiveShort')}
+                  {currentTaskData.status === 'completed' && t('statusDoneShort')}
                 </div>
               )}
             </div>
             {currentTaskData.createdAt && (
               <p className="text-xs text-gray-500">
                 {formatReadableDate(currentTaskData.createdAt)}
-                {` • Created by ${currentTaskData.userName || currentTaskData.userEmail || 'Customer'}`}
+                {` • ${t('createdBy', { name: currentTaskData.userName || currentTaskData.userEmail || t('customer') })}`}
               </p>
             )}
           </div>
@@ -779,20 +783,20 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
             <div className="max-w-xl w-full bg-white border border-gray-200 rounded-2xl shadow-xl p-6">
               {expertAgreementRequired ? (
                 <div className="space-y-4">
-                  <h3 className="text-xl font-bold text-gray-900">Accept Expert Agreement</h3>
-                  <p className="text-gray-600">Before interacting with tasks, you need to accept your framework agreement.</p>
+                  <h3 className="text-xl font-bold text-gray-900">{t('acceptExpertAgreement')}</h3>
+                  <p className="text-gray-600">{t('acceptExpertAgreementDescription')}</p>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setExpertAgreementModalOpen(true)}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
                     >
-                      Open Agreement
+                      {t('openAgreement')}
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <h3 className="text-xl font-bold text-gray-900">Validate Customer Signature</h3>
+                  <h3 className="text-xl font-bold text-gray-900">{t('validateCustomerSignature')}</h3>
                   <p className="text-gray-700">{customerSignatureGate.infoText}</p>
                   {customerSignatureGate.documentUrl && (
                     <a
@@ -801,7 +805,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
                       rel="noopener noreferrer"
                       className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg"
                     >
-                      Download Framework Agreement
+                      {t('downloadFrameworkAgreement')}
                     </a>
                   )}
                   <div className="flex gap-3 pt-2">
@@ -815,7 +819,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
                       }}
                       className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
                     >
-                      Mark as validated
+                      {t('markAsValidated')}
                     </button>
                     <button
                       onClick={async () => {
@@ -824,7 +828,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
                       }}
                       className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
                     >
-                      Something is incorrect
+                      {t('somethingIncorrect')}
                     </button>
                   </div>
                 </div>
@@ -843,7 +847,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
           <button
             onClick={scrollToBottom}
             className="absolute right-6 bottom-28 bg-white/90 border border-gray-200 shadow-sm hover:shadow-md rounded-full p-2"
-            title="Scroll to latest"
+            title={t('scrollToLatest')}
           >
             <ArrowDown className="h-4 w-4 text-gray-700" />
           </button>
@@ -861,7 +865,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
               className="flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-colors"
             >
               <Calculator className="h-4 w-4" />
-              {currentTaskData?.estimateData ? 'Edit Estimate' : 'Create Estimate'}
+              {currentTaskData?.estimateData ? t('editEstimate') : t('createEstimate')}
             </button>
           )}
         </div>
@@ -891,7 +895,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                placeholder="Type your message..."
+                placeholder={t('typeMessage')}
                 disabled={sending || expertAgreementRequired || customerSignatureGate.needsValidation}
                 className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 disabled:opacity-50 bg-gray-50 focus:bg-white transition-colors resize-none"
               />
@@ -920,8 +924,8 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
           <div className="flex items-center justify-center">
             <div className="flex items-center space-x-2 text-amber-700">
               <AlertCircle className="h-5 w-5" />
-              <span className="font-medium">View Only Mode</span>
-              <span className="text-sm">You can view this conversation but cannot send messages or estimates</span>
+              <span className="font-medium">{t('viewOnlyMode')}</span>
+              <span className="text-sm">{t('viewOnlyExpert')}</span>
             </div>
           </div>
         </div>
@@ -953,7 +957,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
               ) : (
                 <div className="text-center py-12">
                   <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-4">Preview not available for this file type</p>
+                  <p className="text-gray-600 mb-4">{t('previewNotAvailable')}</p>
                   <a
                     href={selectedFile.url}
                     target="_blank"
@@ -961,7 +965,7 @@ const ExpertTaskView = ({ taskData, onBack, viewOnly = false }) => {
                     className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    Download File
+                    {t('downloadFile')}
                   </a>
                 </div>
               )}

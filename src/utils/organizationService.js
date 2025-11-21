@@ -1,18 +1,18 @@
-import { 
-  collection, 
-  doc as firestoreDoc, 
-  addDoc, 
-  updateDoc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
+import {
+  collection,
+  doc as firestoreDoc,
+  addDoc,
+  updateDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
   orderBy,
   serverTimestamp,
   writeBatch,
   setDoc,
   limit as firestoreLimit,
-  startAfter
+  startAfter as firestoreStartAfter
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -880,10 +880,9 @@ export const fixMissingUserData = async (organizationId, currentUserId, currentU
 
 // Admin function to get all organizations (optimized with pagination and caching)
 export const getAllOrganizations = async (options = {}) => {
-  const { 
-    limit = 50, 
-    startAfter = null, 
-    useCache = true 
+  const {
+    limit = 50,
+    startAfter: startAfterDoc = null
   } = options;
 
   try {
@@ -895,8 +894,8 @@ export const getAllOrganizations = async (options = {}) => {
       q = query(q, firestoreLimit(limit));
     }
     
-    if (startAfter) {
-      q = query(q, startAfter(startAfter));
+    if (startAfterDoc) {
+      q = query(q, firestoreStartAfter(startAfterDoc));
     }
     
     const snapshot = await getDocs(q);

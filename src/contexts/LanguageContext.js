@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useTolgee } from '@tolgee/react';
 
 const LanguageContext = createContext();
 
@@ -359,7 +360,13 @@ export const languages = {
   }
 };
 
+// Map between internal language codes and Tolgee language tags
+const toTolgeeLanguage = (lang) => lang === 'de' ? 'de-DE' : lang;
+const fromTolgeeLanguage = (lang) => lang === 'de-DE' ? 'de' : lang;
+
 export const LanguageProvider = ({ children }) => {
+  const tolgee = useTolgee(['language']);
+
   // Initialize from localStorage or default to 'de'
   const [language, setLanguageState] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -369,11 +376,22 @@ export const LanguageProvider = ({ children }) => {
     return 'de';
   });
 
-  // Persist language changes to localStorage
+  // Sync Tolgee language with local state
+  useEffect(() => {
+    const tolgeeLanguage = toTolgeeLanguage(language);
+    if (tolgee && tolgee.getLanguage() !== tolgeeLanguage) {
+      tolgee.changeLanguage(tolgeeLanguage);
+    }
+  }, [language, tolgee]);
+
+  // Persist language changes to localStorage and update Tolgee
   const handleSetLanguage = (newLanguage) => {
     setLanguageState(newLanguage);
     if (typeof window !== 'undefined') {
       localStorage.setItem('language', newLanguage);
+    }
+    if (tolgee) {
+      tolgee.changeLanguage(toTolgeeLanguage(newLanguage));
     }
   };
 

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { TolgeeProvider } from '@/tolgee/TolgeeProvider';
 import ScrollToTop from '@/components/ScrollToTop';
 import Footer from '@/components/Footer';
 import CookieConsent from '@/components/CookieConsent';
@@ -20,17 +21,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const isDashboardPage = pathname?.startsWith('/dashboard') || false;
 
   return (
-    <AuthProvider>
-      <NotificationProvider>
-        <AutoNotificationRegistration />
-        <LanguageProvider>
-          <ScrollToTop />
-          {children}
-          {/* {!isDashboardPage && <AIAssistantChatbot />} */}
-          {!isDashboardPage && <Footer onFAQClick={() => {}} />}
-          <CookieConsent />
-        </LanguageProvider>
-      </NotificationProvider>
-    </AuthProvider>
+    <TolgeeProvider>
+      <AuthProvider>
+        <NotificationProvider>
+          <AutoNotificationRegistration />
+          <LanguageProvider>
+            <ScrollToTop />
+            {children}
+            {/* {!isDashboardPage && <AIAssistantChatbot />} */}
+            {!isDashboardPage && <Footer onFAQClick={() => {}} />}
+            <CookieConsent />
+          </LanguageProvider>
+        </NotificationProvider>
+      </AuthProvider>
+    </TolgeeProvider>
   );
 }

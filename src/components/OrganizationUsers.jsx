@@ -26,9 +26,11 @@ import { useAuth } from '../contexts/AuthContext';
 import StandardTabs, { StandardTable } from './ui/StandardTabs';
 import MIDForm from './MIDForm';
 import { Building } from 'lucide-react';
+import { useOrganizationTranslation } from '../tolgee/hooks/useOrganizationTranslation';
 
 const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, onInviteModalClose, onOpenInviteModal, onInviteCompleted, currentContext, missingMIDFields, onFieldsUpdated, onOrganizationCreated, onNavigateToTab }) => {
   const { currentUser } = useAuth();
+  const { t } = useOrganizationTranslation();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -70,6 +72,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
   // Handle openInvite prop
   useEffect(() => {
     if (openInvite) {
+      setActiveTabIndex(1); // Switch to "All Members" tab (second tab)
       setShowInviteModal(true);
     }
   }, [openInvite]);
@@ -93,7 +96,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
   };
 
   const handleRemoveMember = async (memberId) => {
-    if (!window.confirm('Are you sure you want to remove this member from the organization?')) return;
+    if (!window.confirm(t('confirmRemoveMember'))) return;
     
     try {
       await removeMember(organization.id, memberId);
@@ -104,7 +107,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
   };
 
   const formatDate = (timestamp) => {
-    if (!timestamp) return 'Unknown';
+    if (!timestamp) return t('unknown');
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -114,7 +117,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
   };
 
   // Prepare table data for all members
-  const allMembersHeaders = isAdmin ? ['Member', 'Status', 'Access Level', 'Date', 'Actions'] : ['Member', 'Status', 'Access Level', 'Date'];
+  const allMembersHeaders = isAdmin ? [t('member'), t('status'), t('accessLevel'), t('date'), t('actions')] : [t('member'), t('status'), t('accessLevel'), t('date')];
   const allMembersData = members.map((member) => {
     const row = [
       <div key="member" className="flex items-center">
@@ -141,7 +144,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
             {member.userEmail}
             {member.type === 'invitation' && (
               <span className="text-xs text-gray-400 ml-2">
-                • Invited by {member.inviterName}
+                • {t('invitedBy', { name: member.inviterName })}
               </span>
             )}
           </div>
@@ -154,33 +157,33 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
           ? 'bg-purple-100 text-purple-800' 
           : 'bg-green-100 text-green-800'
       }`}>
-        {member.type === 'invitation' 
-          ? 'Pending'
-          : member.role === 'admin' ? 'Admin' : 'Active'
+        {member.type === 'invitation'
+          ? t('pending')
+          : member.role === 'admin' ? t('admin') : t('active')
         }
       </span>,
       <div key="access">
         {member.role === 'admin' ? (
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-purple-500" />
-            <span className="text-sm font-medium text-gray-900">Full Access</span>
+            <span className="text-sm font-medium text-gray-900">{t('fullAccess')}</span>
           </div>
         ) : (
           <div className="space-y-1">
             {member.permissions?.canRequestExperts && (
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-xs text-gray-600">Can request experts</span>
+                <span className="text-xs text-gray-600">{t('canRequestExperts')}</span>
               </div>
             )}
             {member.permissions?.canSeeAllRequests && (
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-xs text-gray-600">Can see all requests</span>
+                <span className="text-xs text-gray-600">{t('canSeeAllRequests')}</span>
               </div>
             )}
             {!member.permissions?.canRequestExperts && !member.permissions?.canSeeAllRequests && (
-              <span className="text-sm text-gray-500">Basic access</span>
+              <span className="text-sm text-gray-500">{t('basicAccess')}</span>
             )}
           </div>
         )}
@@ -195,7 +198,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
       row.push(
         <div key="actions">
           {member.type === 'invitation' ? (
-            <span className="text-sm text-gray-400">Invitation sent</span>
+            <span className="text-sm text-gray-400">{t('invitationSent')}</span>
           ) : member.role !== 'admin' && (
             <div className="flex items-center gap-1">
               <button
@@ -204,14 +207,14 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
                   setShowPermissionsModal(true);
                 }}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Edit permissions"
+                title={t('editPermissions')}
               >
                 <Settings className="h-4 w-4" />
               </button>
               <button
                 onClick={() => handleRemoveMember(member.id)}
                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                title="Remove member"
+                title={t('removeMember')}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -253,30 +256,30 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
       <span key="status" className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
         member.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
       }`}>
-        {member.role === 'admin' ? 'Admin' : 'Active'}
+        {member.role === 'admin' ? t('admin') : t('active')}
       </span>,
       <div key="access">
         {member.role === 'admin' ? (
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-purple-500" />
-            <span className="text-sm font-medium text-gray-900">Full Access</span>
+            <span className="text-sm font-medium text-gray-900">{t('fullAccess')}</span>
           </div>
         ) : (
           <div className="space-y-1">
             {member.permissions?.canRequestExperts && (
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-xs text-gray-600">Can request experts</span>
+                <span className="text-xs text-gray-600">{t('canRequestExperts')}</span>
               </div>
             )}
             {member.permissions?.canSeeAllRequests && (
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-xs text-gray-600">Can see all requests</span>
+                <span className="text-xs text-gray-600">{t('canSeeAllRequests')}</span>
               </div>
             )}
             {!member.permissions?.canRequestExperts && !member.permissions?.canSeeAllRequests && (
-              <span className="text-sm text-gray-500">Basic access</span>
+              <span className="text-sm text-gray-500">{t('basicAccess')}</span>
             )}
           </div>
         )}
@@ -296,21 +299,21 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
               setShowPermissionsModal(true);
             }}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Edit permissions"
+            title={t('editPermissions')}
           >
             <Settings className="h-4 w-4" />
           </button>
           <button
             onClick={() => handleRemoveMember(member.id)}
             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Remove member"
+            title={t('removeMember')}
           >
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
       );
     } else if (isAdmin) {
-      row.push(<div key="actions" className="text-sm text-gray-400">Admin</div>);
+      row.push(<div key="actions" className="text-sm text-gray-400">{t('admin')}</div>);
     }
 
     return row;
@@ -335,7 +338,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
       </div>
     </div>,
     <span key="status" className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
-      Pending
+      {t('pending')}
     </span>,
     <div key="joined" className="flex items-center gap-1 text-sm text-gray-500">
       <Calendar className="h-3 w-3" />
@@ -355,7 +358,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
           className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3BEC] text-white rounded-lg hover:bg-[#6B32D6] transition-colors"
         >
           <UserPlus className="h-4 w-4" />
-          Invite Member
+          {t('inviteMember')}
         </button>
       )}
     </div>
@@ -365,7 +368,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
   // Define tabs
   const tabs = [
     {
-      label: 'Organization Info',
+      label: t('organizationInfo'),
       icon: <Building className="h-4 w-4" />,
       content: (
         <div>
@@ -380,7 +383,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
       )
     },
     {
-      label: 'All Members',
+      label: t('allMembers'),
       icon: <Users className="h-4 w-4" />,
       count: members.length,
       content: (
@@ -403,12 +406,12 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
                   <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-100">
                     <UserPlus className="h-4 w-4 text-purple-600" />
                   </div>
-                  <span>Invite Member</span>
+                  <span>{t('inviteMember')}</span>
                 </button>
               </div>
             </div>
           )}
-          
+
           {/* Show invite button in empty state if admin */}
           {isAdmin && allMembersData.length === 0 && !loading && (
             <div className="text-center py-8">
@@ -417,7 +420,7 @@ const OrganizationUsers = ({ organization, currentUserPermissions, openInvite, o
                 className="inline-flex items-center gap-2 px-4 py-2 bg-[#7C3BEC] text-white rounded-lg hover:bg-[#6B32D6] transition-colors"
               >
                 <UserPlus className="h-4 w-4" />
-                Invite Member
+                {t('inviteMember')}
               </button>
             </div>
           )}

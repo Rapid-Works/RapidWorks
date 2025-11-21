@@ -5,9 +5,13 @@ import { createPortal } from 'react-dom';
 import { X, UserPlus, Mail, Copy, Check, Loader2 } from 'lucide-react';
 import { createInvitation } from '../utils/organizationService';
 import { useAuth } from '../contexts/AuthContext';
+import { useOrganizationTranslation } from '../tolgee/hooks/useOrganizationTranslation';
+import { useCommonTranslation } from '../tolgee/hooks/useCommonTranslation';
 
 const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => {
   const { currentUser } = useAuth();
+  const { t } = useOrganizationTranslation();
+  const { tAction } = useCommonTranslation();
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteEmails, setInviteEmails] = useState([]); // For multi-invite
   const [invitePermissions, setInvitePermissions] = useState({
@@ -36,7 +40,7 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
     const emails = inviteEmail.split(',').map(email => email.trim()).filter(email => email);
     
     if (emails.length === 0) {
-      setError('Please enter at least one valid email address.');
+      setError(t('pleaseEnterEmail'));
       setInviting(false);
       return;
     }
@@ -101,7 +105,7 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
 
     } catch (error) {
       console.error('Error creating invitations:', error);
-      setError('Failed to create invitations. Please try again.');
+      setError(t('errorCreatingInvitation'));
     } finally {
       setInviting(false);
     }
@@ -146,8 +150,8 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
               <UserPlus className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Invite Member</h2>
-              <p className="text-sm text-gray-600">Add a new member to your organization</p>
+              <h2 className="text-xl font-bold text-gray-900">{t('inviteMemberTitle')}</h2>
+              <p className="text-sm text-gray-600">{t('inviteMemberSubtitle')}</p>
             </div>
           </div>
           <button
@@ -165,12 +169,10 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
             <div className="space-y-4">
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <p className="text-green-800 font-medium mb-2">
-                  {allInviteLinks.length > 1 ? 'Invitations Created!' : 'Invitation Created!'}
+                  {t('invitationSentSuccess')}
                 </p>
                 <p className="text-green-700 text-sm mb-3">
-                  {allInviteLinks.length > 1 
-                    ? 'Share these links with the people you want to invite:' 
-                    : 'Share this link with the person you want to invite:'}
+                  {t('invitationLinkDescription')}
                 </p>
                 
                 {/* Single invite link */}
@@ -187,7 +189,7 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
                       className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm flex items-center gap-1 transition-colors"
                     >
                       {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      {copiedLink ? 'Copied!' : 'Copy'}
+                      {copiedLink ? t('copied') : t('copyLink')}
                     </button>
                   </div>
                 )}
@@ -217,7 +219,7 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
                             className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm flex items-center gap-1 transition-colors"
                           >
                             <Copy className="h-4 w-4" />
-                            Copy
+                            {t('copyLink')}
                           </button>
                         </div>
                       </div>
@@ -236,7 +238,7 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
 
               <div>
                 <label htmlFor="inviteEmail" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Addresses *
+                  {t('emailAddresses')} *
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -245,14 +247,14 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
                     id="inviteEmail"
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="Enter email addresses (comma-separated for multiple)"
+                    placeholder={t('emailPlaceholder')}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-[#7C3BEC] outline-none transition-colors"
                     required
                     disabled={inviting}
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Separate multiple emails with commas (e.g., john@example.com, jane@example.com)
+                  {t('emailHelpText')}
                 </p>
               </div>
 
@@ -281,7 +283,7 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Role & Permissions
+                  {t('roleAndPermissions')}
                 </label>
                 <div className="space-y-3">
                   <label className="flex items-start gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -293,8 +295,8 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
                       disabled={inviting}
                     />
                     <div>
-                      <span className="text-sm text-gray-700 font-medium">Make Admin</span>
-                      <p className="text-xs text-gray-500 mt-1">Give this member full administrative access to the organization</p>
+                      <span className="text-sm text-gray-700 font-medium">{t('adminRole')}</span>
+                      <p className="text-xs text-gray-500 mt-1">{t('adminRoleDescription')}</p>
                     </div>
                   </label>
                   <label className={`flex items-start gap-3 ${isAdmin ? 'opacity-50' : ''}`}>
@@ -309,8 +311,8 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
                       disabled={inviting || isAdmin}
                     />
                     <div>
-                      <span className="text-sm text-gray-700 font-medium">Can Request Experts</span>
-                      <p className="text-xs text-gray-500 mt-1">Allow this member to create new expert requests</p>
+                      <span className="text-sm text-gray-700 font-medium">{t('canRequestExpertsLabel')}</span>
+                      <p className="text-xs text-gray-500 mt-1">{t('canRequestExpertsDescription')}</p>
                     </div>
                   </label>
                   <label className={`flex items-start gap-3 ${isAdmin ? 'opacity-50' : ''}`}>
@@ -325,8 +327,8 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
                       disabled={inviting || isAdmin}
                     />
                     <div>
-                      <span className="text-sm text-gray-700 font-medium">Can See All Requests</span>
-                      <p className="text-xs text-gray-500 mt-1">Allow this member to view all organization requests (like an admin)</p>
+                      <span className="text-sm text-gray-700 font-medium">{t('canSeeAllRequestsLabel')}</span>
+                      <p className="text-xs text-gray-500 mt-1">{t('canSeeAllRequestsDescription')}</p>
                     </div>
                   </label>
                 </div>
@@ -339,7 +341,7 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
                   className="flex-1 px-4 py-3 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   disabled={inviting}
                 >
-                  Cancel
+                  {tAction('cancel')}
                 </button>
                 <button
                   type="submit"
@@ -349,10 +351,10 @@ const InviteUserModal = ({ isOpen, onClose, organization, onInviteCreated }) => 
                   {inviting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Creating...
+                      {t('sendingInvite')}
                     </>
                   ) : (
-                    'Generate Invitation Link'
+                    t('sendInvite')
                   )}
                 </button>
               </div>

@@ -12,7 +12,7 @@ import {
   Search,
   Filter
 } from 'lucide-react';
-import { 
+import {
   subscribeAllTaskRequests,
   subscribeExpertTaskRequestsByEmail,
   subscribeUserTaskRequests,
@@ -21,9 +21,11 @@ import {
 // import { getAllExperts } from '../utils/expertService';
 import { getCurrentUserContext } from '../utils/organizationService';
 import TaskChatSystem from './TaskChatSystem';
+import { useTaskTranslation } from '../tolgee/hooks/useTaskTranslation';
 
 const TaskList = ({ userRole, expertInfo, initialSelectedTaskId, onTaskSelected, selectedExpert, onUnreadTotalChange, requestButton }) => {
   const { currentUser } = useAuth();
+  const { t } = useTaskTranslation();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -249,19 +251,19 @@ const TaskList = ({ userRole, expertInfo, initialSelectedTaskId, onTaskSelected,
   const getStatusText = (status) => {
     switch (status) {
       case 'pending':
-        return 'Pending Review';
+        return t('statusPending');
       case 'in_progress':
-        return 'In Progress';
+        return t('statusInProgress');
       case 'estimate_provided':
-        return 'Estimate Provided';
+        return t('statusEstimate');
       case 'accepted':
-        return 'Accepted';
+        return t('statusAccepted');
       case 'completed':
-        return 'Completed';
+        return t('statusCompleted');
       case 'cancelled':
-        return 'Cancelled';
+        return t('statusCancelled');
       case 'declined':
-        return 'Declined';
+        return t('statusDeclined');
       default:
         return status;
     }
@@ -270,37 +272,43 @@ const TaskList = ({ userRole, expertInfo, initialSelectedTaskId, onTaskSelected,
   // Get payment status
   const getPaymentStatus = (task) => {
     if (task.status !== 'accepted' && task.status !== 'completed') {
-      return 'N/A';
+      return t('paymentNA');
     }
-    
+
     if (task.invoiceData?.paymentStatus) {
-      return task.invoiceData.paymentStatus;
+      // Map raw status to translation key
+      const statusMap = {
+        'Paid': t('paymentPaid'),
+        'Due': t('paymentDue'),
+        'Overdue': t('paymentOverdue'),
+        'Pending': t('paymentPending')
+      };
+      return statusMap[task.invoiceData.paymentStatus] || task.invoiceData.paymentStatus;
     }
-    
+
     // Default logic based on task status
     if (task.status === 'accepted') {
-      return 'Pending';
+      return t('paymentPending');
     } else if (task.status === 'completed') {
-      return 'Due';
+      return t('paymentDue');
     }
-    
-    return 'Pending';
+
+    return t('paymentPending');
   };
 
   // Get payment status styling
   const getPaymentStatusStyle = (status) => {
-    switch (status) {
-      case 'Paid':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'Due':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'Overdue':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'Pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default:
-        return 'bg-gray-100 text-gray-600 border-gray-200';
+    // Compare with translated values
+    if (status === t('paymentPaid')) {
+      return 'bg-green-100 text-green-800 border-green-200';
+    } else if (status === t('paymentDue')) {
+      return 'bg-orange-100 text-orange-800 border-orange-200';
+    } else if (status === t('paymentOverdue')) {
+      return 'bg-red-100 text-red-800 border-red-200';
+    } else if (status === t('paymentPending')) {
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     }
+    return 'bg-gray-100 text-gray-600 border-gray-200';
   };
 
   // Get price from task data
@@ -338,21 +346,21 @@ const TaskList = ({ userRole, expertInfo, initialSelectedTaskId, onTaskSelected,
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">
-            {userRole === 'expert' 
-              ? (selectedExpert ? `${selectedExpert.name}'s Tasks` : 'Expert Tasks')
-              : 'Your Requests'
+            {userRole === 'expert'
+              ? (selectedExpert ? `${selectedExpert.name}'s Tasks` : t('expertTasks'))
+              : t('yourRequests')
             }
           </h2>
           <p className="text-gray-600 mt-1">
-            {userRole === 'expert' 
-              ? (selectedExpert 
-                ? `Viewing tasks assigned to ${selectedExpert.name}` 
-                : (isRapidWorksAdmin 
-                  ? 'Viewing all expert tasks - select an expert from sidebar to filter'
-                  : `Manage tasks assigned to you as ${expertInfo?.role}`
+            {userRole === 'expert'
+              ? (selectedExpert
+                ? t('viewingTasksFor', { expertName: selectedExpert.name })
+                : (isRapidWorksAdmin
+                  ? t('viewingAllTasks')
+                  : t('manageTasksAs', { role: expertInfo?.role })
                 )
               )
-              : 'Track your task requests and communicate with experts'
+              : t('trackRequests')
             }
           </p>
         </div>
@@ -372,13 +380,13 @@ const TaskList = ({ userRole, expertInfo, initialSelectedTaskId, onTaskSelected,
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search tasks..."
+            placeholder={t('searchTasks')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent"
           />
         </div>
-        
+
         <div className="relative">
           <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <select
@@ -386,9 +394,9 @@ const TaskList = ({ userRole, expertInfo, initialSelectedTaskId, onTaskSelected,
             onChange={(e) => setStatusFilter(e.target.value)}
             className="appearance-none pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7C3BEC] focus:border-transparent bg-white"
           >
-            <option value="all">All Tasks</option>
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
+            <option value="all">{t('allTasks')}</option>
+            <option value="active">{t('active')}</option>
+            <option value="completed">{t('completed')}</option>
           </select>
         </div>
       </div>
@@ -397,7 +405,7 @@ const TaskList = ({ userRole, expertInfo, initialSelectedTaskId, onTaskSelected,
       {loading && (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7C3BEC]"></div>
-          <span className="ml-2 text-gray-600">Loading tasks...</span>
+          <span className="ml-2 text-gray-600">{t('loadingTasks')}</span>
         </div>
       )}
 
@@ -416,19 +424,19 @@ const TaskList = ({ userRole, expertInfo, initialSelectedTaskId, onTaskSelected,
         <div className="text-center py-12">
           <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchTerm || statusFilter !== 'all' 
-              ? 'No tasks match your filters' 
-              : userRole === 'expert' 
-                ? 'No tasks assigned yet' 
-                : 'No requests yet'
+            {searchTerm || statusFilter !== 'all'
+              ? t('noTasksMatch')
+              : userRole === 'expert'
+                ? t('noTasksAssigned')
+                : t('noRequestsYet')
             }
           </h3>
           <p className="text-gray-600">
             {searchTerm || statusFilter !== 'all'
-              ? 'Try adjusting your search or filter criteria'
+              ? t('tryAdjusting')
               : userRole === 'expert'
-                ? 'New task assignments will appear here'
-                : 'Create your first task request to get started'
+                ? t('newTasksAppear')
+                : t('createFirstRequest')
             }
           </p>
         </div>
@@ -443,28 +451,28 @@ const TaskList = ({ userRole, expertInfo, initialSelectedTaskId, onTaskSelected,
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Task
+                    {t('tableTask')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {userRole === 'expert' ? 'Customer' : 'Expert'}
+                    {userRole === 'expert' ? t('tableCustomer') : t('tableExpert')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created By
+                    {t('tableCreatedBy')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
+                    {t('tableCreated')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Due Date
+                    {t('tableDueDate')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
+                    {t('tablePrice')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    {t('tableStatus')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Payment
+                    {t('tablePayment')}
                   </th>
                 </tr>
               </thead>
@@ -495,9 +503,9 @@ const TaskList = ({ userRole, expertInfo, initialSelectedTaskId, onTaskSelected,
                     {/* Expert/Customer Name */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {userRole === 'expert' 
-                          ? (task.userName || task.userEmail?.split('@')[0] || 'Unknown')
-                          : (task.expertName || task.expertEmail?.split('@')[0] || 'Unassigned')
+                        {userRole === 'expert'
+                          ? (task.userName || task.userEmail?.split('@')[0] || t('unknown'))
+                          : (task.expertName || task.expertEmail?.split('@')[0] || t('unassigned'))
                         }
                       </div>
                     </td>
@@ -560,7 +568,7 @@ const TaskList = ({ userRole, expertInfo, initialSelectedTaskId, onTaskSelected,
       {/* Task Count */}
       {!loading && !error && filteredTasks.length > 0 && (
         <div className="text-center text-sm text-gray-500 pt-4">
-          Showing {filteredTasks.length} of {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+          {t('showingTasks', { filtered: filteredTasks.length, total: tasks.length })}
         </div>
       )}
     </div>
