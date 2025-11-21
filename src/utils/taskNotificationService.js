@@ -165,8 +165,10 @@ export const sendEstimateNotification = async ({
   });
 };
 
-export default {
+const taskNotificationService = {
   sendTaskMessageNotification,
   sendTaskCreatedNotification,
   sendEstimateNotification
 };
+
+export default taskNotificationService;

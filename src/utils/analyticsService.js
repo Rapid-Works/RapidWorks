@@ -85,7 +85,7 @@ export const createTrackingLink = async (linkData) => {
         // Validate URL before sending to Bit.ly
         try {
           new URL(originalTrackingUrl);
-        } catch (urlError) {
+        } catch (_urlError) {
           console.warn('⚠️ Invalid URL format, skipping Bit.ly:', originalTrackingUrl);
           throw new Error('Invalid URL format');
         }
@@ -341,7 +341,7 @@ export const recordClick = async (trackingCode, clickData = {}) => {
 
         // Default to hostname
         return { source: hostname, category: 'website', url: referrerUrl };
-      } catch (error) {
+      } catch (_error) {
         return { source: 'Unknown', category: 'unknown', url: referrerUrl };
       }
     };
@@ -641,7 +641,7 @@ export const regenerateBitlyLink = async (linkId) => {
     // Validate URL before sending to Bit.ly
     try {
       new URL(originalUrl);
-    } catch (urlError) {
+    } catch (_urlError) {
       throw new Error('Invalid URL format - please check the destination URL');
     }
     

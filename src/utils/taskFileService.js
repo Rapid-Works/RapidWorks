@@ -29,7 +29,7 @@ export const uploadTaskFiles = async (files, userId, taskId = null) => {
   const maxFileSize = 10 * 1024 * 1024; // 10MB
 
   try {
-    const uploadPromises = files.map(async (file, index) => {
+    const uploadPromises = files.map(async (file) => {
       // Validate file size
       if (file.size > maxFileSize) {
         throw new Error(`File "${file.name}" is too large. Maximum size is 10MB.`);
@@ -162,10 +162,12 @@ export const validateFile = (file) => {
   return { isValid: true };
 };
 
-export default {
+const taskFileService = {
   uploadTaskFiles,
   deleteTaskFiles,
   getFileCategory,
   formatFileSize,
   validateFile
-}; 
+};
+
+export default taskFileService; 

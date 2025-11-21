@@ -360,6 +360,10 @@ export const languages = {
   }
 };
 
+// Map between internal language codes and Tolgee language tags
+const toTolgeeLanguage = (lang) => lang === 'de' ? 'de-DE' : lang;
+const fromTolgeeLanguage = (lang) => lang === 'de-DE' ? 'de' : lang;
+
 export const LanguageProvider = ({ children }) => {
   const tolgee = useTolgee(['language']);
 
@@ -374,8 +378,9 @@ export const LanguageProvider = ({ children }) => {
 
   // Sync Tolgee language with local state
   useEffect(() => {
-    if (tolgee && tolgee.getLanguage() !== language) {
-      tolgee.changeLanguage(language);
+    const tolgeeLanguage = toTolgeeLanguage(language);
+    if (tolgee && tolgee.getLanguage() !== tolgeeLanguage) {
+      tolgee.changeLanguage(tolgeeLanguage);
     }
   }, [language, tolgee]);
 
@@ -386,7 +391,7 @@ export const LanguageProvider = ({ children }) => {
       localStorage.setItem('language', newLanguage);
     }
     if (tolgee) {
-      tolgee.changeLanguage(newLanguage);
+      tolgee.changeLanguage(toTolgeeLanguage(newLanguage));
     }
   };
 

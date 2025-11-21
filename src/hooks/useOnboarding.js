@@ -290,19 +290,19 @@ export const useOnboarding = () => {
   };
 
   // Check if profile is completed (has both first and last name)
-  const checkProfileCompletion = () => {
+  const _checkProfileCompletion = () => {
     if (!currentUser?.displayName) return false;
-    
+
     const nameParts = currentUser.displayName.trim().split(' ');
     return nameParts.length >= 2 && nameParts[0].length > 0 && nameParts[1].length > 0;
   };
 
   // Mark profile as completed
-  const markProfileCompleted = async () => {
+  const _markProfileCompleted = async () => {
     if (!currentUser) return;
 
     const onboardingRef = doc(db, 'userOnboarding', currentUser.uid);
-    await setDoc(onboardingRef, { 
+    await setDoc(onboardingRef, {
       profileCompleted: true,
       profileCompletedAt: new Date().toISOString()
     }, { merge: true });

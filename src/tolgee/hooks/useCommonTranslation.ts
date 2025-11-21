@@ -67,7 +67,7 @@ export const useCommonTranslation = () => {
      * @param key - Validation type (e.g., 'required', 'email', 'minLength')
      * @param params - Optional parameters for interpolation (e.g., {count: 5})
      */
-    tValidation: (key: string, params?: Record<string, any>) => t(`validation.${key}`, params),
+    tValidation: (key: string, params?: Record<string, string | number | boolean>) => t(`validation.${key}`, params),
 
     /**
      * Direct access to translate function for custom keys

@@ -1,14 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
   onAuthStateChanged,
   signInWithPopup,
   sendPasswordResetEmail,
-  sendEmailVerification,
   updateProfile
 } from 'firebase/auth';
 import { auth, googleProvider, functions } from '../firebase/config';
@@ -54,8 +53,8 @@ export function AuthProvider({ children }) {
       await setDoc(userRef, userData, { merge: true }); // merge: true preserves existing fields like currentOrganizationId
 
 
-    } catch (error) {
-
+    } catch (_error) {
+      // Silently handle error
     }
   }, [db]);
 
@@ -75,9 +74,8 @@ export function AuthProvider({ children }) {
     try {
       
       await sendVerificationEmail(userCredential.user);
-      
-    } catch (emailError) {
 
+    } catch (_emailError) {
       // Don't fail signup if email sending fails
     }
     
@@ -192,10 +190,7 @@ export function AuthProvider({ children }) {
       const result = await sendCustomPasswordReset({ email });
       
       return result.data;
-    } catch (error) {
-      
-      
-      
+    } catch (_error) {
       // Fallback to Firebase default if our custom function fails
       
       try {
@@ -228,8 +223,8 @@ export function AuthProvider({ children }) {
           try {
             await ensureUserDocument(user);
             await notificationInitService.initializeForUser(user, true);
-          } catch (error) {
-            
+          } catch (_error) {
+            // Silently handle initialization error
           }
         }, 0);
       } else {

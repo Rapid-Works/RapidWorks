@@ -67,7 +67,7 @@ export const isEmailNotificationEnabled = (preferences, notificationType) => {
  * @param {string} notificationType - Type of notification
  * @returns {Promise<Array>} Filtered array of tokens for users who want mobile notifications
  */
-export const filterTokensForMobileNotifications = async (tokens, notificationType) => {
+export const filterTokensForMobileNotifications = async (tokens, _notificationType) => {
   const filteredTokens = [];
   
   for (const tokenData of tokens) {

@@ -11,6 +11,7 @@ export const useNotificationPermission = () => {
 
   useEffect(() => {
     checkPermissionStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   const checkPermissionStatus = async () => {

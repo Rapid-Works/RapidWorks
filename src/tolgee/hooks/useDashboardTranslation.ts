@@ -18,7 +18,7 @@ export const useDashboardTranslation = () => {
      * @param key - Dashboard feature key without prefix (e.g., 'welcome', 'setup', 'home')
      * @param params - Optional parameters for interpolation (e.g., {name: 'John'})
      */
-    t: (key: string, params?: Record<string, any>) => translateFn(`dashboard.dashboard.${key}`, params),
+    t: (key: string, params?: Record<string, string | number | boolean>) => translateFn(`dashboard.dashboard.${key}`, params),
 
     /**
      * Direct access to translate function for full control

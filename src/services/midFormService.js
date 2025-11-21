@@ -494,7 +494,7 @@ export const validateFoundingDate = (date) => {
  * @param {Object} formData - The form data to validate
  * @returns {Object} - Validation result with isValid and errors
  */
-export const validateMIDFormData = (formData, isUpdate = false) => {
+export const validateMIDFormData = (formData, _isUpdate = false) => {
   const errors = [];
   
   // Debug: Log the form data to see what's being submitted
