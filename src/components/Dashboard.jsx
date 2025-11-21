@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { Megaphone, Users, MessageSquare, FileCheck, Receipt, ChevronDown, ChevronRight, Building, Building2, BarChart3, Compass, Loader2, FileText, XCircle, Mail, Key, Eye, EyeOff, CheckCircle, Home, User } from 'lucide-react';
-import { useParams, usePathname, useSearchParams } from 'next/navigation';
+import { Megaphone, Users, MessageSquare, FileCheck, Receipt, ChevronDown, ChevronRight, Building, BarChart3, Compass, Loader2, FileText, XCircle, Mail, Key, Eye, EyeOff, CheckCircle, Home, Sparkles } from 'lucide-react';
+import { useParams, usePathname } from 'next/navigation';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/config';
 import { useDashboardTranslation } from '../tolgee/hooks/useDashboardTranslation';
@@ -31,6 +31,7 @@ import FrameworkAgreementModal from './FrameworkAgreementModal';
 import MIDForm from './MIDForm';
 import MIDSubmissions from './MIDSubmissions';
 import { HomePage } from './home';
+import AutomationAnalysis from './AutomationAnalysis';
 
 import { isExpert, getExpertByEmail, isAdmin, getAllExperts } from '../utils/expertService';
 import { getCurrentUserContext, hasUserOrganizationMembership } from '../utils/organizationService';
@@ -861,6 +862,29 @@ const Dashboard = () => {
                     <div className="font-medium">{t('rapidBranding')}</div>
                   </div>
                 </button>
+
+                <button
+                  onClick={() => {
+                    if (!isTabDisabled('automation_analysis')) {
+                      setActiveTab('automation_analysis');
+                      setIsMobileMenuOpen(false);
+                    }
+                  }}
+                  disabled={isTabDisabled('automation_analysis')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                    isTabDisabled('automation_analysis')
+                      ? 'text-gray-400 cursor-not-allowed opacity-50'
+                      : activeTab === 'automation_analysis'
+                      ? 'bg-[#7C3BEC] text-white shadow-lg'
+                      : 'text-gray-700 hover:bg-white hover:shadow-md'
+                  }`}
+                  title={isTabDisabled('automation_analysis') ? 'Complete onboarding to access this tab' : ''}
+                >
+                  <Sparkles className="h-5 w-5" />
+                  <div className="flex-1">
+                    <div className="font-medium">Automation Analysis</div>
+                  </div>
+                </button>
                 
                 {/* Tasks - Expandable for rapid-works.io users */}
                  {userIsExpert && currentUser?.email?.endsWith('@rapid-works.io') ? (
@@ -1316,13 +1340,14 @@ const Dashboard = () => {
                   </svg>
                 </button>
                 <h1 className="text-lg font-semibold text-gray-900 truncate">
-                  {activeTab === 'home' && t('setup')}
-                  {activeTab === 'branding' && t('rapidBranding')}
-                  {activeTab === 'tasks' && (userIsExpert ? t('expertTasks') : (currentUser?.email?.endsWith('@rapid-works.io') ? t('myRequests') : t('rapidExperts')))}
-                  {activeTab === 'agreements' && t('agreements')}
-                  {activeTab === 'invoicing' && t('invoicing')}
-                  {activeTab === 'organizations' && t('organizations')}
-                  {activeTab === 'users' && t('users')}
+                  {activeTab === 'home' && 'Setup'}
+                  {activeTab === 'branding' && 'Rapid Branding'}
+                  {activeTab === 'automation_analysis' && 'Automation Analysis'}
+                  {activeTab === 'tasks' && (userIsExpert ? 'Expert Tasks' : (currentUser?.email?.endsWith('@rapid-works.io') ? 'My Requests' : 'Rapid Experts'))}
+                  {activeTab === 'agreements' && 'Agreements'}
+                  {activeTab === 'invoicing' && 'Invoicing'}
+                  {activeTab === 'organizations' && 'Organizations'}
+                  {activeTab === 'users' && 'Users'}
                   {/* {activeTab === 'analytics' && 'Rapid Analytics'} */}
                   {activeTab === 'coachings' && t('rapidCoaching')}
                   {activeTab === 'financing' && t('rapidFinancing')}
@@ -1374,6 +1399,17 @@ const Dashboard = () => {
                     transition={{ duration: 0.3 }}
                   >
                     <BrandingKits initialKitId={kitId} />
+                  </motion.div>
+                )}
+
+                {activeTab === 'automation_analysis' && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-transparent"
+                  >
+                    <AutomationAnalysis />
                   </motion.div>
                 )}
 

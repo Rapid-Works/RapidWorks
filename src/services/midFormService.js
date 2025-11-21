@@ -431,12 +431,58 @@ export const validateTaxId = (taxId) => {
   return taxIdRegex.test(taxId) ? null : 'Tax ID must be in format XXX/XXXX/XXXX (11 digits)';
 };
 
-// IBAN validation (2 letters + 20 digits for German IBANs)
+const IBAN_COUNTRY_LENGTHS = {
+  DE: 22,
+  AT: 20,
+  CH: 21
+};
+
+const convertIbanCharsToDigits = (value) => {
+  let numeric = '';
+  for (const char of value) {
+    if (/[A-Z]/.test(char)) {
+      numeric += (char.charCodeAt(0) - 55).toString();
+    } else {
+      numeric += char;
+    }
+  }
+  return numeric;
+};
+
+// IBAN validation using mod-97 checksum
 export const validateIBAN = (iban) => {
   if (!iban || iban.trim() === '') return null;
-  const ibanRegex = /^[A-Z]{2}\d{20}$/;
-  const cleanIban = iban.replace(/\s/g, '');
-  return ibanRegex.test(cleanIban) ? null : 'IBAN must be 2 letters followed by 20 digits (e.g., DE11 2222 3333 4444 5555 55)';
+
+  const cleaned = iban.replace(/\s/g, '').toUpperCase();
+
+  if (!/^[A-Z0-9]+$/.test(cleaned)) {
+    return 'IBAN may only contain letters and digits.';
+  }
+
+  if (cleaned.length < 15 || cleaned.length > 34) {
+    return 'IBAN must contain between 15 and 34 characters.';
+  }
+
+  const countryCode = cleaned.slice(0, 2);
+  const expectedLength = IBAN_COUNTRY_LENGTHS[countryCode];
+  if (expectedLength && cleaned.length !== expectedLength) {
+    return `IBAN for country code ${countryCode} must contain exactly ${expectedLength} characters.`;
+  }
+
+  const rearranged = `${cleaned.slice(4)}${cleaned.slice(0, 4)}`;
+  const numericRepresentation = convertIbanCharsToDigits(rearranged);
+
+  let remainder = 0;
+  for (let i = 0; i < numericRepresentation.length; i += 7) {
+    const chunk = numericRepresentation.slice(i, i + 7);
+    remainder = parseInt(`${remainder}${chunk}`, 10) % 97;
+  }
+
+  if (remainder !== 1) {
+    return 'IBAN failed checksum validation. Please double-check the digits.';
+  }
+
+  return null;
 };
 
 // BIC validation (8-11 alphanumeric characters)
@@ -446,6 +492,46 @@ export const validateBIC = (bic) => {
   const cleaned = bic.trim().toUpperCase();
   const bicRegex = /^[A-Z0-9]{8,11}$/;
   return bicRegex.test(cleaned) ? null : 'BIC must be 8-11 alphanumeric characters (e.g., DEUTDEDB180 or QNTODEB2XXX)';
+};
+
+export const fetchBankDetailsForIBAN = async (iban, { signal } = {}) => {
+  const cleaned = iban?.replace(/\s/g, '').toUpperCase();
+
+  if (!cleaned) {
+    throw new Error('IBAN is required to look up bank details.');
+  }
+
+  const response = await fetch(
+    `https://openiban.com/validate/${cleaned}?getBIC=true&validateBankCode=true`,
+    {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json'
+      },
+      signal
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Unable to contact IBAN validation service. Please try again later.');
+  }
+
+  const data = await response.json();
+
+  if (!data.valid) {
+    const message = data.messages?.[0] || 'The provided IBAN is not valid.';
+    throw new Error(message);
+  }
+
+  const bic = data.bankData?.bic ? data.bankData.bic.toUpperCase() : '';
+  const bankName = data.bankData?.name || '';
+  const bankCode = data.bankData?.bankCode || '';
+
+  return {
+    bic,
+    bankName,
+    bankCode
+  };
 };
 
 // Phone number validation (basic format check)
@@ -573,19 +659,17 @@ export const validateMIDFormData = (formData, _isUpdate = false) => {
   
   // IBAN validation (2 letters + 20 digits for German IBANs)
   if (formData.iban && formData.iban.trim() !== '') {
-    const ibanRegex = /^[A-Z]{2}\d{20}$/;
-    const cleanIban = formData.iban.replace(/\s/g, '');
-    if (!ibanRegex.test(cleanIban)) {
-      errors.push('IBAN must be 2 letters followed by 20 digits (e.g., DE11 2222 3333 4444 5555 55)');
+    const ibanError = validateIBAN(formData.iban);
+    if (ibanError) {
+      errors.push(ibanError);
     }
   }
   
   // BIC validation (8-11 alphanumeric characters)
   if (formData.bic && formData.bic.trim() !== '') {
-    const cleaned = formData.bic.trim().toUpperCase();
-    const bicRegex = /^[A-Z0-9]{8,11}$/;
-    if (!bicRegex.test(cleaned)) {
-      errors.push('BIC must be 8-11 alphanumeric characters (e.g., DEUTDEDB180 or QNTODEB2XXX)');
+    const bicError = validateBIC(formData.bic);
+    if (bicError) {
+      errors.push(bicError);
     }
   }
   

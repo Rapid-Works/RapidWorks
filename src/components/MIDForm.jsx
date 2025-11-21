@@ -13,6 +13,7 @@ import {
   validateTaxId,
   validateIBAN,
   validateBIC,
+  fetchBankDetailsForIBAN,
   validatePhoneNumber,
   validateFTE,
   validateFoundingDate
@@ -120,6 +121,10 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
   // Real-time validation state
   const [fieldErrors, setFieldErrors] = useState({});
   const [fieldTouched, setFieldTouched] = useState({});
+  const [isFetchingBankDetails, setIsFetchingBankDetails] = useState(false);
+  const lastFetchedIbanRef = useRef(null);
+  const ibanLookupTimeoutRef = useRef(null);
+  const autoFilledBankDataRef = useRef({ bic: null, bankName: null });
   
   // Impressum extraction state
   const [impressumUrl, setImpressumUrl] = useState('');
@@ -549,6 +554,154 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
       }));
     }
   };
+
+  useEffect(() => {
+    const ibanValue = formData.iban;
+
+    if (!ibanValue || ibanValue.trim() === '') {
+      if (ibanLookupTimeoutRef.current) {
+        clearTimeout(ibanLookupTimeoutRef.current);
+        ibanLookupTimeoutRef.current = null;
+      }
+      lastFetchedIbanRef.current = null;
+      autoFilledBankDataRef.current = { bic: null, bankName: null };
+      setIsFetchingBankDetails(false);
+      return;
+    }
+
+    const cleanedIban = ibanValue.replace(/\s/g, '').toUpperCase();
+
+    if (cleanedIban.length < 15) {
+      return;
+    }
+
+    const validationError = validateIBAN(ibanValue);
+    setFieldErrors(prev => {
+      if (prev.iban === validationError) {
+        return prev;
+      }
+      return {
+        ...prev,
+        iban: validationError
+      };
+    });
+
+    if (validationError) {
+      if (ibanLookupTimeoutRef.current) {
+        clearTimeout(ibanLookupTimeoutRef.current);
+        ibanLookupTimeoutRef.current = null;
+      }
+      setIsFetchingBankDetails(false);
+      lastFetchedIbanRef.current = null;
+      return;
+    }
+
+    if (cleanedIban === lastFetchedIbanRef.current) {
+      return;
+    }
+
+    if (ibanLookupTimeoutRef.current) {
+      clearTimeout(ibanLookupTimeoutRef.current);
+      ibanLookupTimeoutRef.current = null;
+    }
+
+    const controller = new AbortController();
+
+    ibanLookupTimeoutRef.current = setTimeout(async () => {
+      setIsFetchingBankDetails(true);
+      try {
+        const bankData = await fetchBankDetailsForIBAN(cleanedIban, { signal: controller.signal });
+        lastFetchedIbanRef.current = cleanedIban;
+
+        setFieldErrors(prev => {
+          if (prev.iban === null) {
+            return prev;
+          }
+          return {
+            ...prev,
+            iban: null
+          };
+        });
+
+        let nextBic = null;
+        let nextBankName = null;
+
+        setFormData(prev => {
+          const updated = { ...prev };
+          let didUpdate = false;
+
+          if (bankData?.bic) {
+            const shouldUpdateBic = !prev.bic?.trim() || prev.bic === autoFilledBankDataRef.current.bic;
+            if (shouldUpdateBic) {
+              nextBic = bankData.bic;
+              updated.bic = bankData.bic;
+              didUpdate = true;
+            }
+          }
+
+          if (bankData?.bankName) {
+            const shouldUpdateBankName = !prev.bankName?.trim() || prev.bankName === autoFilledBankDataRef.current.bankName;
+            if (shouldUpdateBankName) {
+              nextBankName = bankData.bankName;
+              updated.bankName = bankData.bankName;
+              didUpdate = true;
+            }
+          }
+
+          if (didUpdate) {
+            return updated;
+          }
+
+          return prev;
+        });
+
+        if (nextBic) {
+          autoFilledBankDataRef.current.bic = nextBic;
+          const bicError = validateBIC(nextBic);
+          setFieldErrors(prev => {
+            if (prev.bic === bicError) {
+              return prev;
+            }
+            return {
+              ...prev,
+              bic: bicError
+            };
+          });
+        }
+
+        if (nextBankName) {
+          autoFilledBankDataRef.current.bankName = nextBankName;
+        }
+      } catch (lookupError) {
+        if (lookupError.name === 'AbortError') {
+          return;
+        }
+
+        console.error('IBAN lookup failed:', lookupError);
+        lastFetchedIbanRef.current = null;
+        const fallbackMessage = lookupError?.message || 'Unable to retrieve bank details for this IBAN. Please verify the number.';
+        setFieldErrors(prev => {
+          if (prev.iban === fallbackMessage) {
+            return prev;
+          }
+          return {
+            ...prev,
+            iban: fallbackMessage
+          };
+        });
+      } finally {
+        setIsFetchingBankDetails(false);
+      }
+    }, 600);
+
+    return () => {
+      if (ibanLookupTimeoutRef.current) {
+        clearTimeout(ibanLookupTimeoutRef.current);
+        ibanLookupTimeoutRef.current = null;
+      }
+      controller.abort();
+    };
+  }, [formData.iban, fetchBankDetailsForIBAN, validateIBAN, validateBIC]);
 
   // Handle field blur (when user stops typing)
   const handleFieldBlur = (field) => {
@@ -2078,6 +2231,9 @@ const MIDForm = ({ currentContext, missingMIDFields = [], onFieldsUpdated, onOrg
                   <span className="flex items-center gap-2">
                     {t('iban')}
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">MID</span>
+                    {isFetchingBankDetails && (
+                      <Loader2 className="h-3 w-3 text-purple-600 animate-spin" aria-hidden="true" />
+                    )}
                   </span>
                 </label>
                 <input
