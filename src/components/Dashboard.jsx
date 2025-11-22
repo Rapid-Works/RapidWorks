@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { Megaphone, Users, MessageSquare, FileCheck, Receipt, ChevronDown, ChevronRight, Building, BarChart3, Compass, Loader2, FileText, XCircle, Mail, Key, Eye, EyeOff, CheckCircle, Home, Sparkles } from 'lucide-react';
-import { useParams, usePathname } from 'next/navigation';
+import { Megaphone, Users, User, MessageSquare, FileCheck, Receipt, ChevronDown, ChevronRight, Building, Building2, BarChart3, Compass, Loader2, FileText, XCircle, Mail, Key, Eye, EyeOff, CheckCircle, Home, Sparkles } from 'lucide-react';
+import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/config';
 import { useDashboardTranslation } from '../tolgee/hooks/useDashboardTranslation';
